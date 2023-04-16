@@ -104,11 +104,10 @@ impl Parse for CommandInfo {
                         panic!("doc comment should be a string literal");
                     };
                     let string = expr.value();
-                    let trimmed = string.trim();
-                    if trimmed.is_empty() {
+                    if string.is_empty() {
                         description.push_str("\n\n");
                     } else {
-                        description.push_str(trimmed);
+                        description.push_str(&string);
                     }
                 },
                 "info" => {
@@ -148,13 +147,13 @@ impl Parse for CommandInfo {
 ///
 /// This is where the macro gets its information from to implement the trait:
 ///
-/// | Tag           | Description                      | Accepts | Obtained from                                                        |
-/// |---------------|----------------------------------|---------|----------------------------------------------------------------------|
-/// | `name`        | The name of the command.         | &str    | The struct's name.                                                   |
-/// | `description` | The description of the command.  | &str    | The struct's doc comment.                                            |
-/// | `aliases`     | Allowed aliases for the command. | &[&str] | The struct's name, or via the `aliases` tag in the `info` attribute. |
-/// | `syntax`      | The syntax of the command.       | &[&str] | The `syntax` tag in the `info` attribute.                            |
-/// | `examples`    | Example usage of the command.    | &[&str] | The `examples` tag in the `info` attribute.                          |
+/// | Tag           | Description                      | Accepts   | Obtained from                                                        |
+/// |---------------|----------------------------------|-----------|----------------------------------------------------------------------|
+/// | `name`        | The name of the command.         | `&str`    | The struct's name.                                                   |
+/// | `description` | The description of the command.  | `&str`    | The struct's doc comment.                                            |
+/// | `aliases`     | Allowed aliases for the command. | `&[&str]` | The struct's name, or via the `aliases` tag in the `info` attribute. |
+/// | `syntax`      | The syntax of the command.       | `&[&str]` | The `syntax` tag in the `info` attribute.                            |
+/// | `examples`    | Example usage of the command.    | `&[&str]` | The `examples` tag in the `info` attribute.                          |
 #[proc_macro_derive(Info, attributes(info))]
 pub fn info(item: TokenStream) -> TokenStream {
     let info = parse_macro_input!(item as CommandInfo);
@@ -167,6 +166,7 @@ pub fn info(item: TokenStream) -> TokenStream {
     } = info;
 
     let name_str = pascal_to_snake_case(&name.to_string());
+    let description = description.trim();
     let aliases = wrap(aliases);
     let syntax = wrap(syntax);
     let examples = wrap(examples);
