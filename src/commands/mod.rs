@@ -77,10 +77,7 @@ impl CommandInfo {
 
 /// Represents any command.
 #[async_trait]
-pub trait Command {
-    /// Returns the command's metadata.
-    fn info(&self) -> CommandInfo;
-
+pub trait Command: Info {
     /// Executes the command.
     async fn execute(
         &self,
@@ -96,4 +93,12 @@ pub trait Command {
             .await?;
         Ok(())
     }
+}
+
+/// Represents a command with information on how to use it.
+///
+/// This trait can be derived using the `#[derive(Info)]` attribute, provided in `calcbot-attrs`.
+pub trait Info {
+    /// Returns the command's metadata.
+    fn info(&self) -> CommandInfo;
 }

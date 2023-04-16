@@ -111,6 +111,7 @@ name = "calcbot"
 version = "0.1.0"
 dependencies = [
  "async-trait",
+ "calcbot-attrs",
  "dotenv",
  "sysinfo",
  "tokio",
@@ -119,6 +120,15 @@ dependencies = [
  "twilight-http",
  "twilight-model",
  "twilight-util",
+]
+
+[[package]]
+name = "calcbot-attrs"
+version = "0.1.0"
+dependencies = [
+ "proc-macro2",
+ "quote",
+ "syn 2.0.15",
 ]
 
 [[package]]

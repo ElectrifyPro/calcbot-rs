@@ -1,5 +1,6 @@
+use calcbot_attrs::Info;
 use crate::{
-    commands::{Command, CommandInfo},
+    commands::Command,
     global::State,
     util::format_duration,
 };
@@ -11,21 +12,12 @@ use twilight_http::Client;
 use twilight_model::channel::message::Message;
 use twilight_util::builder::embed::EmbedBuilder;
 
-/// `c-about` command.
+/// View information about CalcBot.
+#[derive(Info)]
 pub struct About;
 
 #[async_trait]
 impl Command for About {
-    fn info(&self) -> CommandInfo {
-        CommandInfo {
-            name: "about",
-            description: "View information about CalcBot.",
-            aliases: None,
-            syntax: None,
-            examples: None,
-        }
-    }
-
     async fn execute(
         &self,
         http: Arc<Client>,

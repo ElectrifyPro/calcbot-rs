@@ -5,6 +5,9 @@ edition = "2021"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
+[dependencies.calcbot-attrs]
+path = "calcbot-attrs"
+
 [dependencies]
 async-trait = "0.1.68"
 dotenv = "0.15.0"
