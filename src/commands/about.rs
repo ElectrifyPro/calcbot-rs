@@ -50,7 +50,7 @@ impl Command for About {
             .color(0x988bc2)
             .description(format!(
                 "
-            <@{}> is being constantly developed by {}.
+            <@{}> is being constantly developed by **{}**.
 
             Uptime: {}
             Shard CPU usage: {}%

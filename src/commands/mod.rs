@@ -39,9 +39,20 @@ pub struct CommandInfo {
 
     /// Example usage of the command. This is generally not needed for simple commands.
     pub examples: Option<&'static [&'static str]>,
+
+    /// The children of this command. This will be displayed in the help embed.
+    pub children: Vec<Box<dyn Command>>,
 }
 
 impl CommandInfo {
+    /// Retrieves the default alias for this command.
+    pub fn default_alias(&self) -> &'static str {
+        self.aliases
+            .map(|aliases| aliases.first())
+            .flatten()
+            .unwrap_or_else(|| &self.name)
+    }
+
     /// Build the help embed for this command.
     ///
     /// Fields in the embed can contain special tags that will be replaced with the appropriate
@@ -56,13 +67,6 @@ impl CommandInfo {
             .color(0x66d2e8)
             .field(EmbedFieldBuilder::new("Description", self.description.replace("{prefix}", prefix)));
 
-        if let Some(aliases) = self.aliases {
-            let shortest = aliases.iter().min_by_key(|s| s.len()).unwrap();
-            embed = embed
-                .field(EmbedFieldBuilder::new("Shorthand", &format!("{}{}", prefix, shortest)))
-                .field(EmbedFieldBuilder::new("Aliases", aliases.join(", ")));
-        }
-
         if let Some(syntax) = self.syntax.map(|syntax| format_code_block(prefix, syntax)) {
             embed = embed.field(EmbedFieldBuilder::new("Syntax", syntax));
         }
@@ -71,13 +75,30 @@ impl CommandInfo {
             embed = embed.field(EmbedFieldBuilder::new("Examples", examples));
         }
 
+        if let Some(aliases) = self.aliases {
+            let shortest = aliases.iter().min_by_key(|s| s.len()).unwrap();
+            embed = embed
+                .field(EmbedFieldBuilder::new("Shorthand", format!("`{}{}`", prefix, shortest)))
+                .field(EmbedFieldBuilder::new("Aliases", format!("`{}`", aliases.join("`, `"))));
+        }
+
+        if !self.children.is_empty() {
+            let children = self
+                .children
+                .iter()
+                .map(|child| format!("`{}`", child.info().default_alias()))
+                .collect::<Vec<_>>()
+                .join("\n");
+            embed = embed.field(EmbedFieldBuilder::new("Children commands", children));
+        }
+
         embed.build()
     }
 }
 
 /// Represents any command.
 #[async_trait]
-pub trait Command: Info {
+pub trait Command: Info + Send + Sync {
     /// Executes the command.
     async fn execute(
         &self,
