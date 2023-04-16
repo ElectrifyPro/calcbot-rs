@@ -60,7 +60,7 @@ async fn handle_event(
     match event {
         Event::MessageCreate(msg) if msg.content == "!ping" => {
             use commands::Command;
-            commands::about::About
+            commands::help::Help
                 .execute(http, cache, state, &msg)
                 .await?;
         }
