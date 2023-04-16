@@ -6,8 +6,12 @@ edition = "2021"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
+async-trait = "0.1.68"
 dotenv = "0.15.0"
+sysinfo = "0.28.4"
 tokio = { version = "1.27.0", default-features = false, features = ["macros", "rt-multi-thread"] }
 twilight-cache-inmemory = "0.15.1"
 twilight-gateway = "0.15.1"
 twilight-http = "0.15.1"
+twilight-model = "0.15.1"
+twilight-util = { version = "0.15.1", features = ["builder"] }
