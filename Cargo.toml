@@ -1,0 +1,13 @@
+[package]
+name = "calcbot"
+version = "0.1.0"
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+dotenv = "0.15.0"
+tokio = { version = "1.27.0", default-features = false, features = ["macros", "rt-multi-thread"] }
+twilight-cache-inmemory = "0.15.1"
+twilight-gateway = "0.15.1"
+twilight-http = "0.15.1"
