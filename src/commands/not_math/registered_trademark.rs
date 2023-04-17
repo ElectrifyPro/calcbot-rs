@@ -5,8 +5,6 @@ use crate::{
     global::State,
 };
 use std::{error::Error, sync::Arc};
-use twilight_cache_inmemory::InMemoryCache;
-use twilight_http::Client;
 use twilight_model::channel::message::Message;
 
 /// Get your own custom brand name for free!
@@ -22,13 +20,11 @@ pub struct RegisteredTrademark;
 impl Command for RegisteredTrademark {
     async fn execute(
         &self,
-        http: Arc<Client>,
-        _: Arc<InMemoryCache>,
-        _: Arc<State>,
+        state: Arc<State>,
         message: &Message,
         args: Vec<&str>,
     ) -> Result<(), Box<dyn Error + Send + Sync>> {
-        http.create_message(message.channel_id)
+        state.http.create_message(message.channel_id)
             .content(&format!("{}:registered:", args.join(" ")))?
             .await?;
         Ok(())

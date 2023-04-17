@@ -7,8 +7,6 @@ use crate::{
 };
 use std::{env, error::Error, num::NonZeroU64, sync::Arc};
 use sysinfo::{Pid, ProcessExt, System, SystemExt};
-use twilight_cache_inmemory::InMemoryCache;
-use twilight_http::Client;
 use twilight_model::channel::message::Message;
 use twilight_util::builder::embed::EmbedBuilder;
 
@@ -21,8 +19,6 @@ pub struct About;
 impl Command for About {
     async fn execute(
         &self,
-        http: Arc<Client>,
-        cache: Arc<InMemoryCache>,
         state: Arc<State>,
         message: &Message,
         _: Vec<&str>,
@@ -37,11 +33,11 @@ impl Command for About {
         // not work if the author is not in the same server as the user who ran the command
         let author_id = env::var("AUTHOR_ID")?.parse::<NonZeroU64>().unwrap();
         let author = {
-            let user = http.user(author_id.into()).await?.model().await?;
+            let user = state.http.user(author_id.into()).await?.model().await?;
             format!("{}#{}", user.name, user.discriminator())
         };
 
-        let bot_id = cache
+        let bot_id = state.cache
             .current_user()
             .expect("should be received upon login")
             .id
@@ -67,7 +63,7 @@ impl Command for About {
             ))
             .build();
 
-        http.create_message(message.channel_id)
+        state.http.create_message(message.channel_id)
             .embeds(&[embed])
             .unwrap()
             .await?;

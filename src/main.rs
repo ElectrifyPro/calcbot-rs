@@ -3,11 +3,10 @@ pub mod global;
 pub mod util;
 
 use dotenv::dotenv;
+use global::State;
 use simple_logger::SimpleLogger;
 use std::{env, error::Error, sync::Arc, time::Instant};
-use twilight_cache_inmemory::{InMemoryCache, ResourceType};
 use twilight_gateway::{Event, Intents, Shard, ShardId};
-use twilight_http::Client as HttpClient;
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn Error + Send + Sync>> {
@@ -29,13 +28,7 @@ async fn main() -> Result<(), Box<dyn Error + Send + Sync>> {
         | Intents::MESSAGE_CONTENT;
     let mut shard = Shard::new(ShardId::ONE, token.clone(), intents);
 
-    let http = Arc::new(HttpClient::new(token));
-    let cache = Arc::new(
-        InMemoryCache::builder()
-            .resource_types(ResourceType::USER_CURRENT | ResourceType::MESSAGE)
-            .build(),
-    );
-    let state = Arc::new(global::State::default());
+    let state = Arc::new(State::new(token));
 
     loop {
         let event = match shard.next_event().await {
@@ -48,12 +41,10 @@ async fn main() -> Result<(), Box<dyn Error + Send + Sync>> {
                 continue;
             }
         };
-        cache.update(&event);
+        state.cache.update(&event);
 
         tokio::spawn(handle_event(
             event,
-            Arc::clone(&http),
-            Arc::clone(&cache),
             Arc::clone(&state),
         ));
     }
@@ -63,8 +54,6 @@ async fn main() -> Result<(), Box<dyn Error + Send + Sync>> {
 
 async fn handle_event(
     event: Event,
-    http: Arc<HttpClient>,
-    cache: Arc<InMemoryCache>,
     state: Arc<global::State>,
 ) -> Result<(), Box<dyn Error + Send + Sync>> {
     match event {
@@ -74,7 +63,7 @@ async fn handle_event(
                 let now = Instant::now();
                 match state.commands.find_command(&mut trimmed) {
                     Some(cmd) => {
-                        cmd.execute(http, cache, state, &msg, trimmed.collect())
+                        cmd.execute(state, &msg, trimmed.collect())
                             .await?;
                         log::info!(
                             "Command executed in {}ms: {}",

@@ -1,5 +1,7 @@
 use super::commands::{self, CommandGroup};
 use std::{collections::HashMap, time::Instant};
+use twilight_cache_inmemory::{InMemoryCache, ResourceType};
+use twilight_http::Client as HttpClient;
 use twilight_model::channel::message::Embed;
 use twilight_util::builder::embed::{EmbedBuilder, EmbedFieldBuilder};
 
@@ -10,17 +12,17 @@ pub struct State {
 
     /// The commands at the base of the command tree.
     pub commands: CommandGroup,
-}
 
-impl Default for State {
-    fn default() -> Self {
-        Self::new()
-    }
+    /// The HTTP client, used to make requests to the Discord API.
+    pub http: HttpClient,
+
+    /// The cache, which stores information received from Discord.
+    pub cache: InMemoryCache,
 }
 
 impl State {
-    /// Creates a new [`State`].
-    pub fn new() -> Self {
+    /// Creates a new [`State`] with the given token.
+    pub fn new(token: String) -> Self {
         Self {
             start_time: Instant::now(),
             commands: CommandGroup::new(vec![
@@ -28,6 +30,10 @@ impl State {
                 Box::new(commands::help::Help),
                 Box::new(commands::not_math::NotMath),
             ]),
+            http: HttpClient::new(token),
+            cache: InMemoryCache::builder()
+                .resource_types(ResourceType::USER_CURRENT | ResourceType::MESSAGE)
+                .build(),
         }
     }
 

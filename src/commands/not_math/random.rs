@@ -6,8 +6,6 @@ use crate::{
 };
 use getrandom::getrandom;
 use std::{error::Error, sync::Arc};
-use twilight_cache_inmemory::InMemoryCache;
-use twilight_http::Client;
 use twilight_model::channel::message::Message;
 
 /// Generates the random integer.
@@ -34,9 +32,7 @@ pub struct Random;
 impl Command for Random {
     async fn execute(
         &self,
-        http: Arc<Client>,
-        _: Arc<InMemoryCache>,
-        _: Arc<State>,
+        state: Arc<State>,
         message: &Message,
         args: Vec<&str>,
     ) -> Result<(), Box<dyn Error + Send + Sync>> {
@@ -46,7 +42,7 @@ impl Command for Random {
             _ => return Err("Invalid number of arguments".into()),
         };
         let num = random(min, max + 1);
-        http.create_message(message.channel_id)
+        state.http.create_message(message.channel_id)
             .content(&format!(
                 "**Random number** from {} to {}\n{}",
                 min, max, num

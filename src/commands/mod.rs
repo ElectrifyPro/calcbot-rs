@@ -5,8 +5,6 @@ pub mod not_math;
 use super::global::State;
 use async_trait::async_trait;
 use std::{error::Error, iter::Peekable, sync::Arc};
-use twilight_cache_inmemory::InMemoryCache;
-use twilight_http::Client;
 use twilight_model::channel::message::{Embed, Message};
 use twilight_util::builder::embed::{EmbedBuilder, EmbedFieldBuilder};
 
@@ -182,11 +180,9 @@ pub trait Command: CommandClone + Info + Send + Sync {
     /// Executes the command.
     async fn execute(
         &self,
-        http: Arc<Client>,
-        _: Arc<InMemoryCache>,
-        _: Arc<State>,
+        state: Arc<State>,
         message: &Message,
-        _: Vec<&str>,
+        args: Vec<&str>,
     ) -> Result<(), Box<dyn Error + Send + Sync>>;
 }
 

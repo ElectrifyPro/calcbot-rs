@@ -6,8 +6,6 @@ use crate::{
 };
 use regex::Regex;
 use std::{error::Error, sync::Arc};
-use twilight_cache_inmemory::InMemoryCache;
-use twilight_http::Client;
 use twilight_model::channel::message::Message;
 
 lazy_static::lazy_static! {
@@ -28,16 +26,14 @@ pub struct Aegyo;
 impl Command for Aegyo {
     async fn execute(
         &self,
-        http: Arc<Client>,
-        _: Arc<InMemoryCache>,
-        _: Arc<State>,
+        state: Arc<State>,
         message: &Message,
         args: Vec<&str>,
     ) -> Result<(), Box<dyn Error + Send + Sync>> {
         let input = args.join(" ");
         let replaced_upper = REGEX_UPPER.replace_all(&input, "W");
         let replaced_lower = REGEX_LOWER.replace_all(&replaced_upper, "w");
-        http.create_message(message.channel_id)
+        state.http.create_message(message.channel_id)
             .content(&replaced_lower)?
             .await?;
         Ok(())

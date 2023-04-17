@@ -5,8 +5,6 @@ use crate::{
     global::State,
 };
 use std::{error::Error, sync::Arc};
-use twilight_cache_inmemory::InMemoryCache;
-use twilight_http::Client;
 use twilight_model::channel::message::Message;
 
 /// View a list of available commands.
@@ -18,13 +16,11 @@ pub struct Commands;
 impl Command for Commands {
     async fn execute(
         &self,
-        http: Arc<Client>,
-        _: Arc<InMemoryCache>,
         state: Arc<State>,
         message: &Message,
         _: Vec<&str>,
     ) -> Result<(), Box<dyn Error + Send + Sync>> {
-        http.create_message(message.channel_id)
+        state.http.create_message(message.channel_id)
             .embeds(&[state.build_commands_embed()])?
             .await?;
         Ok(())

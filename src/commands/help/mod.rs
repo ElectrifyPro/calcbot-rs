@@ -7,8 +7,6 @@ use crate::{
     global::State,
 };
 use std::{error::Error, sync::Arc};
-use twilight_cache_inmemory::InMemoryCache;
-use twilight_http::Client;
 use twilight_model::channel::message::Message;
 
 /// Get information on how to use a command. For example, to learn about `{prefix}calculate stats`,
@@ -30,8 +28,6 @@ pub struct Help;
 impl Command for Help {
     async fn execute(
         &self,
-        http: Arc<Client>,
-        _: Arc<InMemoryCache>,
         state: Arc<State>,
         message: &Message,
         args: Vec<&str>,
@@ -43,7 +39,7 @@ impl Command for Help {
             None => self.info(),
         }.build_embed(Some("c-"));
 
-        http.create_message(message.channel_id)
+        state.http.create_message(message.channel_id)
             .embeds(&[embed])?
             .await?;
         Ok(())

@@ -5,8 +5,6 @@ use crate::{
     global::State,
 };
 use std::{error::Error, sync::Arc};
-use twilight_cache_inmemory::InMemoryCache;
-use twilight_http::Client;
 use twilight_model::channel::message::Message;
 
 /// This command is incredibly useful for sounding like the sloth from Zootopia.
@@ -22,13 +20,11 @@ pub struct Spacer;
 impl Command for Spacer {
     async fn execute(
         &self,
-        http: Arc<Client>,
-        _: Arc<InMemoryCache>,
-        _: Arc<State>,
+        state: Arc<State>,
         message: &Message,
         args: Vec<&str>,
     ) -> Result<(), Box<dyn Error + Send + Sync>> {
-        http.create_message(message.channel_id)
+        state.http.create_message(message.channel_id)
             .content(&args.join(" ").split("").collect::<Vec<&str>>().join(" "))?
             .await?;
         Ok(())

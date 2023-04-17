@@ -5,8 +5,6 @@ use crate::{
     global::State,
 };
 use std::{collections::HashMap, error::Error, sync::Arc};
-use twilight_cache_inmemory::InMemoryCache;
-use twilight_http::Client;
 use twilight_model::channel::message::Message;
 
 lazy_static::lazy_static! {
@@ -71,9 +69,7 @@ pub struct Unscramble;
 impl Command for Unscramble {
     async fn execute(
         &self,
-        http: Arc<Client>,
-        _: Arc<InMemoryCache>,
-        _: Arc<State>,
+        state: Arc<State>,
         message: &Message,
         args: Vec<&str>,
     ) -> Result<(), Box<dyn Error + Send + Sync>> {
@@ -85,7 +81,7 @@ impl Command for Unscramble {
             words.join(", ")
         };
 
-        http.create_message(message.channel_id)
+        state.http.create_message(message.channel_id)
             .content(&format!(
                 "**Unscrambling** `{}` with word length of {}\n{}",
                 args[0], length, output

@@ -5,8 +5,6 @@ use crate::{
     global::State,
 };
 use std::{error::Error, sync::Arc};
-use twilight_cache_inmemory::InMemoryCache;
-use twilight_http::Client;
 use twilight_model::channel::message::Message;
 
 /// Sorts a list of numbers / words in ascending / alphabetical order, numbers first. If a minus
@@ -24,9 +22,7 @@ pub struct Sort;
 impl Command for Sort {
     async fn execute(
         &self,
-        http: Arc<Client>,
-        _: Arc<InMemoryCache>,
-        _: Arc<State>,
+        state: Arc<State>,
         message: &Message,
         mut args: Vec<&str>,
     ) -> Result<(), Box<dyn Error + Send + Sync>> {
@@ -64,7 +60,7 @@ impl Command for Sort {
             .join(", ");
         output.push_str(&values);
 
-        http.create_message(message.channel_id)
+        state.http.create_message(message.channel_id)
             .content(&output)?
             .await?;
         Ok(())
