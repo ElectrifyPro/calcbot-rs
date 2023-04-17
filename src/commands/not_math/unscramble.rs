@@ -79,10 +79,10 @@ impl Command for Unscramble {
     ) -> Result<(), Box<dyn Error + Send + Sync>> {
         let length = args[1].parse::<usize>().unwrap_or(args[0].len());
         let words = unscramble(args[0], length);
-        let output = if words.len() > 0 {
-            words.join(", ")
-        } else {
+        let output = if words.is_empty() {
             "_no words found_".to_string()
+        } else {
+            words.join(", ")
         };
 
         http.create_message(message.channel_id)
