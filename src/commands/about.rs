@@ -13,7 +13,8 @@ use twilight_model::channel::message::Message;
 use twilight_util::builder::embed::EmbedBuilder;
 
 /// View information about CalcBot.
-#[derive(Info)]
+#[derive(Clone, Info)]
+#[info(category = "Miscellaneous")]
 pub struct About;
 
 #[async_trait]
@@ -24,6 +25,7 @@ impl Command for About {
         cache: Arc<InMemoryCache>,
         state: Arc<State>,
         message: &Message,
+        _: Vec<&str>,
     ) -> Result<(), Box<dyn Error + Send + Sync>> {
         let mut system = System::new_all();
         system.refresh_all();
@@ -48,8 +50,7 @@ impl Command for About {
         let embed = EmbedBuilder::new()
             .title("About me")
             .color(0x988bc2)
-            .description(format!(
-                "
+            .description(format!("
             <@{}> is being constantly developed by **{}**.
 
             Uptime: {}

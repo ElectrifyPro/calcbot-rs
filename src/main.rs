@@ -3,13 +3,28 @@ pub mod global;
 pub mod util;
 
 use dotenv::dotenv;
-use std::{env, error::Error, sync::Arc};
+use simple_logger::SimpleLogger;
+use std::{
+    env,
+    error::Error,
+    sync::Arc,
+    time::Instant,
+};
 use twilight_cache_inmemory::{InMemoryCache, ResourceType};
 use twilight_gateway::{Event, Intents, Shard, ShardId};
 use twilight_http::Client as HttpClient;
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn Error + Send + Sync>> {
+    SimpleLogger::new()
+        .with_module_level("rustls", log::LevelFilter::Warn)
+        .with_module_level("mio", log::LevelFilter::Warn)
+        .with_module_level("tokio_tungstenite", log::LevelFilter::Warn)
+        .with_module_level("tungstenite", log::LevelFilter::Warn)
+        .with_module_level("want", log::LevelFilter::Warn)
+        .init()
+        .unwrap();
+
     dotenv()?;
     let token = env::var("DISCORD_TOKEN")?;
 
@@ -25,7 +40,7 @@ async fn main() -> Result<(), Box<dyn Error + Send + Sync>> {
             .resource_types(ResourceType::USER_CURRENT | ResourceType::MESSAGE)
             .build(),
     );
-    let state = Arc::new(global::State::new());
+    let state = Arc::new(global::State::default());
 
     loop {
         let event = match shard.next_event().await {
@@ -58,15 +73,20 @@ async fn handle_event(
     state: Arc<global::State>,
 ) -> Result<(), Box<dyn Error + Send + Sync>> {
     match event {
-        Event::MessageCreate(msg) if msg.content == "!ping" => {
-            use commands::Command;
-            commands::help::Help
-                .execute(http, cache, state, &msg)
-                .await?;
+        Event::MessageCreate(msg) => {
+            if msg.content.starts_with("c-") {
+                let mut trimmed = msg.content[2..].split_whitespace().peekable();
+                let now = Instant::now();
+                match state.commands.find_command(&mut trimmed) {
+                    Some(cmd) => {
+                        cmd.execute(http, cache, state, &msg, trimmed.collect()).await?;
+                        log::info!("Command executed in {}ms: {}", now.elapsed().as_millis(), msg.content);
+                    },
+                    None => log::info!("Command not found ({}ms spent): {}", now.elapsed().as_millis(), msg.content),
+                }
+            }
         }
-        Event::Ready(_) => {
-            println!("Shard is ready");
-        }
+        Event::Ready(ready) => log::info!("Shard {} connected", ready.shard.unwrap_or(ShardId::new(0, 1))),
         _ => {}
     }
 

@@ -6,6 +6,7 @@ use syn::{
     parse_quote,
     Attribute,
     Expr,
+    ExprLit,
     Ident,
     ItemStruct,
     Lit,
@@ -49,6 +50,7 @@ impl Parse for KeyValuePairs {
 pub struct CommandInfo {
     pub name: Ident,
     pub description: String,
+    pub category: Option<TokenStream2>,
     pub aliases: Option<TokenStream2>,
     pub syntax: Option<TokenStream2>,
     pub examples: Option<TokenStream2>,
@@ -66,6 +68,7 @@ impl Parse for CommandInfo {
 
         let name = remaining.ident;
         let mut description = String::new();
+        let mut category = None;
         let mut aliases = None;
         let mut syntax = None;
         let mut examples = None;
@@ -96,18 +99,25 @@ impl Parse for CommandInfo {
                     let KeyValuePairs { pairs } = attr.parse_args()?;
                     for (ident, expr) in pairs {
                         let ident_name = ident.to_string();
-                        let mut expr_array = validate_expr_array(expr)?;
-                        match ident_name.as_str() {
-                            "aliases" => aliases = Some(quote! { &#expr_array }),
-                            "syntax" => syntax = Some(quote! { &#expr_array }),
-                            "examples" => examples = Some(quote! { &#expr_array }),
-                            "children" => {
-                                expr_array.elems.iter_mut().for_each(|elem| {
-                                    *elem = parse_quote! { Box::new(#elem) as Box<dyn crate::commands::Command> }
-                                });
-                                children = Some(quote! { vec!#expr_array });
-                            },
-                            _ => return Err(syn::Error::new_spanned(ident, format!("unknown attribute `{}` in `info`", ident_name))),
+                        if ident_name.as_str() == "category" {
+                            let Expr::Lit(ExprLit { lit: Lit::Str(lit_str), .. }) = expr else {
+                                return Err(syn::Error::new_spanned(expr, "expected a string literal here"));
+                            };
+                            category = Some(quote! { #lit_str });
+                        } else {
+                            let mut expr_array = validate_expr_array(expr)?;
+                            match ident_name.as_str() {
+                                "aliases" => aliases = Some(quote! { &#expr_array }),
+                                "syntax" => syntax = Some(quote! { &#expr_array }),
+                                "examples" => examples = Some(quote! { &#expr_array }),
+                                "children" => {
+                                    expr_array.elems.iter_mut().for_each(|elem| {
+                                        *elem = parse_quote! { Box::new(#elem) as Box<dyn crate::commands::Command> }
+                                    });
+                                    children = Some(quote! { crate::commands::CommandGroup::new(vec!#expr_array) });
+                                },
+                                _ => return Err(syn::Error::new_spanned(ident, format!("unknown attribute `{}` in `info`", ident_name))),
+                            }
                         }
                     }
                 },
@@ -118,10 +128,11 @@ impl Parse for CommandInfo {
         Ok(CommandInfo {
             name,
             description,
+            category,
             aliases,
             syntax,
             examples,
-            children: children.or(Some(quote! { vec![] })),
+            children: children.or(Some(quote! { crate::commands::CommandGroup::new(vec![]) })),
         })
     }
 }
