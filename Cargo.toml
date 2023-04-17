@@ -20,3 +20,7 @@ twilight-http = "0.15.1"
 twilight-model = "0.15.1"
 twilight-util = { version = "0.15.1", features = ["builder"] }
 simple_logger = "4.1.0"
+regex = "1.7.3"
+getrandom = "0.2.9"
+serde_json = "1.0.96"
+lazy_static = "1.4.0"

@@ -26,6 +26,7 @@ impl State {
             commands: CommandGroup::new(vec![
                 Box::new(commands::about::About),
                 Box::new(commands::help::Help),
+                Box::new(commands::not_math::NotMath),
             ]),
         }
     }
@@ -66,9 +67,12 @@ impl State {
 
         for (category, commands) in categories {
             embed = embed.field(
-                EmbedFieldBuilder::new(format!("{} {}", category_emoji(category), category), format!("`{}`", commands.join("`, `")))
-                    .inline()
-                    .build(),
+                EmbedFieldBuilder::new(
+                    format!("{} {}", category_emoji(category), category),
+                    format!("`{}`", commands.join("`, `")),
+                )
+                .inline()
+                .build(),
             );
         }
 

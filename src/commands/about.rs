@@ -1,10 +1,10 @@
+use async_trait::async_trait;
 use calcbot_attrs::Info;
 use crate::{
     commands::Command,
     global::State,
     util::format_duration,
 };
-use async_trait::async_trait;
 use std::{env, error::Error, num::NonZeroU64, sync::Arc};
 use sysinfo::{Pid, ProcessExt, System, SystemExt};
 use twilight_cache_inmemory::InMemoryCache;

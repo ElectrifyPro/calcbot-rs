@@ -9,23 +9,27 @@ use twilight_cache_inmemory::InMemoryCache;
 use twilight_http::Client;
 use twilight_model::channel::message::Message;
 
-/// View a list of available commands.
+/// Get your own custom brand name for free, although it has no legal meaning!
 #[derive(Clone, Info)]
-#[info(aliases = ["commands", "cmds", "list", "cmd", "l", "c"])]
-pub struct Commands;
+#[info(
+    aliases = ["trademark", "tm"],
+    syntax = ["<string>"],
+    examples = ["The Perfect Bite"],
+)]
+pub struct Trademark;
 
 #[async_trait]
-impl Command for Commands {
+impl Command for Trademark {
     async fn execute(
         &self,
         http: Arc<Client>,
         _: Arc<InMemoryCache>,
-        state: Arc<State>,
+        _: Arc<State>,
         message: &Message,
-        _: Vec<&str>,
+        args: Vec<&str>,
     ) -> Result<(), Box<dyn Error + Send + Sync>> {
         http.create_message(message.channel_id)
-            .embeds(&[state.build_commands_embed()])?
+            .content(&format!("{}:tm:", args.join(" ")))?
             .await?;
         Ok(())
     }

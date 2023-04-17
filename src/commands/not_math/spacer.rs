@@ -9,23 +9,27 @@ use twilight_cache_inmemory::InMemoryCache;
 use twilight_http::Client;
 use twilight_model::channel::message::Message;
 
-/// View a list of available commands.
+/// This command is incredibly useful for sounding like the sloth from Zootopia.
 #[derive(Clone, Info)]
-#[info(aliases = ["commands", "cmds", "list", "cmd", "l", "c"])]
-pub struct Commands;
+#[info(
+    aliases = ["spacer", "space", "sp"],
+    syntax = ["<string>"],
+    examples = ["patience, mortal", "he is the captain now"],
+)]
+pub struct Spacer;
 
 #[async_trait]
-impl Command for Commands {
+impl Command for Spacer {
     async fn execute(
         &self,
         http: Arc<Client>,
         _: Arc<InMemoryCache>,
-        state: Arc<State>,
+        _: Arc<State>,
         message: &Message,
-        _: Vec<&str>,
+        args: Vec<&str>,
     ) -> Result<(), Box<dyn Error + Send + Sync>> {
         http.create_message(message.channel_id)
-            .embeds(&[state.build_commands_embed()])?
+            .content(&args.join(" ").split("").collect::<Vec<&str>>().join(" "))?
             .await?;
         Ok(())
     }

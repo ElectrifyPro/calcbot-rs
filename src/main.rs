@@ -4,12 +4,7 @@ pub mod util;
 
 use dotenv::dotenv;
 use simple_logger::SimpleLogger;
-use std::{
-    env,
-    error::Error,
-    sync::Arc,
-    time::Instant,
-};
+use std::{env, error::Error, sync::Arc, time::Instant};
 use twilight_cache_inmemory::{InMemoryCache, ResourceType};
 use twilight_gateway::{Event, Intents, Shard, ShardId};
 use twilight_http::Client as HttpClient;
@@ -79,14 +74,26 @@ async fn handle_event(
                 let now = Instant::now();
                 match state.commands.find_command(&mut trimmed) {
                     Some(cmd) => {
-                        cmd.execute(http, cache, state, &msg, trimmed.collect()).await?;
-                        log::info!("Command executed in {}ms: {}", now.elapsed().as_millis(), msg.content);
-                    },
-                    None => log::info!("Command not found ({}ms spent): {}", now.elapsed().as_millis(), msg.content),
+                        cmd.execute(http, cache, state, &msg, trimmed.collect())
+                            .await?;
+                        log::info!(
+                            "Command executed in {}ms: {}",
+                            now.elapsed().as_millis(),
+                            msg.content
+                        );
+                    }
+                    None => log::info!(
+                        "Command not found ({}ms spent): {}",
+                        now.elapsed().as_millis(),
+                        msg.content
+                    ),
                 }
             }
         }
-        Event::Ready(ready) => log::info!("Shard {} connected", ready.shard.unwrap_or(ShardId::new(0, 1))),
+        Event::Ready(ready) => log::info!(
+            "Shard {} connected",
+            ready.shard.unwrap_or(ShardId::new(0, 1))
+        ),
         _ => {}
     }
 

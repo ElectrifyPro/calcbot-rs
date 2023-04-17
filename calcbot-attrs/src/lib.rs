@@ -70,6 +70,23 @@ pub fn command(item: TokenStream) -> TokenStream {
     let item = parse_macro_input!(item as ItemStruct);
     let name = item.ident;
     quote! {
-        impl crate::commands::Command for #name {}
+        #[async_trait::async_trait]
+        impl crate::commands::Command for #name {
+            async fn execute(
+                &self,
+                http: Arc<twilight_http::Client>,
+                _: Arc<twilight_cache_inmemory::InMemoryCache>,
+                _: Arc<crate::global::State>,
+                message: &twilight_model::channel::message::Message,
+                _: Vec<&str>,
+            ) -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
+                // send the help embed by default
+                let embed = self.info().build_embed(Some("c-"));
+                http.create_message(message.channel_id)
+                    .embeds(&[embed])?
+                    .await?;
+                Ok(())
+            }
+        }
     }.into()
 }

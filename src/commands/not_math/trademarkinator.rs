@@ -9,23 +9,27 @@ use twilight_cache_inmemory::InMemoryCache;
 use twilight_http::Client;
 use twilight_model::channel::message::Message;
 
-/// View a list of available commands.
+/// I don't know why you would want to make the word "The" your custom brand name, but you do you.
 #[derive(Clone, Info)]
-#[info(aliases = ["commands", "cmds", "list", "cmd", "l", "c"])]
-pub struct Commands;
+#[info(
+    aliases = ["trademarkinator", "tmor"],
+    syntax = ["<string>"],
+    examples = ["The Perfect Bite"],
+)]
+pub struct Trademarkinator;
 
 #[async_trait]
-impl Command for Commands {
+impl Command for Trademarkinator {
     async fn execute(
         &self,
         http: Arc<Client>,
         _: Arc<InMemoryCache>,
-        state: Arc<State>,
+        _: Arc<State>,
         message: &Message,
-        _: Vec<&str>,
+        args: Vec<&str>,
     ) -> Result<(), Box<dyn Error + Send + Sync>> {
         http.create_message(message.channel_id)
-            .embeds(&[state.build_commands_embed()])?
+            .content(&format!("{}:tm:", args.join(":tm: ")))?
             .await?;
         Ok(())
     }

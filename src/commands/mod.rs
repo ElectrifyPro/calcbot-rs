@@ -1,5 +1,6 @@
 pub mod about;
 pub mod help;
+pub mod not_math;
 
 use super::global::State;
 use async_trait::async_trait;
@@ -16,7 +17,7 @@ pub fn format_code_block(prefix: &str, default_alias: &str, strings: &[&str]) ->
         "```\n{}\n```",
         strings
             .iter()
-            .map(|string| format!("{}{}{}", prefix, default_alias, string))
+            .map(|string| format!("{}{} {}", prefix, default_alias, string))
             .collect::<Vec<_>>()
             .join("\n")
     )
@@ -113,24 +114,40 @@ impl CommandInfo {
     /// - `{setting}`: if this command is a setting, the value of the setting
     pub fn build_embed(&self, prefix: Option<&str>) -> Embed {
         let prefix = prefix.unwrap_or("");
-        let mut embed = EmbedBuilder::new()
-            .title(self.name)
-            .color(0x66d2e8)
-            .field(EmbedFieldBuilder::new("Description", self.description.replace("{prefix}", prefix)));
+        let mut embed =
+            EmbedBuilder::new()
+                .title(self.name)
+                .color(0x66d2e8)
+                .field(EmbedFieldBuilder::new(
+                    "Description",
+                    self.description.replace("{prefix}", prefix),
+                ));
 
-        if let Some(syntax) = self.syntax.map(|syntax| format_code_block(prefix, self.default_alias(), syntax)) {
+        if let Some(syntax) = self
+            .syntax
+            .map(|syntax| format_code_block(prefix, self.default_alias(), syntax))
+        {
             embed = embed.field(EmbedFieldBuilder::new("Syntax", syntax));
         }
 
-        if let Some(examples) = self.examples.map(|examples| format_code_block(prefix, self.default_alias(), examples)) {
+        if let Some(examples) = self
+            .examples
+            .map(|examples| format_code_block(prefix, self.default_alias(), examples))
+        {
             embed = embed.field(EmbedFieldBuilder::new("Examples", examples));
         }
 
         if let Some(aliases) = self.aliases {
             let shortest = aliases.iter().min_by_key(|s| s.len()).unwrap();
             embed = embed
-                .field(EmbedFieldBuilder::new("Shorthand", format!("`{}{}`", prefix, shortest)))
-                .field(EmbedFieldBuilder::new("Aliases", format!("`{}`", aliases.join("`, `"))));
+                .field(EmbedFieldBuilder::new(
+                    "Shorthand",
+                    format!("`{}{}`", prefix, shortest),
+                ))
+                .field(EmbedFieldBuilder::new(
+                    "Aliases",
+                    format!("`{}`", aliases.join("`, `")),
+                ));
         }
 
         if !self.children.commands.is_empty() {
@@ -140,7 +157,7 @@ impl CommandInfo {
                 .iter()
                 .map(|child| format!("`{}`", child.info().default_alias()))
                 .collect::<Vec<_>>()
-                .join("\n");
+                .join(", ");
             embed = embed.field(EmbedFieldBuilder::new("Children commands", children));
         }
 

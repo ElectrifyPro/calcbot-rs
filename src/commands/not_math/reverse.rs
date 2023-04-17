@@ -9,23 +9,27 @@ use twilight_cache_inmemory::InMemoryCache;
 use twilight_http::Client;
 use twilight_model::channel::message::Message;
 
-/// View a list of available commands.
+/// No one will ever figure out your password now!
 #[derive(Clone, Info)]
-#[info(aliases = ["commands", "cmds", "list", "cmd", "l", "c"])]
-pub struct Commands;
+#[info(
+    aliases = ["reverse", "rev"],
+    syntax = ["<string>"],
+    examples = ["!yadhtrib yppah"],
+)]
+pub struct Reverse;
 
 #[async_trait]
-impl Command for Commands {
+impl Command for Reverse {
     async fn execute(
         &self,
         http: Arc<Client>,
         _: Arc<InMemoryCache>,
-        state: Arc<State>,
+        _: Arc<State>,
         message: &Message,
-        _: Vec<&str>,
+        args: Vec<&str>,
     ) -> Result<(), Box<dyn Error + Send + Sync>> {
         http.create_message(message.channel_id)
-            .embeds(&[state.build_commands_embed()])?
+            .content(&args.join(" ").chars().rev().collect::<String>())?
             .await?;
         Ok(())
     }

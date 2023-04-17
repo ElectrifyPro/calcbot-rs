@@ -1,12 +1,11 @@
 pub mod commands;
 
+use async_trait::async_trait;
 use calcbot_attrs::Info;
-use commands::Commands;
 use crate::{
     commands::{Command, Info},
     global::State,
 };
-use async_trait::async_trait;
 use std::{error::Error, sync::Arc};
 use twilight_cache_inmemory::InMemoryCache;
 use twilight_http::Client;
@@ -23,7 +22,7 @@ use twilight_model::channel::message::Message;
     aliases = ["help", "h"],
     syntax = ["[command]"],
     examples = ["calculate stats"],
-    children = [Commands],
+    children = [commands::Commands],
 )]
 pub struct Help;
 
