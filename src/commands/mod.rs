@@ -62,6 +62,16 @@ impl CommandGroup {
             Some(command.clone_box())
         }
     }
+
+    /// Count the number of commands in this group.
+    pub fn count(&self) -> usize {
+        self.commands.len()
+            + self
+                .commands
+                .iter()
+                .map(|c| c.info().children.count())
+                .sum::<usize>()
+    }
 }
 
 /// Represents a command's metadata. This data is shown when the user runs the help command for

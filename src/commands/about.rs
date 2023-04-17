@@ -56,12 +56,14 @@ impl Command for About {
             Uptime: {}
             Shard CPU usage: {}%
             Shard memory usage: {} MB
+            Commands: {}
             ",
                 bot_id,
                 author,
                 format_duration(state.start_time.elapsed()),
                 process.cpu_usage(),
-                process.memory() / 1024 / 1024
+                process.memory() / 1024 / 1024,
+                state.commands.count(),
             ))
             .build();
 
