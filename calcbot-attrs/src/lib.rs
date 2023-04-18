@@ -74,7 +74,8 @@ pub fn command(item: TokenStream) -> TokenStream {
         impl crate::commands::Command for #name {
             async fn execute(
                 &self,
-                state: Arc<crate::global::State>,
+                state: std::sync::Arc<crate::global::State>,
+                _: std::sync::Arc<tokio::sync::Mutex<crate::database::Database>>,
                 message: &twilight_model::channel::message::Message,
                 _: Vec<&str>,
             ) -> Result<(), Box<dyn std::error::Error + Send + Sync>> {

@@ -2,9 +2,11 @@ use async_trait::async_trait;
 use calcbot_attrs::Info;
 use crate::{
     commands::Command,
+    database::Database,
     global::State,
 };
 use std::{error::Error, sync::Arc};
+use tokio::sync::Mutex;
 use twilight_model::channel::message::Message;
 
 /// I don't know why you would want to make the word "The" your custom brand name, but you do you.
@@ -21,6 +23,7 @@ impl Command for Trademarkinator {
     async fn execute(
         &self,
         state: Arc<State>,
+        _: Arc<Mutex<Database>>,
         message: &Message,
         args: Vec<&str>,
     ) -> Result<(), Box<dyn Error + Send + Sync>> {

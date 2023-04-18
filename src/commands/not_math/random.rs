@@ -2,10 +2,12 @@ use async_trait::async_trait;
 use calcbot_attrs::Info;
 use crate::{
     commands::Command,
+    database::Database,
     global::State,
 };
 use getrandom::getrandom;
 use std::{error::Error, sync::Arc};
+use tokio::sync::Mutex;
 use twilight_model::channel::message::Message;
 
 /// Generates the random integer.
@@ -33,6 +35,7 @@ impl Command for Random {
     async fn execute(
         &self,
         state: Arc<State>,
+        _: Arc<Mutex<Database>>,
         message: &Message,
         args: Vec<&str>,
     ) -> Result<(), Box<dyn Error + Send + Sync>> {

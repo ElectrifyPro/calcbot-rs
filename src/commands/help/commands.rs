@@ -2,9 +2,11 @@ use async_trait::async_trait;
 use calcbot_attrs::Info;
 use crate::{
     commands::Command,
+    database::Database,
     global::State,
 };
 use std::{error::Error, sync::Arc};
+use tokio::sync::Mutex;
 use twilight_model::channel::message::Message;
 
 /// View a list of available commands.
@@ -17,6 +19,7 @@ impl Command for Commands {
     async fn execute(
         &self,
         state: Arc<State>,
+        _: Arc<Mutex<Database>>,
         message: &Message,
         _: Vec<&str>,
     ) -> Result<(), Box<dyn Error + Send + Sync>> {

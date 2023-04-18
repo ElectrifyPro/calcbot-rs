@@ -2,9 +2,11 @@ use async_trait::async_trait;
 use calcbot_attrs::Info;
 use crate::{
     commands::Command,
+    database::Database,
     global::State,
 };
 use std::{error::Error, sync::Arc};
+use tokio::sync::Mutex;
 use twilight_model::channel::message::Message;
 
 /// Sorts a list of numbers / words in ascending / alphabetical order, numbers first. If a minus
@@ -23,6 +25,7 @@ impl Command for Sort {
     async fn execute(
         &self,
         state: Arc<State>,
+        _: Arc<Mutex<Database>>,
         message: &Message,
         mut args: Vec<&str>,
     ) -> Result<(), Box<dyn Error + Send + Sync>> {

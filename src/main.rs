@@ -1,11 +1,15 @@
 pub mod commands;
+pub mod database;
 pub mod global;
+pub mod handler;
 pub mod util;
 
+use database::Database;
 use dotenv::dotenv;
 use global::State;
 use simple_logger::SimpleLogger;
-use std::{env, error::Error, sync::Arc, time::Instant};
+use std::{env, error::Error, sync::Arc};
+use tokio::sync::Mutex;
 use twilight_gateway::{Event, Intents, Shard, ShardId};
 
 #[tokio::main]
@@ -29,6 +33,7 @@ async fn main() -> Result<(), Box<dyn Error + Send + Sync>> {
     let mut shard = Shard::new(ShardId::ONE, token.clone(), intents);
 
     let state = Arc::new(State::new(token));
+    let database = Arc::new(Mutex::new(Database::new()));
 
     loop {
         let event = match shard.next_event().await {
@@ -46,39 +51,21 @@ async fn main() -> Result<(), Box<dyn Error + Send + Sync>> {
         tokio::spawn(handle_event(
             event,
             Arc::clone(&state),
+            Arc::clone(&database),
         ));
     }
 
     Ok(())
 }
 
+/// Handles events relevant to the bot, delegating each event to the appropriate handler.
 async fn handle_event(
     event: Event,
-    state: Arc<global::State>,
+    state: Arc<State>,
+    database: Arc<Mutex<Database>>,
 ) -> Result<(), Box<dyn Error + Send + Sync>> {
     match event {
-        Event::MessageCreate(msg) => {
-            if msg.content.starts_with("c-") {
-                let mut trimmed = msg.content[2..].split_whitespace().peekable();
-                let now = Instant::now();
-                match state.commands.find_command(&mut trimmed) {
-                    Some(cmd) => {
-                        cmd.execute(state, &msg, trimmed.collect())
-                            .await?;
-                        log::info!(
-                            "Command executed in {}ms: {}",
-                            now.elapsed().as_millis(),
-                            msg.content
-                        );
-                    }
-                    None => log::info!(
-                        "Command not found ({}ms spent): {}",
-                        now.elapsed().as_millis(),
-                        msg.content
-                    ),
-                }
-            }
-        }
+        Event::MessageCreate(msg) => handler::message_create(*msg, state, database).await?,
         Event::Ready(ready) => log::info!(
             "Shard {} connected",
             ready.shard.unwrap_or(ShardId::new(0, 1))

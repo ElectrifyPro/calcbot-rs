@@ -2,11 +2,13 @@ use async_trait::async_trait;
 use calcbot_attrs::Info;
 use crate::{
     commands::Command,
+    database::Database,
     global::State,
     util::format_duration,
 };
 use std::{env, error::Error, num::NonZeroU64, sync::Arc};
 use sysinfo::{Pid, ProcessExt, System, SystemExt};
+use tokio::sync::Mutex;
 use twilight_model::channel::message::Message;
 use twilight_util::builder::embed::EmbedBuilder;
 
@@ -20,6 +22,7 @@ impl Command for About {
     async fn execute(
         &self,
         state: Arc<State>,
+        _: Arc<Mutex<Database>>,
         message: &Message,
         _: Vec<&str>,
     ) -> Result<(), Box<dyn Error + Send + Sync>> {

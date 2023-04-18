@@ -4,9 +4,11 @@ use async_trait::async_trait;
 use calcbot_attrs::Info;
 use crate::{
     commands::{Command, Info},
+    database::Database,
     global::State,
 };
 use std::{error::Error, sync::Arc};
+use tokio::sync::Mutex;
 use twilight_model::channel::message::Message;
 
 /// Get information on how to use a command. For example, to learn about `{prefix}calculate stats`,
@@ -29,6 +31,7 @@ impl Command for Help {
     async fn execute(
         &self,
         state: Arc<State>,
+        _: Arc<Mutex<Database>>,
         message: &Message,
         args: Vec<&str>,
     ) -> Result<(), Box<dyn Error + Send + Sync>> {

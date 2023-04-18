@@ -13,7 +13,6 @@ pub mod unscramble;
 
 use calcbot_attrs::{Command, Info};
 use crate::commands::Info;
-use std::sync::Arc;
 
 /// A bunch of non-math related things. How dare you; go study for APUSH or something.
 #[derive(Clone, Command, Info)]
