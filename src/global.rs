@@ -25,11 +25,7 @@ impl State {
     pub fn new(token: String) -> Self {
         Self {
             start_time: Instant::now(),
-            commands: CommandGroup::new(vec![
-                Box::new(commands::about::About),
-                Box::new(commands::help::Help),
-                Box::new(commands::not_math::NotMath),
-            ]),
+            commands: commands::root(),
             http: HttpClient::new(token),
             cache: InMemoryCache::builder()
                 .resource_types(ResourceType::USER_CURRENT | ResourceType::MESSAGE)

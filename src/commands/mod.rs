@@ -210,3 +210,14 @@ pub trait Info {
     /// Returns the command's metadata.
     fn info(&self) -> CommandInfo;
 }
+
+/// Returns the root command group.
+pub fn root() -> CommandGroup {
+    CommandGroup {
+        commands: vec![
+            Box::new(about::About),
+            Box::new(help::Help),
+            Box::new(not_math::NotMath),
+        ],
+    }
+}
