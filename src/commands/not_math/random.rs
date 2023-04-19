@@ -27,6 +27,7 @@ fn random(min: u32, max: u32) -> u32 {
     aliases = ["random", "rand", "r"],
     syntax = ["<max>", "<min> <max>"],
     examples = ["11", "4 11"],
+    args = [u32, Option<u32>],
 )]
 pub struct Random;
 
@@ -39,10 +40,9 @@ impl Command for Random {
         message: &Message,
         args: Vec<&str>,
     ) -> Result<(), Box<dyn Error + Send + Sync>> {
-        let (min, max) = match args.len() {
-            1 => (0, args[0].parse::<u32>()?),
-            2 => (args[0].parse::<u32>()?, args[1].parse::<u32>()?),
-            _ => return Err("Invalid number of arguments".into()),
+        let (min, max) = match parse_args(args)? {
+            (a, Some(b)) => (a, b),
+            (a, None) => (0, a),
         };
         let num = random(min, max + 1);
         state.http.create_message(message.channel_id)

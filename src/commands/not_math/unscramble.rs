@@ -64,6 +64,7 @@ fn unscramble(letters: &str, length: usize) -> Vec<&'static str> {
     aliases = ["unscramble", "unsc", "uns"],
     syntax = ["<word> [word length]"],
     examples = ["itonnnive"],
+    args = [&str, Option<usize>],
 )]
 pub struct Unscramble;
 
@@ -76,8 +77,10 @@ impl Command for Unscramble {
         message: &Message,
         args: Vec<&str>,
     ) -> Result<(), Box<dyn Error + Send + Sync>> {
-        let length = args[1].parse::<usize>().unwrap_or(args[0].len());
-        let words = unscramble(args[0], length);
+        let (word, length) = parse_args(args)?;
+        let length = length.unwrap_or(word.len());
+
+        let words = unscramble(word, length);
         let output = if words.is_empty() {
             "_no words found_".to_string()
         } else {
@@ -87,7 +90,7 @@ impl Command for Unscramble {
         state.http.create_message(message.channel_id)
             .content(&format!(
                 "**Unscrambling** `{}` with word length of {}\n{}",
-                args[0], length, output
+                word, length, output
             ))?
             .await?;
         Ok(())
