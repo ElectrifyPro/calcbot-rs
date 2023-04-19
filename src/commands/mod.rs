@@ -1,5 +1,6 @@
 pub mod about;
 pub mod help;
+pub mod link;
 pub mod not_math;
 
 use super::{database::Database, global::State};
@@ -217,6 +218,7 @@ pub fn root() -> CommandGroup {
         commands: vec![
             Box::new(about::About),
             Box::new(help::Help),
+            Box::new(link::Link),
             Box::new(not_math::NotMath),
         ],
     }
