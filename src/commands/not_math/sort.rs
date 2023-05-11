@@ -27,8 +27,9 @@ impl Command for Sort {
         state: Arc<State>,
         _: Arc<Mutex<Database>>,
         message: &Message,
-        mut args: Vec<&str>,
+        raw_input: &str,
     ) -> Result<(), Box<dyn Error + Send + Sync>> {
+        let mut args = raw_input.split_whitespace().collect::<Vec<_>>();
         let descending = args[0] == "-";
         if descending {
             args.remove(0);

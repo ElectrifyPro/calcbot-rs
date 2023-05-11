@@ -13,9 +13,19 @@ lto = true
 path = "calcbot-attrs"
 
 [dependencies]
+ariadne = "0.2.0"
 async-trait = "0.1.68"
+cas-eval = { git = "https://github.com/ElectrifyPro/cas-rs.git", branch = "main" }
+cas-parser = { git = "https://github.com/ElectrifyPro/cas-rs.git", branch = "main" }
 dotenv = "0.15.0"
+getrandom = "0.2.9"
+lazy_static = "1.4.0"
 log = "0.4.17"
+mysql_async = "0.32.1"
+regex = "1.7.3"
+serde_json = "1.0.96"
+simple_logger = "4.1.0"
+strip-ansi-escapes = "0.1.1"
 sysinfo = "0.28.4"
 tokio = { version = "1.27.0", default-features = false, features = ["macros", "rt-multi-thread"] }
 twilight-cache-inmemory = "0.15.1"
@@ -23,9 +33,3 @@ twilight-gateway = "0.15.1"
 twilight-http = "0.15.1"
 twilight-model = "0.15.1"
 twilight-util = { version = "0.15.1", features = ["builder"] }
-simple_logger = "4.1.0"
-regex = "1.7.3"
-getrandom = "0.2.9"
-serde_json = "1.0.96"
-lazy_static = "1.4.0"
-mysql_async = "0.32.1"

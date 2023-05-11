@@ -25,10 +25,10 @@ impl Command for Spacer {
         state: Arc<State>,
         _: Arc<Mutex<Database>>,
         message: &Message,
-        args: Vec<&str>,
+        raw_input: &str,
     ) -> Result<(), Box<dyn Error + Send + Sync>> {
         state.http.create_message(message.channel_id)
-            .content(&args.join(" ").split("").collect::<Vec<&str>>().join(" "))?
+            .content(&raw_input.split("").collect::<Vec<&str>>().join(" "))?
             .await?;
         Ok(())
     }

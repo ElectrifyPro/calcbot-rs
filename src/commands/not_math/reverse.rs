@@ -25,10 +25,10 @@ impl Command for Reverse {
         state: Arc<State>,
         _: Arc<Mutex<Database>>,
         message: &Message,
-        args: Vec<&str>,
+        raw_input: &str,
     ) -> Result<(), Box<dyn Error + Send + Sync>> {
         state.http.create_message(message.channel_id)
-            .content(&args.join(" ").chars().rev().collect::<String>())?
+            .content(&raw_input.chars().rev().collect::<String>())?
             .await?;
         Ok(())
     }

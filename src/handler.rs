@@ -32,8 +32,15 @@ pub async fn message_create(
         let now = Instant::now();
         match state.commands.find_command(&mut trimmed) {
             Some(cmd) => {
-                cmd.execute(state, database, &msg, trimmed.collect())
-                    .await?;
+                let raw_input = trimmed.peek()
+                    .map(|s| {
+                        // trimmed is a view into msg.content, so we can find the start of the
+                        // arguments with some pointer arithmetic
+                        let byte = s.as_ptr() as usize - msg.content.as_ptr() as usize;
+                        &msg.content[byte..]
+                    })
+                    .unwrap_or_default();
+                cmd.execute(state, database, &msg, raw_input).await?;
                 log::info!(
                     "Command executed in {}ms: {}",
                     now.elapsed().as_millis(),

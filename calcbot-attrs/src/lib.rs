@@ -58,7 +58,7 @@ use syn::{parse_macro_input, ItemStruct};
 ///         _: Arc<State>,
 ///         _: Arc<Mutex<Database>>,
 ///         _: &Message,
-///         _: Vec<&str>,
+///         _: &str,
 ///     ) -> Result<(), Box<dyn Error + Send + Sync>> {
 ///         let (a, b, c) = parse_args(args)?;
 ///         Ok(())
@@ -119,7 +119,7 @@ pub fn command(item: TokenStream) -> TokenStream {
                 state: std::sync::Arc<crate::global::State>,
                 _: std::sync::Arc<tokio::sync::Mutex<crate::database::Database>>,
                 message: &twilight_model::channel::message::Message,
-                _: Vec<&str>,
+                _: &str,
             ) -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
                 // send the help embed by default
                 let embed = self.info().build_embed(Some("c-"));

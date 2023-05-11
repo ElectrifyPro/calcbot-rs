@@ -25,10 +25,10 @@ impl Command for RegisteredTrademark {
         state: Arc<State>,
         _: Arc<Mutex<Database>>,
         message: &Message,
-        args: Vec<&str>,
+        raw_input: &str,
     ) -> Result<(), Box<dyn Error + Send + Sync>> {
         state.http.create_message(message.channel_id)
-            .content(&format!("{}:registered:", args.join(" ")))?
+            .content(&format!("{}:registered:", raw_input))?
             .await?;
         Ok(())
     }

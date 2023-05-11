@@ -38,9 +38,9 @@ impl Command for Random {
         state: Arc<State>,
         _: Arc<Mutex<Database>>,
         message: &Message,
-        args: Vec<&str>,
+        raw_input: &str,
     ) -> Result<(), Box<dyn Error + Send + Sync>> {
-        let (min, max) = match parse_args(args)? {
+        let (min, max) = match parse_args(raw_input.split_whitespace().collect())? {
             (a, Some(b)) => (a, b),
             (a, None) => (0, a),
         };

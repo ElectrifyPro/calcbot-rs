@@ -33,10 +33,10 @@ impl Command for Help {
         state: Arc<State>,
         _: Arc<Mutex<Database>>,
         message: &Message,
-        args: Vec<&str>,
+        raw_input: &str,
     ) -> Result<(), Box<dyn Error + Send + Sync>> {
         // extract the path to the command the user wants help with
-        let mut path = args.into_iter().peekable();
+        let mut path = raw_input.split_whitespace().peekable();
         let embed = match state.commands.find_command(&mut path) {
             Some(cmd) => cmd.info(),
             None => self.info(),

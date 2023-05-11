@@ -11,7 +11,7 @@ use twilight_model::channel::message::Message;
 
 /// View a list of available commands.
 #[derive(Clone, Info)]
-#[info(aliases = ["commands", "cmds", "list", "cmd", "l", "c"])]
+#[info(aliases = ["commands", "cmds", "list", "cmd", "l"])]
 pub struct Commands;
 
 #[async_trait]
@@ -21,7 +21,7 @@ impl Command for Commands {
         state: Arc<State>,
         _: Arc<Mutex<Database>>,
         message: &Message,
-        _: Vec<&str>,
+        _: &str,
     ) -> Result<(), Box<dyn Error + Send + Sync>> {
         state.http.create_message(message.channel_id)
             .embeds(&[state.build_commands_embed()])?

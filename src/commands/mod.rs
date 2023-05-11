@@ -1,4 +1,5 @@
 pub mod about;
+pub mod calculate;
 pub mod help;
 pub mod link;
 pub mod not_math;
@@ -185,7 +186,7 @@ pub trait Command: CommandClone + Info + Send + Sync {
         state: Arc<State>,
         database: Arc<Mutex<Database>>,
         message: &Message,
-        args: Vec<&str>,
+        raw_input: &str,
     ) -> Result<(), Box<dyn Error + Send + Sync>>;
 }
 
@@ -217,6 +218,7 @@ pub fn root() -> CommandGroup {
     CommandGroup {
         commands: vec![
             Box::new(about::About),
+            Box::new(calculate::Calculate),
             Box::new(help::Help),
             Box::new(link::Link),
             Box::new(not_math::NotMath),

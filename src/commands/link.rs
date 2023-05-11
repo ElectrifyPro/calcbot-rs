@@ -22,7 +22,7 @@ impl Command for Link {
         state: Arc<State>,
         _: Arc<Mutex<Database>>,
         message: &Message,
-        _: Vec<&str>,
+        _: &str,
     ) -> Result<(), Box<dyn Error + Send + Sync>> {
         let embed = EmbedBuilder::new()
             .title("Links")

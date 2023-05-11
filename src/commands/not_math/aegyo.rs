@@ -31,10 +31,9 @@ impl Command for Aegyo {
         state: Arc<State>,
         _: Arc<Mutex<Database>>,
         message: &Message,
-        args: Vec<&str>,
+        raw_input: &str,
     ) -> Result<(), Box<dyn Error + Send + Sync>> {
-        let input = args.join(" ");
-        let replaced_upper = REGEX_UPPER.replace_all(&input, "W");
+        let replaced_upper = REGEX_UPPER.replace_all(&raw_input, "W");
         let replaced_lower = REGEX_LOWER.replace_all(&replaced_upper, "w");
         state.http.create_message(message.channel_id)
             .content(&replaced_lower)?

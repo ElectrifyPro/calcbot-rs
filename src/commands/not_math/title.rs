@@ -41,9 +41,10 @@ impl Command for Title {
         state: Arc<State>,
         _: Arc<Mutex<Database>>,
         message: &Message,
-        args: Vec<&str>,
+        raw_input: &str,
     ) -> Result<(), Box<dyn Error + Send + Sync>> {
-        let content = args
+        let content = raw_input
+            .split_whitespace()
             .into_iter()
             .enumerate()
             .map(|(i, word)| {

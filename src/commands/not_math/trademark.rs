@@ -25,10 +25,10 @@ impl Command for Trademark {
         state: Arc<State>,
         _: Arc<Mutex<Database>>,
         message: &Message,
-        args: Vec<&str>,
+        raw_input: &str,
     ) -> Result<(), Box<dyn Error + Send + Sync>> {
         state.http.create_message(message.channel_id)
-            .content(&format!("{}:tm:", args.join(" ")))?
+            .content(&format!("{}:tm:", raw_input))?
             .await?;
         Ok(())
     }

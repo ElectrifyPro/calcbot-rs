@@ -75,9 +75,9 @@ impl Command for Unscramble {
         state: Arc<State>,
         _: Arc<Mutex<Database>>,
         message: &Message,
-        args: Vec<&str>,
+        raw_input: &str,
     ) -> Result<(), Box<dyn Error + Send + Sync>> {
-        let (word, length) = parse_args(args)?;
+        let (word, length) = parse_args(raw_input.split_whitespace().collect::<Vec<_>>())?;
         let length = length.unwrap_or(word.len());
 
         let words = unscramble(word, length);

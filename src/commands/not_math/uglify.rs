@@ -25,11 +25,10 @@ impl Command for Uglify {
         state: Arc<State>,
         _: Arc<Mutex<Database>>,
         message: &Message,
-        args: Vec<&str>,
+        raw_input: &str,
     ) -> Result<(), Box<dyn Error + Send + Sync>> {
         let mut lower = true;
-        let content = args
-            .join(" ")
+        let content = raw_input
             .chars()
             .map(|c| {
                 if c.is_alphabetic() {
