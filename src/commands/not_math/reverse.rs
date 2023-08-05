@@ -1,13 +1,12 @@
 use async_trait::async_trait;
 use calcbot_attrs::Info;
 use crate::{
-    commands::Command,
+    commands::{Command, Context},
     database::Database,
     global::State,
 };
 use std::{error::Error, sync::Arc};
 use tokio::sync::Mutex;
-use twilight_model::channel::message::Message;
 
 /// No one will ever figure out your password now!
 #[derive(Clone, Info)]
@@ -24,11 +23,10 @@ impl Command for Reverse {
         &self,
         state: Arc<State>,
         _: Arc<Mutex<Database>>,
-        message: &Message,
-        raw_input: &str,
+        ctxt: &Context,
     ) -> Result<(), Box<dyn Error + Send + Sync>> {
-        state.http.create_message(message.channel_id)
-            .content(&raw_input.chars().rev().collect::<String>())?
+        state.http.create_message(ctxt.message.channel_id)
+            .content(&ctxt.raw_input.chars().rev().collect::<String>())?
             .await?;
         Ok(())
     }

@@ -1,13 +1,12 @@
 use async_trait::async_trait;
 use calcbot_attrs::Info;
 use crate::{
-    commands::Command,
+    commands::{Command, Context},
     database::Database,
     global::State,
 };
 use std::{error::Error, sync::Arc};
 use tokio::sync::Mutex;
-use twilight_model::channel::message::Message;
 
 /// This command is incredibly useful for sounding like the sloth from Zootopia.
 #[derive(Clone, Info)]
@@ -24,11 +23,10 @@ impl Command for Spacer {
         &self,
         state: Arc<State>,
         _: Arc<Mutex<Database>>,
-        message: &Message,
-        raw_input: &str,
+        ctxt: &Context,
     ) -> Result<(), Box<dyn Error + Send + Sync>> {
-        state.http.create_message(message.channel_id)
-            .content(&raw_input.split("").collect::<Vec<&str>>().join(" "))?
+        state.http.create_message(ctxt.message.channel_id)
+            .content(&ctxt.raw_input.split("").collect::<Vec<&str>>().join(" "))?
             .await?;
         Ok(())
     }

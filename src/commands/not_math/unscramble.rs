@@ -1,13 +1,12 @@
 use async_trait::async_trait;
 use calcbot_attrs::Info;
 use crate::{
-    commands::Command,
+    commands::{Command, Context},
     database::Database,
     global::State,
 };
 use std::{collections::HashMap, error::Error, sync::Arc};
 use tokio::sync::Mutex;
-use twilight_model::channel::message::Message;
 
 lazy_static::lazy_static! {
     /// The list of words to search through (~250K words).
@@ -74,10 +73,9 @@ impl Command for Unscramble {
         &self,
         state: Arc<State>,
         _: Arc<Mutex<Database>>,
-        message: &Message,
-        raw_input: &str,
+        ctxt: &Context,
     ) -> Result<(), Box<dyn Error + Send + Sync>> {
-        let (word, length) = parse_args(raw_input.split_whitespace().collect::<Vec<_>>())?;
+        let (word, length) = parse_args(ctxt.raw_input.split_whitespace().collect::<Vec<_>>())?;
         let length = length.unwrap_or(word.len());
 
         let words = unscramble(word, length);
@@ -87,7 +85,7 @@ impl Command for Unscramble {
             words.join(", ")
         };
 
-        state.http.create_message(message.channel_id)
+        state.http.create_message(ctxt.message.channel_id)
             .content(&format!(
                 "**Unscrambling** `{}` with word length of {}\n{}",
                 word, length, output

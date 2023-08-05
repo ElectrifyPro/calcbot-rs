@@ -1,7 +1,7 @@
 use async_trait::async_trait;
 use calcbot_attrs::Info;
 use crate::{
-    commands::Command,
+    commands::{Command, Context},
     database::Database,
     global::State,
     util::format_duration,
@@ -9,7 +9,6 @@ use crate::{
 use std::{env, error::Error, num::NonZeroU64, sync::Arc};
 use sysinfo::{Pid, ProcessExt, System, SystemExt};
 use tokio::sync::Mutex;
-use twilight_model::channel::message::Message;
 use twilight_util::builder::embed::EmbedBuilder;
 
 /// View information about CalcBot.
@@ -23,8 +22,7 @@ impl Command for About {
         &self,
         state: Arc<State>,
         _: Arc<Mutex<Database>>,
-        message: &Message,
-        _: &str,
+        ctxt: &Context,
     ) -> Result<(), Box<dyn Error + Send + Sync>> {
         let mut system = System::new_all();
         system.refresh_all();
@@ -66,7 +64,7 @@ impl Command for About {
             ))
             .build();
 
-        state.http.create_message(message.channel_id)
+        state.http.create_message(ctxt.message.channel_id)
             .embeds(&[embed])
             .unwrap()
             .await?;

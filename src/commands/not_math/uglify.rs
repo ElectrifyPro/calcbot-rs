@@ -1,13 +1,12 @@
 use async_trait::async_trait;
 use calcbot_attrs::Info;
 use crate::{
-    commands::Command,
+    commands::{Command, Context},
     database::Database,
     global::State,
 };
 use std::{error::Error, sync::Arc};
 use tokio::sync::Mutex;
-use twilight_model::channel::message::Message;
 
 /// It'll sound like you're going through puberty.
 #[derive(Clone, Info)]
@@ -24,11 +23,10 @@ impl Command for Uglify {
         &self,
         state: Arc<State>,
         _: Arc<Mutex<Database>>,
-        message: &Message,
-        raw_input: &str,
+        ctxt: &Context,
     ) -> Result<(), Box<dyn Error + Send + Sync>> {
         let mut lower = true;
-        let content = raw_input
+        let content = ctxt.raw_input
             .chars()
             .map(|c| {
                 if c.is_alphabetic() {
@@ -45,7 +43,7 @@ impl Command for Uglify {
             })
             .collect::<String>();
 
-        state.http.create_message(message.channel_id)
+        state.http.create_message(ctxt.message.channel_id)
             .content(&content)?
             .await?;
         Ok(())

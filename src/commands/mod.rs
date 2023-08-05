@@ -13,6 +13,14 @@ use twilight_util::builder::embed::{EmbedBuilder, EmbedFieldBuilder};
 
 /// Formats a list of commands into a code block. Each string is displayed on a separate line,
 /// prepended with the given prefix.
+///
+/// The output will look like this:
+/// ```text
+/// <prefix><default_alias> <string1>
+/// <prefix><default_alias> <string2>
+/// <prefix><default_alias> <string3>
+/// ...
+/// ```
 pub fn format_code_block(prefix: &str, default_alias: &str, strings: &[&str]) -> String {
     format!(
         "```\n{}\n```",
@@ -176,6 +184,20 @@ impl CommandInfo {
     }
 }
 
+/// The context passed to a command's [`Command::execute`] method. This wraps various fields needed
+/// by most commands in one convenient struct.
+pub struct Context<'a> {
+    /// The message that triggered the command.
+    pub message: &'a Message,
+
+    /// The prefix used to invoke the command. If [`None`], the command was invoked from a DM
+    /// channel.
+    pub prefix: Option<&'a str>,
+
+    /// The raw input to the command, not including the prefix.
+    pub raw_input: &'a str,
+}
+
 /// Represents any command that can be executed by a user (accounting for permissions and other
 /// factors).
 #[async_trait]
@@ -185,8 +207,7 @@ pub trait Command: CommandClone + Info + Send + Sync {
         &self,
         state: Arc<State>,
         database: Arc<Mutex<Database>>,
-        message: &Message,
-        raw_input: &str,
+        ctxt: &Context,
     ) -> Result<(), Box<dyn Error + Send + Sync>>;
 }
 

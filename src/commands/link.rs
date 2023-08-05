@@ -1,13 +1,12 @@
 use async_trait::async_trait;
 use calcbot_attrs::Info;
 use crate::{
-    commands::Command,
+    commands::{Command, Context},
     database::Database,
     global::State,
 };
 use std::{error::Error, sync::Arc};
 use tokio::sync::Mutex;
-use twilight_model::channel::message::Message;
 use twilight_util::builder::embed::{EmbedBuilder, EmbedFieldBuilder};
 
 /// Access various useful links for CalcBot, such as online documentation or CalcBot's invite link.
@@ -21,8 +20,7 @@ impl Command for Link {
         &self,
         state: Arc<State>,
         _: Arc<Mutex<Database>>,
-        message: &Message,
-        _: &str,
+        ctxt: &Context,
     ) -> Result<(), Box<dyn Error + Send + Sync>> {
         let embed = EmbedBuilder::new()
             .title("Links")
@@ -54,7 +52,7 @@ impl Command for Link {
             ).inline())
             .build();
 
-        state.http.create_message(message.channel_id)
+        state.http.create_message(ctxt.message.channel_id)
             .embeds(&[embed])
             .unwrap()
             .await?;

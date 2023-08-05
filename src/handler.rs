@@ -1,4 +1,4 @@
-use super::{database::Database, global::State};
+use super::{commands::Context, database::Database, global::State};
 use std::{error::Error, sync::Arc, time::Instant};
 use tokio::sync::Mutex;
 use twilight_model::gateway::payload::incoming::MessageCreate;
@@ -26,7 +26,7 @@ pub async fn message_create(
     };
 
     if prefix.is_none() || msg.content.starts_with(prefix.as_ref().unwrap()) {
-        let prefix_len = prefix.map(|p| p.len()).unwrap_or(0);
+        let prefix_len = prefix.as_ref().map(|p| p.len()).unwrap_or(0);
         let mut trimmed = msg.content[prefix_len..].split_whitespace().peekable();
 
         let now = Instant::now();
@@ -40,7 +40,8 @@ pub async fn message_create(
                         &msg.content[byte..]
                     })
                     .unwrap_or_default();
-                cmd.execute(state, database, &msg, raw_input).await?;
+                let ctxt = Context { message: &msg, prefix: prefix.as_deref(), raw_input };
+                cmd.execute(state, database, &ctxt).await?;
                 log::info!(
                     "Command executed in {}ms: {}",
                     now.elapsed().as_millis(),

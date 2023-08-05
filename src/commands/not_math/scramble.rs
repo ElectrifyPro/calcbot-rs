@@ -1,14 +1,13 @@
 use async_trait::async_trait;
 use calcbot_attrs::Info;
 use crate::{
-    commands::Command,
+    commands::{Command, Context},
     database::Database,
     global::State,
 };
 use getrandom::getrandom;
 use std::{error::Error, sync::Arc};
 use tokio::sync::Mutex;
-use twilight_model::channel::message::Message;
 
 /// Randomize the order of characters in a string.
 fn scramble(string: &str) -> String {
@@ -40,11 +39,10 @@ impl Command for Scramble {
         &self,
         state: Arc<State>,
         _: Arc<Mutex<Database>>,
-        message: &Message,
-        raw_input: &str,
+        ctxt: &Context,
     ) -> Result<(), Box<dyn Error + Send + Sync>> {
-        state.http.create_message(message.channel_id)
-            .content(&scramble(raw_input))?
+        state.http.create_message(ctxt.message.channel_id)
+            .content(&scramble(ctxt.raw_input))?
             .await?;
         Ok(())
     }

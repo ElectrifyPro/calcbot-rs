@@ -1,13 +1,12 @@
 use async_trait::async_trait;
 use calcbot_attrs::Info;
 use crate::{
-    commands::Command,
+    commands::{Command, Context},
     database::Database,
     global::State,
 };
 use std::{collections::HashSet, error::Error, sync::Arc};
 use tokio::sync::Mutex;
-use twilight_model::channel::message::Message;
 
 lazy_static::lazy_static! {
     /// Words to ignore when converting to title case.
@@ -40,10 +39,9 @@ impl Command for Title {
         &self,
         state: Arc<State>,
         _: Arc<Mutex<Database>>,
-        message: &Message,
-        raw_input: &str,
+        ctxt: &Context,
     ) -> Result<(), Box<dyn Error + Send + Sync>> {
-        let content = raw_input
+        let content = ctxt.raw_input
             .split_whitespace()
             .into_iter()
             .enumerate()
@@ -58,7 +56,7 @@ impl Command for Title {
             .collect::<Vec<String>>()
             .join(" ");
 
-        state.http.create_message(message.channel_id)
+        state.http.create_message(ctxt.message.channel_id)
             .content(&content)?
             .await?;
         Ok(())

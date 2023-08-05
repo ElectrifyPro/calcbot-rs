@@ -1,13 +1,12 @@
 use async_trait::async_trait;
 use calcbot_attrs::Info;
 use crate::{
-    commands::Command,
+    commands::{Command, Context},
     database::Database,
     global::State,
 };
 use std::{error::Error, sync::Arc};
 use tokio::sync::Mutex;
-use twilight_model::channel::message::Message;
 
 /// Sorts a list of numbers / words in ascending / alphabetical order, numbers first. If a minus
 /// symbol (`-`) is provided for the first argument, the list will be sorted in descending order
@@ -26,10 +25,9 @@ impl Command for Sort {
         &self,
         state: Arc<State>,
         _: Arc<Mutex<Database>>,
-        message: &Message,
-        raw_input: &str,
+        ctxt: &Context,
     ) -> Result<(), Box<dyn Error + Send + Sync>> {
-        let mut args = raw_input.split_whitespace().collect::<Vec<_>>();
+        let mut args = ctxt.raw_input.split_whitespace().collect::<Vec<_>>();
         let descending = args[0] == "-";
         if descending {
             args.remove(0);
@@ -64,7 +62,7 @@ impl Command for Sort {
             .join(", ");
         output.push_str(&values);
 
-        state.http.create_message(message.channel_id)
+        state.http.create_message(ctxt.message.channel_id)
             .content(&output)?
             .await?;
         Ok(())

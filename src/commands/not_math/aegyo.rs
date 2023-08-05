@@ -1,14 +1,13 @@
 use async_trait::async_trait;
 use calcbot_attrs::Info;
 use crate::{
-    commands::Command,
+    commands::{Command, Context},
     database::Database,
     global::State,
 };
 use regex::Regex;
 use std::{error::Error, sync::Arc};
 use tokio::sync::Mutex;
-use twilight_model::channel::message::Message;
 
 lazy_static::lazy_static! {
     static ref REGEX_LOWER: Regex = Regex::new(r"[lr]").unwrap();
@@ -30,12 +29,11 @@ impl Command for Aegyo {
         &self,
         state: Arc<State>,
         _: Arc<Mutex<Database>>,
-        message: &Message,
-        raw_input: &str,
+        ctxt: &Context,
     ) -> Result<(), Box<dyn Error + Send + Sync>> {
-        let replaced_upper = REGEX_UPPER.replace_all(&raw_input, "W");
+        let replaced_upper = REGEX_UPPER.replace_all(&ctxt.raw_input, "W");
         let replaced_lower = REGEX_LOWER.replace_all(&replaced_upper, "w");
-        state.http.create_message(message.channel_id)
+        state.http.create_message(ctxt.message.channel_id)
             .content(&replaced_lower)?
             .await?;
         Ok(())

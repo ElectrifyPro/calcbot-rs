@@ -34,17 +34,20 @@ impl State {
     }
 
     /// Build the `c-help commands` embed.
-    pub fn build_commands_embed(&self) -> Embed {
+    pub fn build_commands_embed(&self, prefix: Option<&str>) -> Embed {
         let mut embed = EmbedBuilder::new()
             .title("Available commands")
             .color(0xda70d6)
             .description(format!(
-                "
-                This server's prefix is `{0}`. Type `{0}<command>` to access one of the commands below, and type `{0}help <command>` to learn more about that command. You can find documentation for all commands [here](https://chillant.gitbook.io/calcbot/reference/commands).
+                "{}help <command>` to learn more about that command. You can find documentation for all commands [here](https://chillant.gitbook.io/calcbot/reference/commands).
 
                 CalcBot's command system can be confusing for those new to the bot. This short [guide](https://chillant.gitbook.io/calcbot/commands/command-system) will hopefully clear up that confusion.
             ",
-                "c-", // TODO
+                if let Some(prefix) = prefix {
+                    format!("This server's prefix is `{0}`. Type `{0}<command>` to run one of the commands below, and type `{0}", prefix)
+                } else {
+                    "Type `<command>` to run one of the commands below, and type `".to_string()
+                }
             ));
 
         let mut categories = HashMap::new();

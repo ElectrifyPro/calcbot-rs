@@ -4,14 +4,13 @@ use calcbot_attrs::Info;
 use cas_eval::eval::Eval;
 use cas_parser::parser::{expr::Expr, Parser};
 use crate::{
-    commands::Command,
+    commands::{Command, Context},
     database::Database,
     global::State,
 };
 use strip_ansi_escapes::strip;
 use std::{error::Error, sync::Arc};
 use tokio::sync::Mutex;
-use twilight_model::channel::message::Message;
 
 /// Evaluates a given expression, like `1 + 1`. You can declare variables by typing `variablename =
 /// [value]`.
@@ -33,21 +32,20 @@ impl Command for Calculate {
         &self,
         state: Arc<State>,
         _: Arc<Mutex<Database>>,
-        message: &Message,
-        raw_input: &str,
+        ctxt: &Context,
     ) -> Result<(), Box<dyn Error + Send + Sync>> {
-        let mut parser = Parser::new(raw_input);
+        let mut parser = Parser::new(ctxt.raw_input);
         match parser.try_parse::<Expr>() {
             Ok(expr) => {
                 let ans = expr.eval_default().unwrap();
-                state.http.create_message(message.channel_id)
+                state.http.create_message(ctxt.message.channel_id)
                     .content(&format!("**Calculation** (mode: degrees)\n{}", ans))?
                     .await?;
             },
             Err(err) => {
                 let mut buf = Vec::new();
-                err.build_report().unwrap().write(("input", Source::from(raw_input)), &mut buf).unwrap();
-                state.http.create_message(message.channel_id)
+                err.build_report().unwrap().write(("input", Source::from(ctxt.raw_input)), &mut buf).unwrap();
+                state.http.create_message(ctxt.message.channel_id)
                     .content(&format!("```{}```", String::from_utf8_lossy(&strip(buf).unwrap())))?
                     .await?;
             },

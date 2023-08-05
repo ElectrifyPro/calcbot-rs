@@ -1,14 +1,13 @@
 use async_trait::async_trait;
 use calcbot_attrs::Info;
 use crate::{
-    commands::Command,
+    commands::{Command, Context},
     database::Database,
     global::State,
 };
 use getrandom::getrandom;
 use std::{error::Error, sync::Arc};
 use tokio::sync::Mutex;
-use twilight_model::channel::message::Message;
 
 /// Generates the random integer.
 fn random(min: u32, max: u32) -> u32 {
@@ -37,15 +36,14 @@ impl Command for Random {
         &self,
         state: Arc<State>,
         _: Arc<Mutex<Database>>,
-        message: &Message,
-        raw_input: &str,
+        ctxt: &Context,
     ) -> Result<(), Box<dyn Error + Send + Sync>> {
-        let (min, max) = match parse_args(raw_input.split_whitespace().collect())? {
+        let (min, max) = match parse_args(ctxt.raw_input.split_whitespace().collect())? {
             (a, Some(b)) => (a, b),
             (a, None) => (0, a),
         };
         let num = random(min, max + 1);
-        state.http.create_message(message.channel_id)
+        state.http.create_message(ctxt.message.channel_id)
             .content(&format!(
                 "**Random number** from {} to {}\n{}",
                 min, max, num
