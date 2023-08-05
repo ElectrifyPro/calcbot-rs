@@ -5,9 +5,10 @@ use calcbot_attrs::Info;
 use crate::{
     commands::{Command, Context, Info},
     database::Database,
+    error::Error,
     global::State,
 };
-use std::{error::Error, sync::Arc};
+use std::sync::Arc;
 use tokio::sync::Mutex;
 
 /// Get information on how to use a command. For example, to learn about `{prefix}calculate stats`,
@@ -29,8 +30,8 @@ pub struct Help;
 impl Command for Help {
     async fn execute(
         &self,
-        state: Arc<State>,
-        _: Arc<Mutex<Database>>,
+        state: &Arc<State>,
+        _: &Arc<Mutex<Database>>,
         ctxt: &Context,
     ) -> Result<(), Box<dyn Error + Send + Sync>> {
         // extract the path to the command the user wants help with

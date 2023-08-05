@@ -3,9 +3,10 @@ use calcbot_attrs::Info;
 use crate::{
     commands::{Command, Context},
     database::Database,
+    error::Error,
     global::State,
 };
-use std::{error::Error, sync::Arc};
+use std::sync::Arc;
 use tokio::sync::Mutex;
 use twilight_util::builder::embed::{EmbedBuilder, EmbedFieldBuilder};
 
@@ -18,8 +19,8 @@ pub struct Link;
 impl Command for Link {
     async fn execute(
         &self,
-        state: Arc<State>,
-        _: Arc<Mutex<Database>>,
+        state: &Arc<State>,
+        _: &Arc<Mutex<Database>>,
         ctxt: &Context,
     ) -> Result<(), Box<dyn Error + Send + Sync>> {
         let embed = EmbedBuilder::new()

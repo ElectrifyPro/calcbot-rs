@@ -3,9 +3,10 @@ use calcbot_attrs::Info;
 use crate::{
     commands::{Command, Context},
     database::Database,
+    error::Error,
     global::State,
 };
-use std::{error::Error, sync::Arc};
+use std::sync::Arc;
 use tokio::sync::Mutex;
 
 /// Get your own custom brand name for free!
@@ -21,8 +22,8 @@ pub struct RegisteredTrademark;
 impl Command for RegisteredTrademark {
     async fn execute(
         &self,
-        state: Arc<State>,
-        _: Arc<Mutex<Database>>,
+        state: &Arc<State>,
+        _: &Arc<Mutex<Database>>,
         ctxt: &Context,
     ) -> Result<(), Box<dyn Error + Send + Sync>> {
         state.http.create_message(ctxt.message.channel_id)

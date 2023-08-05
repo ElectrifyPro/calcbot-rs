@@ -3,10 +3,11 @@ use calcbot_attrs::Info;
 use crate::{
     commands::{Command, Context},
     database::Database,
+    error::Error,
     global::State,
 };
 use getrandom::getrandom;
-use std::{error::Error, sync::Arc};
+use std::sync::Arc;
 use tokio::sync::Mutex;
 
 /// Randomize the order of characters in a string.
@@ -37,8 +38,8 @@ pub struct Scramble;
 impl Command for Scramble {
     async fn execute(
         &self,
-        state: Arc<State>,
-        _: Arc<Mutex<Database>>,
+        state: &Arc<State>,
+        _: &Arc<Mutex<Database>>,
         ctxt: &Context,
     ) -> Result<(), Box<dyn Error + Send + Sync>> {
         state.http.create_message(ctxt.message.channel_id)

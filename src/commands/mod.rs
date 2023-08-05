@@ -4,9 +4,9 @@ pub mod help;
 pub mod link;
 pub mod not_math;
 
-use super::{database::Database, global::State};
+use super::{database::Database, error::Error, global::State};
 use async_trait::async_trait;
-use std::{error::Error, iter::Peekable, sync::Arc};
+use std::{iter::Peekable, sync::Arc};
 use tokio::sync::Mutex;
 use twilight_model::channel::message::{Embed, Message};
 use twilight_util::builder::embed::{EmbedBuilder, EmbedFieldBuilder};
@@ -205,8 +205,8 @@ pub trait Command: CommandClone + Info + Send + Sync {
     /// Executes the command.
     async fn execute(
         &self,
-        state: Arc<State>,
-        database: Arc<Mutex<Database>>,
+        state: &Arc<State>,
+        database: &Arc<Mutex<Database>>,
         ctxt: &Context,
     ) -> Result<(), Box<dyn Error + Send + Sync>>;
 }

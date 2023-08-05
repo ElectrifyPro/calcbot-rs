@@ -3,10 +3,11 @@ use calcbot_attrs::Info;
 use crate::{
     commands::{Command, Context},
     database::Database,
+    error::Error,
     global::State,
     util::format_duration,
 };
-use std::{env, error::Error, num::NonZeroU64, sync::Arc};
+use std::{env, num::NonZeroU64, sync::Arc};
 use sysinfo::{Pid, ProcessExt, System, SystemExt};
 use tokio::sync::Mutex;
 use twilight_util::builder::embed::EmbedBuilder;
@@ -20,8 +21,8 @@ pub struct About;
 impl Command for About {
     async fn execute(
         &self,
-        state: Arc<State>,
-        _: Arc<Mutex<Database>>,
+        state: &Arc<State>,
+        _: &Arc<Mutex<Database>>,
         ctxt: &Context,
     ) -> Result<(), Box<dyn Error + Send + Sync>> {
         let mut system = System::new_all();

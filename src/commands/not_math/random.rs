@@ -3,10 +3,11 @@ use calcbot_attrs::Info;
 use crate::{
     commands::{Command, Context},
     database::Database,
+    error::Error,
     global::State,
 };
 use getrandom::getrandom;
-use std::{error::Error, sync::Arc};
+use std::sync::Arc;
 use tokio::sync::Mutex;
 
 /// Generates the random integer.
@@ -34,8 +35,8 @@ pub struct Random;
 impl Command for Random {
     async fn execute(
         &self,
-        state: Arc<State>,
-        _: Arc<Mutex<Database>>,
+        state: &Arc<State>,
+        _: &Arc<Mutex<Database>>,
         ctxt: &Context,
     ) -> Result<(), Box<dyn Error + Send + Sync>> {
         let (min, max) = match parse_args(ctxt.raw_input.split_whitespace().collect())? {

@@ -6,10 +6,11 @@ use cas_parser::parser::{expr::Expr, Parser};
 use crate::{
     commands::{Command, Context},
     database::Database,
+    error::Error,
     global::State,
 };
 use strip_ansi_escapes::strip;
-use std::{error::Error, sync::Arc};
+use std::sync::Arc;
 use tokio::sync::Mutex;
 
 /// Evaluates a given expression, like `1 + 1`. You can declare variables by typing `variablename =
@@ -30,8 +31,8 @@ pub struct Calculate;
 impl Command for Calculate {
     async fn execute(
         &self,
-        state: Arc<State>,
-        _: Arc<Mutex<Database>>,
+        state: &Arc<State>,
+        _: &Arc<Mutex<Database>>,
         ctxt: &Context,
     ) -> Result<(), Box<dyn Error + Send + Sync>> {
         let mut parser = Parser::new(ctxt.raw_input);

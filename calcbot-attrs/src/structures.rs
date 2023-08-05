@@ -147,7 +147,7 @@ impl Args {
             } else {
                 quote! {
                     {
-                        let s = args.next().ok_or(format!("Missing argument #{}", #i))?;
+                        let s = args.next().ok_or(crate::error::MissingArgument { index: #i })?;
                         let arg = <#arg_type as std::str::FromStr>::from_str(s).unwrap_or_default();
                         arg
                     }

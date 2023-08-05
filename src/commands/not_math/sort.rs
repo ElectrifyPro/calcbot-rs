@@ -3,9 +3,10 @@ use calcbot_attrs::Info;
 use crate::{
     commands::{Command, Context},
     database::Database,
+    error::Error,
     global::State,
 };
-use std::{error::Error, sync::Arc};
+use std::sync::Arc;
 use tokio::sync::Mutex;
 
 /// Sorts a list of numbers / words in ascending / alphabetical order, numbers first. If a minus
@@ -23,8 +24,8 @@ pub struct Sort;
 impl Command for Sort {
     async fn execute(
         &self,
-        state: Arc<State>,
-        _: Arc<Mutex<Database>>,
+        state: &Arc<State>,
+        _: &Arc<Mutex<Database>>,
         ctxt: &Context,
     ) -> Result<(), Box<dyn Error + Send + Sync>> {
         let mut args = ctxt.raw_input.split_whitespace().collect::<Vec<_>>();

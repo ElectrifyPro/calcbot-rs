@@ -116,10 +116,10 @@ pub fn command(item: TokenStream) -> TokenStream {
         impl crate::commands::Command for #name {
             async fn execute(
                 &self,
-                state: std::sync::Arc<crate::global::State>,
-                _: std::sync::Arc<tokio::sync::Mutex<crate::database::Database>>,
+                state: &std::sync::Arc<crate::global::State>,
+                _: &std::sync::Arc<tokio::sync::Mutex<crate::database::Database>>,
                 ctxt: &crate::commands::Context,
-            ) -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
+            ) -> Result<(), Box<dyn crate::error::Error + Send + Sync>> {
                 // send the help embed by default
                 let embed = self.info().build_embed(Some("c-"));
                 state.http.create_message(ctxt.message.channel_id)

@@ -3,9 +3,10 @@ use calcbot_attrs::Info;
 use crate::{
     commands::{Command, Context},
     database::Database,
+    error::Error,
     global::State,
 };
-use std::{collections::HashMap, error::Error, sync::Arc};
+use std::{collections::HashMap, sync::Arc};
 use tokio::sync::Mutex;
 
 lazy_static::lazy_static! {
@@ -71,8 +72,8 @@ pub struct Unscramble;
 impl Command for Unscramble {
     async fn execute(
         &self,
-        state: Arc<State>,
-        _: Arc<Mutex<Database>>,
+        state: &Arc<State>,
+        _: &Arc<Mutex<Database>>,
         ctxt: &Context,
     ) -> Result<(), Box<dyn Error + Send + Sync>> {
         let (word, length) = parse_args(ctxt.raw_input.split_whitespace().collect::<Vec<_>>())?;

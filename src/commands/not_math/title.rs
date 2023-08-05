@@ -3,9 +3,10 @@ use calcbot_attrs::Info;
 use crate::{
     commands::{Command, Context},
     database::Database,
+    error::Error,
     global::State,
 };
-use std::{collections::HashSet, error::Error, sync::Arc};
+use std::{collections::HashSet, sync::Arc};
 use tokio::sync::Mutex;
 
 lazy_static::lazy_static! {
@@ -37,8 +38,8 @@ pub struct Title;
 impl Command for Title {
     async fn execute(
         &self,
-        state: Arc<State>,
-        _: Arc<Mutex<Database>>,
+        state: &Arc<State>,
+        _: &Arc<Mutex<Database>>,
         ctxt: &Context,
     ) -> Result<(), Box<dyn Error + Send + Sync>> {
         let content = ctxt.raw_input

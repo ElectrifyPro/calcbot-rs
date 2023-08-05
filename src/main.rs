@@ -1,5 +1,6 @@
 pub mod commands;
 pub mod database;
+pub mod error;
 pub mod global;
 pub mod handler;
 pub mod util;

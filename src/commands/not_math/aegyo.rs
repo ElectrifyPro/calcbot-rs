@@ -3,10 +3,11 @@ use calcbot_attrs::Info;
 use crate::{
     commands::{Command, Context},
     database::Database,
+    error::Error,
     global::State,
 };
 use regex::Regex;
-use std::{error::Error, sync::Arc};
+use std::sync::Arc;
 use tokio::sync::Mutex;
 
 lazy_static::lazy_static! {
@@ -27,8 +28,8 @@ pub struct Aegyo;
 impl Command for Aegyo {
     async fn execute(
         &self,
-        state: Arc<State>,
-        _: Arc<Mutex<Database>>,
+        state: &Arc<State>,
+        _: &Arc<Mutex<Database>>,
         ctxt: &Context,
     ) -> Result<(), Box<dyn Error + Send + Sync>> {
         let replaced_upper = REGEX_UPPER.replace_all(&ctxt.raw_input, "W");
