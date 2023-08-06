@@ -156,7 +156,21 @@ impl Args {
 
             args.push(quote! { #arg_name });
             arg_names.push(quote! { #arg_name });
-            arg_types.push(quote! { #arg_type });
+
+            // handle Unlimited
+            if let Type::Path(path) = arg {
+                let path = &path.path;
+                let last = path.segments.last().unwrap();
+                let ident = &last.ident;
+
+                if ident == "Unlimited" {
+                    arg_types.push(quote! { String });
+                } else {
+                    arg_types.push(quote! { #arg_type });
+                }
+            } else {
+                    arg_types.push(quote! { #arg_type });
+            }
             arg_parsers.push(quote! { let #arg_name = #arg_parser; });
         }
 
