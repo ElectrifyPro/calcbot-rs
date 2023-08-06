@@ -1,5 +1,6 @@
 pub mod about;
 pub mod calculate;
+pub mod dictionary;
 pub mod help;
 pub mod link;
 pub mod not_math;
@@ -240,6 +241,7 @@ pub fn root() -> CommandGroup {
         commands: vec![
             Box::new(about::About),
             Box::new(calculate::Calculate),
+            Box::new(dictionary::Dictionary),
             Box::new(help::Help),
             Box::new(link::Link),
             Box::new(not_math::NotMath),

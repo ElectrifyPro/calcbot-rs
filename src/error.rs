@@ -49,6 +49,13 @@ generic_error_impl! {
     twilight_http::Error
 }
 
+impl Error for &str {
+    fn fmt<'a>(&self, init: CreateMessage<'a>) -> Result<ResponseFuture<Message>, MessageValidationError> {
+        Ok(init.content(self)?
+            .into_future())
+    }
+}
+
 /// An argument was missing from a command invocation.
 #[derive(Debug)]
 pub struct MissingArgument {
