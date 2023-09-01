@@ -32,16 +32,37 @@ impl Command for Calculate {
     async fn execute(
         &self,
         state: &Arc<State>,
-        _: &Arc<Mutex<Database>>,
+        database: &Arc<Mutex<Database>>,
         ctxt: &Context,
     ) -> Result<(), Box<dyn Error + Send + Sync>> {
         let mut parser = Parser::new(ctxt.raw_input);
         match parser.try_parse_full::<Expr>() {
             Ok(expr) => {
-                let ans = expr.eval_default().unwrap();
+                let mut user_data = database.lock().await
+                    .get_user(ctxt.message.author.id).await
+                    .clone();
+
+                let ans = match expr.eval(&mut user_data.ctxt) {
+                    Ok(ans) => ans,
+                    Err(err) => {
+                        let mut buf = Vec::new();
+                        err.build_report()
+                            .write(("input", Source::from(ctxt.raw_input)), &mut buf)
+                            .unwrap();
+
+                        state.http.create_message(ctxt.message.channel_id)
+                            .content(&format!("```{}```", String::from_utf8_lossy(&strip(buf).unwrap())))?
+                            .await?;
+                        return Ok(());
+                    },
+                };
                 state.http.create_message(ctxt.message.channel_id)
                     .content(&format!("**Calculation** (mode: degrees)\n{}", ans))?
                     .await?;
+
+                user_data.ctxt.add_var("ans", ans);
+                database.lock().await
+                    .set_user(ctxt.message.author.id, user_data).await;
             },
             Err(errs) => {
                 let msg = errs.into_iter()

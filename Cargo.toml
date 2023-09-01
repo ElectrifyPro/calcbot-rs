@@ -12,11 +12,18 @@ lto = true
 [dependencies.calcbot-attrs]
 path = "calcbot-attrs"
 
+[dependencies.cas-eval]
+git = "https://github.com/ElectrifyPro/cas-rs.git"
+branch = "dev"
+features = ["mysql", "serde"]
+
+[dependencies.cas-parser]
+git = "https://github.com/ElectrifyPro/cas-rs.git"
+branch = "dev"
+
 [dependencies]
 ariadne = "0.2.0"
 async-trait = "0.1.68"
-cas-eval = { git = "https://github.com/ElectrifyPro/cas-rs.git", branch = "main" }
-cas-parser = { git = "https://github.com/ElectrifyPro/cas-rs.git", branch = "main" }
 dotenv = "0.15.0"
 getrandom = "0.2.9"
 lazy_static = "1.4.0"

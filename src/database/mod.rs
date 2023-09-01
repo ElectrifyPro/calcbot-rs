@@ -1,11 +1,15 @@
+pub mod user;
+
 use dotenv::var;
 use mysql_async::{
     prelude::{Query, WithParams},
     OptsBuilder,
     Pool,
 };
+use serde_json::to_value;
 use std::collections::HashMap;
-use twilight_model::id::{Id, marker::GuildMarker};
+use user::UserData;
+use twilight_model::id::{Id, marker::{GuildMarker, UserMarker}};
 
 /// Helper struct to access and manage the database.
 pub struct Database {
@@ -14,6 +18,9 @@ pub struct Database {
 
     /// The server cache. This stores the prefix of CalcBot on servers that have recently used it.
     servers: HashMap<Id<GuildMarker>, String>,
+
+    /// The user cache. This stores the user data of users that have recently used CalcBot.
+    users: HashMap<Id<UserMarker>, UserData>,
 }
 
 impl Default for Database {
@@ -35,6 +42,7 @@ impl Database {
                     .socket(var("MYSQL_SOCKET").ok())
             ),
             servers: HashMap::new(),
+            users: HashMap::new(),
         }
     }
 
@@ -67,5 +75,48 @@ impl Database {
         };
 
         self.servers.entry(id).or_insert(prefix)
+    }
+
+    /// Returns the user data for the given user ID.
+    ///
+    /// If the data was cached previously, the cached value will be returned. Otherwise, the data
+    /// will be fetched from the database, cached, then returned.
+    ///
+    /// If the data does not exist anywhere, a default is created.
+    pub async fn get_user(&mut self, id: Id<UserMarker>) -> &UserData {
+        if self.users.contains_key(&id) {
+            return &self.users[&id];
+        }
+
+        let data = match "SELECT calculate, ctxt FROM users WHERE id = ? LIMIT 1"
+            .with((id.get(),))
+            .first::<UserData, _>(&self.pool)
+            .await
+            .unwrap()
+        {
+            Some(data) => data,
+            None => {
+                "INSERT INTO users (id, ctxt) VALUES (?, ?)"
+                    .with((id.get(), to_value(cas_eval::ctxt::Ctxt::default()).unwrap(),))
+                    .ignore(&self.pool)
+                    .await
+                    .unwrap();
+                UserData::default()
+            },
+        };
+
+        self.users.entry(id).or_insert(data)
+    }
+
+    /// Sets the user data for the given user ID.
+    ///
+    /// This will update the cached value and the database value.
+    pub async fn set_user(&mut self, id: Id<UserMarker>, data: UserData) {
+        self.users.insert(id, data.clone());
+        "UPDATE users SET calculate = ?, ctxt = ? WHERE id = ?"
+            .with((data.calculate, to_value(data.ctxt).unwrap(), id.get()))
+            .ignore(&self.pool)
+            .await
+            .unwrap();
     }
 }
