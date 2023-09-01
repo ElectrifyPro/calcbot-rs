@@ -13,7 +13,7 @@ pub struct Database {
     pool: Pool,
 
     /// The server cache. This stores the prefix of CalcBot on servers that have recently used it.
-    server_cache: HashMap<Id<GuildMarker>, String>,
+    servers: HashMap<Id<GuildMarker>, String>,
 }
 
 impl Default for Database {
@@ -34,7 +34,7 @@ impl Database {
                     .db_name(Some("calcbot"))
                     .socket(var("MYSQL_SOCKET").ok())
             ),
-            server_cache: HashMap::new(),
+            servers: HashMap::new(),
         }
     }
 
@@ -45,17 +45,17 @@ impl Database {
     ///
     /// If the data does not exist anywhere, a default is created.
     pub async fn get_server(&mut self, id: Id<GuildMarker>) -> &str {
-        if self.server_cache.contains_key(&id) {
-            return &self.server_cache[&id];
+        if self.servers.contains_key(&id) {
+            return &self.servers[&id];
         }
 
-        let prefix = match "SELECT id, prefix FROM servers WHERE id = ? LIMIT 1"
+        let prefix = match "SELECT prefix FROM servers WHERE id = ? LIMIT 1"
             .with((id.get(),))
-            .first::<(u64, String), _>(&self.pool)
+            .first::<String, _>(&self.pool)
             .await
             .unwrap()
         {
-            Some((_, prefix)) => prefix,
+            Some(prefix) => prefix,
             None => {
                 "INSERT INTO servers (id, prefix) VALUES (?, 'c-')"
                     .with((id.get(),))
@@ -66,6 +66,6 @@ impl Database {
             },
         };
 
-        self.server_cache.entry(id).or_insert(prefix)
+        self.servers.entry(id).or_insert(prefix)
     }
 }

@@ -36,18 +36,27 @@ impl Command for Calculate {
         ctxt: &Context,
     ) -> Result<(), Box<dyn Error + Send + Sync>> {
         let mut parser = Parser::new(ctxt.raw_input);
-        match parser.try_parse::<Expr>() {
+        match parser.try_parse_full::<Expr>() {
             Ok(expr) => {
                 let ans = expr.eval_default().unwrap();
                 state.http.create_message(ctxt.message.channel_id)
                     .content(&format!("**Calculation** (mode: degrees)\n{}", ans))?
                     .await?;
             },
-            Err(err) => {
-                let mut buf = Vec::new();
-                err.build_report().unwrap().write(("input", Source::from(ctxt.raw_input)), &mut buf).unwrap();
+            Err(errs) => {
+                let msg = errs.into_iter()
+                    .map(|err| {
+                        let mut buf = Vec::new();
+                        err.build_report()
+                            .write(("input", Source::from(ctxt.raw_input)), &mut buf)
+                            .unwrap();
+                        String::from_utf8(strip(buf).unwrap()).unwrap()
+                    })
+                    .collect::<Vec<_>>()
+                    .join("\n");
+
                 state.http.create_message(ctxt.message.channel_id)
-                    .content(&format!("```{}```", String::from_utf8_lossy(&strip(buf).unwrap())))?
+                    .content(&format!("```{}```", msg))?
                     .await?;
             },
         }
