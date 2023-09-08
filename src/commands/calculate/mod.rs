@@ -1,3 +1,5 @@
+pub mod mode;
+
 use ariadne::Source;
 use async_trait::async_trait;
 use calcbot_attrs::Info;
@@ -5,7 +7,7 @@ use cas_eval::eval::Eval;
 use cas_parser::parser::{expr::Expr, Parser};
 use crate::{
     commands::{Command, Context},
-    database::Database,
+    database::{user::UserField, Database},
     error::Error,
     global::State,
 };
@@ -23,7 +25,10 @@ use tokio::sync::Mutex;
     category = "Calculate",
     aliases = ["calculate", "calc", "c"],
     syntax = ["<expression>"],
-    examples = ["1+1", "x=2", "5sin(pi/2)", "6!", "f(x)=x^2+5x+6", "f(2)", "cos'(0)"]
+    examples = ["1+1", "x=2", "5sin(pi/2)", "6!", "f(x)=x^2+5x+6", "f(2)", "cos'(0)"],
+    children = [
+        mode::Mode,
+    ],
 )]
 pub struct Calculate;
 
@@ -57,12 +62,12 @@ impl Command for Calculate {
                     },
                 };
                 state.http.create_message(ctxt.message.channel_id)
-                    .content(&format!("**Calculation** (mode: degrees)\n{}", ans))?
+                    .content(&format!("**Calculation** (mode: {})\n{}", user_data.ctxt.trig_mode, ans))?
                     .await?;
 
                 user_data.ctxt.add_var("ans", ans);
                 database.lock().await
-                    .set_user(ctxt.message.author.id, user_data).await;
+                    .set_user_field(ctxt.message.author.id, UserField::Ctxt(user_data.ctxt)).await;
             },
             Err(errs) => {
                 let msg = errs.into_iter()

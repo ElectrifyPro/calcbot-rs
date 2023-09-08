@@ -8,7 +8,7 @@ use mysql_async::{
 };
 use serde_json::to_value;
 use std::collections::HashMap;
-use user::UserData;
+use user::{UserData, UserField};
 use twilight_model::id::{Id, marker::{GuildMarker, UserMarker}};
 
 /// Helper struct to access and manage the database.
@@ -88,7 +88,7 @@ impl Database {
             return &self.users[&id];
         }
 
-        let data = match "SELECT calculate, ctxt FROM users WHERE id = ? LIMIT 1"
+        let data = match "SELECT ctxt FROM users WHERE id = ? LIMIT 1"
             .with((id.get(),))
             .first::<UserData, _>(&self.pool)
             .await
@@ -112,11 +112,27 @@ impl Database {
     ///
     /// This will update the cached value and the database value.
     pub async fn set_user(&mut self, id: Id<UserMarker>, data: UserData) {
-        self.users.insert(id, data.clone());
-        "UPDATE users SET calculate = ?, ctxt = ? WHERE id = ?"
-            .with((data.calculate, to_value(data.ctxt).unwrap(), id.get()))
+        "UPDATE users SET ctxt = ? WHERE id = ?"
+            .with((to_value(&data.ctxt).unwrap(), id.get()))
             .ignore(&self.pool)
             .await
             .unwrap();
+        self.users.insert(id, data);
+    }
+
+    /// Sets a specific field of the user data for the given user ID.
+    ///
+    /// This will update the cached value and the database value.
+    pub async fn set_user_field(&mut self, id: Id<UserMarker>, field: UserField) {
+        match field {
+            UserField::Ctxt(ctxt) => {
+                "UPDATE users SET ctxt = ? WHERE id = ?"
+                    .with((to_value(&ctxt).unwrap(), id.get()))
+                    .ignore(&self.pool)
+                    .await
+                    .unwrap();
+                self.users.get_mut(&id).unwrap().ctxt = ctxt;
+            },
+        }
     }
 }
