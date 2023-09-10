@@ -1,4 +1,5 @@
 pub mod mode;
+pub mod to_latex;
 
 use ariadne::Source;
 use async_trait::async_trait;
@@ -28,6 +29,7 @@ use tokio::sync::Mutex;
     examples = ["1+1", "x=2", "5sin(pi/2)", "6!", "f(x)=x^2+5x+6", "f(2)", "cos'(0)"],
     children = [
         mode::Mode,
+        to_latex::ToLatex,
     ],
 )]
 pub struct Calculate;
