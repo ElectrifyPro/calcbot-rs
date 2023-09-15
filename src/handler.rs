@@ -42,7 +42,7 @@ pub async fn message_create(
                     .unwrap_or_default();
                 let ctxt = Context { message: &msg, prefix: prefix.as_deref(), raw_input };
                 if let Err(discord_error) = cmd.execute(&state, &database, &ctxt).await {
-                    discord_error.fmt(state.http.create_message(msg.channel_id))?
+                    discord_error.rich_fmt(state.http.create_message(msg.channel_id))?
                         .await?;
                 };
 

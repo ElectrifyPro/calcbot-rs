@@ -8,8 +8,12 @@ use mysql_async::{
 };
 use serde_json::to_value;
 use std::collections::HashMap;
+use tokio::sync::mpsc::{UnboundedReceiver, UnboundedSender, unbounded_channel};
+use twilight_model::{
+    gateway::payload::incoming::InteractionCreate,
+    id::{Id, marker::{ChannelMarker, GuildMarker, MessageMarker, UserMarker}},
+};
 use user::{UserData, UserField};
-use twilight_model::id::{Id, marker::{GuildMarker, UserMarker}};
 
 /// Helper struct to access and manage the database.
 pub struct Database {
@@ -21,6 +25,9 @@ pub struct Database {
 
     /// The user cache. This stores the user data of users that have recently used CalcBot.
     users: HashMap<Id<UserMarker>, UserData>,
+
+    /// Paged messages that are currently being displayed.
+    paged: HashMap<(Id<ChannelMarker>, Id<MessageMarker>), UnboundedSender<InteractionCreate>>,
 }
 
 impl Default for Database {
@@ -43,6 +50,30 @@ impl Database {
             ),
             servers: HashMap::new(),
             users: HashMap::new(),
+            paged: HashMap::new(),
+        }
+    }
+
+    /// Sets the paged message sender for the given channel and message IDs. This is used to listen
+    /// for interactions on messages with multiple pages.
+    pub fn set_paged_message(&mut self, channel_id: Id<ChannelMarker>, message_id: Id<MessageMarker>) -> UnboundedReceiver<InteractionCreate> {
+        let (sender, receiver) = unbounded_channel();
+        self.paged.insert((channel_id, message_id), sender);
+        receiver
+    }
+
+    /// Obtains the paged message sender for the given channel and message IDs.
+    ///
+    /// If the sender is closed (the receiver has been dropped), the sender will automatically be
+    /// removed from the cache and [`None`] will be returned.
+    pub fn get_paged_message(&mut self, channel_id: Id<ChannelMarker>, message_id: Id<MessageMarker>) -> Option<&UnboundedSender<InteractionCreate>> {
+        let sender_is_closed = self.paged.get(&(channel_id, message_id))
+            .map_or(false, |sender| sender.is_closed());
+        if sender_is_closed {
+            self.paged.remove(&(channel_id, message_id));
+            None
+        } else {
+            self.paged.get(&(channel_id, message_id))
         }
     }
 

@@ -1,4 +1,4 @@
-use std::future::IntoFuture;
+use std::{fmt::Debug, future::IntoFuture};
 use twilight_http::{
     request::channel::message::CreateMessage,
     response::{DeserializeBodyError, ResponseFuture},
@@ -7,14 +7,14 @@ use twilight_model::channel::message::Message;
 use twilight_validate::message::MessageValidationError;
 
 /// Describes an error that can format itself into a rich Discord message.
-pub trait Error {
+pub trait Error: Debug {
     /// Creates a rich Discord message with the given base, describing the error.
     ///
     /// Because [`CreateMessage`] borrows its content, this makes it impossible to return a
     /// [`CreateMessage`] directly, as many error types need to generate their own data. Instead,
     /// this method takes an extra step and returns a [`ResponseFuture`] (which can be done by
     /// using the [`std::future::IntoFuture`] trait). When awaited, the message will be sent.
-    fn fmt<'a>(&self, init: CreateMessage<'a>) -> Result<ResponseFuture<Message>, MessageValidationError>;
+    fn rich_fmt<'a>(&self, init: CreateMessage<'a>) -> Result<ResponseFuture<Message>, MessageValidationError>;
 }
 
 impl<T> From<T> for Box<dyn Error + Send + Sync>
@@ -33,7 +33,7 @@ macro_rules! generic_error_impl {
     ($($name:ty)+) => {
         $(
             impl Error for $name {
-                fn fmt<'a>(&self, init: CreateMessage<'a>) -> Result<ResponseFuture<Message>, MessageValidationError> {
+                fn rich_fmt<'a>(&self, init: CreateMessage<'a>) -> Result<ResponseFuture<Message>, MessageValidationError> {
                     Ok(init.content(&format!("**Oops!** CalcBot processed your command correctly, but Discord rejected the response message. This could be a bug!\nPlease report this to the developers, and include this error code:\n```\n{}\n```", stringify!($name)))?
                         .into_future())
                 }
@@ -50,7 +50,7 @@ generic_error_impl! {
 }
 
 impl Error for &str {
-    fn fmt<'a>(&self, init: CreateMessage<'a>) -> Result<ResponseFuture<Message>, MessageValidationError> {
+    fn rich_fmt<'a>(&self, init: CreateMessage<'a>) -> Result<ResponseFuture<Message>, MessageValidationError> {
         Ok(init.content(self)?
             .into_future())
     }
@@ -64,7 +64,7 @@ pub struct MissingArgument {
 }
 
 impl Error for MissingArgument {
-    fn fmt<'a>(&self, init: CreateMessage<'a>) -> Result<ResponseFuture<Message>, MessageValidationError> {
+    fn rich_fmt<'a>(&self, init: CreateMessage<'a>) -> Result<ResponseFuture<Message>, MessageValidationError> {
         Ok(init.content(&format!("Missing argument at index {}.", self.index))?
             .into_future())
     }

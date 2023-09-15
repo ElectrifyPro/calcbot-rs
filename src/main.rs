@@ -33,7 +33,7 @@ async fn main() -> Result<(), Box<dyn Error + Send + Sync>> {
         | Intents::MESSAGE_CONTENT;
     let mut shard = Shard::new(ShardId::ONE, token.clone(), intents);
 
-    let state = Arc::new(State::new(token));
+    let state = Arc::new(State::new(token).await);
     let database = Arc::new(Mutex::new(Database::new()));
 
     loop {
@@ -71,6 +71,17 @@ async fn handle_event(
             "Shard {} connected",
             ready.shard.unwrap_or(ShardId::new(0, 1))
         ),
+        Event::InteractionCreate(interaction) => {
+            if let (Some(channel), Some(message)) = (
+                &interaction.channel,
+                &interaction.message,
+            ) {
+                database.lock()
+                    .await
+                    .get_paged_message(channel.id, message.id)
+                    .map(|sender| sender.send(*interaction));
+            }
+        }
         _ => {}
     }
 

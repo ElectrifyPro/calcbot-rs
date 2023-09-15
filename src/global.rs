@@ -2,11 +2,14 @@ use super::commands::{self, CommandGroup};
 use std::{collections::HashMap, time::Instant};
 use twilight_cache_inmemory::{InMemoryCache, ResourceType};
 use twilight_http::Client as HttpClient;
-use twilight_model::channel::message::Embed;
+use twilight_model::{channel::message::Embed, id::{marker::ApplicationMarker, Id}};
 use twilight_util::builder::embed::{EmbedBuilder, EmbedFieldBuilder};
 
 /// The global state of the bot.
 pub struct State {
+    /// The application ID of the bot.
+    pub application_id: Id<ApplicationMarker>,
+
     /// The [`Instant`] the bot was started. This can be used to determine the bot's uptime.
     pub start_time: Instant,
 
@@ -22,11 +25,14 @@ pub struct State {
 
 impl State {
     /// Creates a new [`State`] with the given token.
-    pub fn new(token: String) -> Self {
+    pub async fn new(token: String) -> Self {
+        let http = HttpClient::new(token);
         Self {
+            application_id: http.current_user_application().await.unwrap()
+                .model().await.unwrap().id,
             start_time: Instant::now(),
             commands: commands::root(),
-            http: HttpClient::new(token),
+            http,
             cache: InMemoryCache::builder()
                 .resource_types(ResourceType::USER_CURRENT | ResourceType::MESSAGE)
                 .build(),

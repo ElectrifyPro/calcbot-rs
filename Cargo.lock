@@ -319,6 +319,7 @@ dependencies = [
  "async-trait",
  "calcbot-attrs",
  "cas-eval",
+ "cas-math",
  "cas-parser",
  "dotenv",
  "getrandom",
@@ -353,7 +354,7 @@ dependencies = [
 [[package]]
 name = "cas-attrs"
 version = "0.1.0"
-source = "git+https://github.com/ElectrifyPro/cas-rs.git?branch=dev#3a7cbf17247c22940fc72eed9a88203f59c7e2c1"
+source = "git+https://github.com/ElectrifyPro/cas-rs.git?branch=dev#ec8609f9509543b219ff23e40752d84f2d006efc"
 dependencies = [
  "proc-macro2",
  "quote",
@@ -363,7 +364,7 @@ dependencies = [
 [[package]]
 name = "cas-error"
 version = "0.1.0"
-source = "git+https://github.com/ElectrifyPro/cas-rs.git?branch=dev#3a7cbf17247c22940fc72eed9a88203f59c7e2c1"
+source = "git+https://github.com/ElectrifyPro/cas-rs.git?branch=dev#ec8609f9509543b219ff23e40752d84f2d006efc"
 dependencies = [
  "ariadne",
 ]
@@ -371,7 +372,7 @@ dependencies = [
 [[package]]
 name = "cas-eval"
 version = "0.1.0"
-source = "git+https://github.com/ElectrifyPro/cas-rs.git?branch=dev#3a7cbf17247c22940fc72eed9a88203f59c7e2c1"
+source = "git+https://github.com/ElectrifyPro/cas-rs.git?branch=dev#ec8609f9509543b219ff23e40752d84f2d006efc"
 dependencies = [
  "ariadne",
  "cas-attrs",
@@ -388,9 +389,14 @@ dependencies = [
 ]
 
 [[package]]
+name = "cas-math"
+version = "0.1.0"
+source = "git+https://github.com/ElectrifyPro/cas-rs.git?branch=dev#ec8609f9509543b219ff23e40752d84f2d006efc"
+
+[[package]]
 name = "cas-parser"
 version = "0.1.0"
-source = "git+https://github.com/ElectrifyPro/cas-rs.git?branch=dev#3a7cbf17247c22940fc72eed9a88203f59c7e2c1"
+source = "git+https://github.com/ElectrifyPro/cas-rs.git?branch=dev#ec8609f9509543b219ff23e40752d84f2d006efc"
 dependencies = [
  "ariadne",
  "cas-attrs",

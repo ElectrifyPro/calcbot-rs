@@ -99,7 +99,7 @@ enum FetchError {
 }
 
 impl Error for FetchError {
-    fn fmt<'a>(&self, init: CreateMessage<'a>) -> Result<ResponseFuture<Message>, MessageValidationError> {
+    fn rich_fmt<'a>(&self, init: CreateMessage<'a>) -> Result<ResponseFuture<Message>, MessageValidationError> {
         match self {
             FetchError::InvalidLanguageCode(language) => Ok(init.content(&format!("**The language code `{}` is invalid.** See [this link](<https://chillant.gitbook.io/calcbot/commands/dictionary>) for a list of valid language codes.", language))?.into_future()),
             FetchError::NotFound(word, language) => Ok(init.content(&format!("**Could not find a dictionary entry for `{}` in the `{}` dictionary.**", word, language))?.into_future()),

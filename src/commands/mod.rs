@@ -4,6 +4,7 @@ pub mod dictionary;
 pub mod help;
 pub mod link;
 pub mod not_math;
+pub mod unit_convert;
 
 use super::{database::Database, error::Error, global::State};
 use async_trait::async_trait;
@@ -245,6 +246,7 @@ pub fn root() -> CommandGroup {
             Box::new(help::Help),
             Box::new(link::Link),
             Box::new(not_math::NotMath),
+            Box::new(unit_convert::UnitConvert),
         ],
     }
 }
