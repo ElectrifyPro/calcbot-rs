@@ -1,7 +1,7 @@
 use ariadne::Source;
 use async_trait::async_trait;
 use calcbot_attrs::Info;
-use cas_parser::parser::{expr::Expr, fmt::Latex, Parser};
+use cas_parser::parser::{ast::expr::Expr, fmt::Latex, Parser};
 use crate::{
     commands::{Command, Context},
     database::Database,

@@ -354,7 +354,7 @@ dependencies = [
 [[package]]
 name = "cas-attrs"
 version = "0.1.0"
-source = "git+https://github.com/ElectrifyPro/cas-rs.git?branch=dev#ec8609f9509543b219ff23e40752d84f2d006efc"
+source = "git+https://github.com/ElectrifyPro/cas-rs.git?branch=dev#a45ded8676fbcac88223ee148cc35022b579ccf9"
 dependencies = [
  "proc-macro2",
  "quote",
@@ -364,7 +364,7 @@ dependencies = [
 [[package]]
 name = "cas-error"
 version = "0.1.0"
-source = "git+https://github.com/ElectrifyPro/cas-rs.git?branch=dev#ec8609f9509543b219ff23e40752d84f2d006efc"
+source = "git+https://github.com/ElectrifyPro/cas-rs.git?branch=dev#a45ded8676fbcac88223ee148cc35022b579ccf9"
 dependencies = [
  "ariadne",
 ]
@@ -372,7 +372,7 @@ dependencies = [
 [[package]]
 name = "cas-eval"
 version = "0.1.0"
-source = "git+https://github.com/ElectrifyPro/cas-rs.git?branch=dev#ec8609f9509543b219ff23e40752d84f2d006efc"
+source = "git+https://github.com/ElectrifyPro/cas-rs.git?branch=dev#a45ded8676fbcac88223ee148cc35022b579ccf9"
 dependencies = [
  "ariadne",
  "cas-attrs",
@@ -391,12 +391,18 @@ dependencies = [
 [[package]]
 name = "cas-math"
 version = "0.1.0"
-source = "git+https://github.com/ElectrifyPro/cas-rs.git?branch=dev#ec8609f9509543b219ff23e40752d84f2d006efc"
+source = "git+https://github.com/ElectrifyPro/cas-rs.git?branch=dev#a45ded8676fbcac88223ee148cc35022b579ccf9"
+dependencies = [
+ "cas-eval",
+ "cas-parser",
+ "once_cell",
+ "rug",
+]
 
 [[package]]
 name = "cas-parser"
 version = "0.1.0"
-source = "git+https://github.com/ElectrifyPro/cas-rs.git?branch=dev#ec8609f9509543b219ff23e40752d84f2d006efc"
+source = "git+https://github.com/ElectrifyPro/cas-rs.git?branch=dev#a45ded8676fbcac88223ee148cc35022b579ccf9"
 dependencies = [
  "ariadne",
  "cas-attrs",
@@ -1927,9 +1933,9 @@ dependencies = [
 
 [[package]]
 name = "rug"
-version = "1.21.0"
+version = "1.22.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "8882d6fd62b334b72dcf5c79f7e6b529d6790322de14bb49339415266131b031"
+checksum = "5a118f8296241f6952511e8f9ab5b8a759c0d9ed902159b0aeed82d902e84ca6"
 dependencies = [
  "az",
  "gmp-mpfr-sys",

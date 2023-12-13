@@ -1,3 +1,4 @@
+pub mod list_definitions;
 pub mod mode;
 pub mod to_latex;
 
@@ -5,7 +6,7 @@ use ariadne::Source;
 use async_trait::async_trait;
 use calcbot_attrs::Info;
 use cas_eval::eval::Eval;
-use cas_parser::parser::{expr::Expr, Parser};
+use cas_parser::parser::{ast::expr::Expr, Parser};
 use crate::{
     commands::{Command, Context},
     database::{user::UserField, Database},
@@ -28,6 +29,7 @@ use tokio::sync::Mutex;
     syntax = ["<expression>"],
     examples = ["1+1", "x=2", "5sin(pi/2)", "6!", "f(x)=x^2+5x+6", "f(2)", "cos'(0)"],
     children = [
+        list_definitions::ListDefinitions,
         mode::Mode,
         to_latex::ToLatex,
     ],
