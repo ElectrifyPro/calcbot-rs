@@ -67,6 +67,12 @@ async fn handle_event(
 ) -> Result<(), Box<dyn Error + Send + Sync>> {
     match event {
         Event::MessageCreate(msg) => handler::message_create(*msg, state, database).await?,
+        Event::MessageDelete(msg) => {
+            if database.lock().await.remove_paged_message(msg.channel_id, msg.id) {
+                log::info!("paged message task ended: message deleted");
+                // NOTE: the other log message will also appear as the task is dropped
+            }
+        },
         Event::Ready(ready) => log::info!(
             "Shard {} connected",
             ready.shard.unwrap_or(ShardId::new(0, 1))

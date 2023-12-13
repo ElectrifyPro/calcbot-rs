@@ -135,6 +135,8 @@ fn send_paged_message(
             }
         }
 
+        log::info!("paged message task ended: delete interaction button clicked");
+
         Ok::<(), Box<dyn Error + Send + Sync>>(())
     });
 

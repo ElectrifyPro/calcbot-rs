@@ -56,7 +56,11 @@ impl Database {
 
     /// Sets the paged message sender for the given channel and message IDs. This is used to listen
     /// for interactions on messages with multiple pages.
-    pub fn set_paged_message(&mut self, channel_id: Id<ChannelMarker>, message_id: Id<MessageMarker>) -> UnboundedReceiver<InteractionCreate> {
+    pub fn set_paged_message(
+        &mut self,
+        channel_id: Id<ChannelMarker>,
+        message_id: Id<MessageMarker>,
+    ) -> UnboundedReceiver<InteractionCreate> {
         let (sender, receiver) = unbounded_channel();
         self.paged.insert((channel_id, message_id), sender);
         receiver
@@ -66,8 +70,13 @@ impl Database {
     ///
     /// If the sender is closed (the receiver has been dropped), the sender will automatically be
     /// removed from the cache and [`None`] will be returned.
-    pub fn get_paged_message(&mut self, channel_id: Id<ChannelMarker>, message_id: Id<MessageMarker>) -> Option<&UnboundedSender<InteractionCreate>> {
-        let sender_is_closed = self.paged.get(&(channel_id, message_id))
+    pub fn get_paged_message(
+        &mut self,
+        channel_id: Id<ChannelMarker>,
+        message_id: Id<MessageMarker>,
+    ) -> Option<&UnboundedSender<InteractionCreate>> {
+        let sender_is_closed = self.paged
+            .get(&(channel_id, message_id))
             .map_or(false, |sender| sender.is_closed());
         if sender_is_closed {
             self.paged.remove(&(channel_id, message_id));
@@ -75,6 +84,16 @@ impl Database {
         } else {
             self.paged.get(&(channel_id, message_id))
         }
+    }
+
+    /// Removes the paged message sender for the given channel and message IDs. Returns `true` if
+    /// the sender was removed.
+    pub fn remove_paged_message(
+        &mut self,
+        channel_id: Id<ChannelMarker>,
+        message_id: Id<MessageMarker>,
+    ) -> bool {
+        self.paged.remove(&(channel_id, message_id)).is_some()
     }
 
     /// Returns the data of the server with the given ID.

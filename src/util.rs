@@ -46,7 +46,7 @@ impl Add<usize> for Clamped {
 
 impl AddAssign<usize> for Clamped {
     fn add_assign(&mut self, rhs: usize) {
-        *self = *self + rhs;
+        self.value = (self.value + rhs) % self.max;
     }
 }
 
@@ -60,7 +60,7 @@ impl Sub<usize> for Clamped {
 
 impl SubAssign<usize> for Clamped {
     fn sub_assign(&mut self, rhs: usize) {
-        *self = *self - rhs;
+        self.value = (self.value + self.max - rhs) % self.max;
     }
 }
 
