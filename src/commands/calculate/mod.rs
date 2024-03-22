@@ -5,8 +5,8 @@ pub mod to_latex;
 use ariadne::Source;
 use async_trait::async_trait;
 use calcbot_attrs::Info;
-use cas_eval::eval::Eval;
-use cas_parser::parser::{ast::expr::Expr, Parser};
+use cas_compute::numerical::eval::eval_stmts;
+use cas_parser::parser::Parser;
 use crate::{
     commands::{Command, Context},
     database::{user::UserField, Database},
@@ -45,13 +45,13 @@ impl Command for Calculate {
         ctxt: &Context,
     ) -> Result<(), Box<dyn Error + Send + Sync>> {
         let mut parser = Parser::new(ctxt.raw_input);
-        match parser.try_parse_full::<Expr>() {
-            Ok(expr) => {
+        match parser.try_parse_full_many() {
+            Ok(stmts) => {
                 let mut user_data = database.lock().await
                     .get_user(ctxt.message.author.id).await
                     .clone();
 
-                let ans = match expr.eval(&mut user_data.ctxt) {
+                let ans = match eval_stmts(&stmts, &mut user_data.ctxt) {
                     Ok(ans) => ans,
                     Err(err) => {
                         let mut buf = Vec::new();
@@ -60,7 +60,7 @@ impl Command for Calculate {
                             .unwrap();
 
                         state.http.create_message(ctxt.message.channel_id)
-                            .content(&format!("```{}```", String::from_utf8_lossy(&strip(buf).unwrap())))?
+                            .content(&format!("```rs\n{}\n```", String::from_utf8_lossy(&strip(buf).unwrap())))?
                             .await?;
                         return Ok(());
                     },
@@ -86,7 +86,7 @@ impl Command for Calculate {
                     .join("\n");
 
                 state.http.create_message(ctxt.message.channel_id)
-                    .content(&format!("```{}```", msg))?
+                    .content(&format!("```rs\n{}\n```", msg))?
                     .await?;
             },
         }

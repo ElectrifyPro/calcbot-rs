@@ -1,6 +1,6 @@
 use async_trait::async_trait;
 use calcbot_attrs::Info;
-use cas_eval::ctxt::TrigMode;
+use cas_compute::numerical::ctxt::TrigMode;
 use crate::{
     commands::{Command, Context},
     database::{user::UserField, Database},

@@ -147,7 +147,7 @@ impl Database {
             Some(data) => data,
             None => {
                 "INSERT INTO users (id, ctxt) VALUES (?, ?)"
-                    .with((id.get(), to_value(cas_eval::ctxt::Ctxt::default()).unwrap(),))
+                    .with((id.get(), to_value(cas_compute::numerical::ctxt::Ctxt::default()).unwrap(),))
                     .ignore(&self.pool)
                     .await
                     .unwrap();

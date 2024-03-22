@@ -1,5 +1,6 @@
 use async_trait::async_trait;
 use calcbot_attrs::Info;
+use cas_compute::numerical::ctxt::{Func, UserFunc};
 use crate::{
     commands::{Command, Context},
     database::Database,
@@ -33,7 +34,10 @@ impl Command for ListDefinitions {
                     .collect::<Vec<_>>(),
                 user_data.ctxt.get_funcs()
                     .values()
-                    .map(|func| format!("`{} = {}`", func.header, func.body))
+                    .filter_map(|func| match func {
+                        Func::UserFunc(UserFunc { header, body, .. }) => Some(format!("`{} = {}`", header, body)),
+                        Func::Builtin(_) => None,
+                    })
                     .collect::<Vec<_>>(),
             )
         };
