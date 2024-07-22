@@ -53,7 +53,7 @@ impl Command for UnitConvert {
                 format!("**There is no conversion path from `{}` to `{}`.**", unit, target_unit)
             },
         };
-        state.http.create_message(ctxt.message.channel_id)
+        ctxt.trigger.reply(&state.http)
             .content(&out_msg)?
             .await?;
 

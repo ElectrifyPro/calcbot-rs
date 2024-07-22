@@ -86,7 +86,7 @@ impl Command for Unscramble {
             words.join(", ")
         };
 
-        state.http.create_message(ctxt.message.channel_id)
+        ctxt.trigger.reply(&state.http)
             .content(&format!(
                 "**Unscrambling** `{}` with word length of {}\n{}",
                 word, length, output

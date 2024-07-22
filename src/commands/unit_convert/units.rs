@@ -191,7 +191,7 @@ impl Command for Units {
     ) -> Result<(), Box<dyn Error + Send + Sync>> {
         let index = ctxt.raw_input.parse::<usize>().unwrap_or(1).saturating_sub(1);
         let embeds = generate_embeds();
-        send_paged_message(state, database, ctxt.message.channel_id, &embeds, index)?;
+        send_paged_message(state, database, ctxt.trigger.channel_id(), &embeds, index)?;
         Ok(())
     }
 }

@@ -32,7 +32,7 @@ impl Command for ToLatex {
         let mut parser = Parser::new(ctxt.raw_input);
         match parser.try_parse_full::<Expr>() {
             Ok(expr) => {
-                state.http.create_message(ctxt.message.channel_id)
+                ctxt.trigger.reply(&state.http)
                     .content(&format!("**Converting** `{}` to LaTeX\n```{}```", ctxt.raw_input, expr.as_display()))?
                     .await?;
             },
@@ -48,7 +48,7 @@ impl Command for ToLatex {
                     .collect::<Vec<_>>()
                     .join("\n");
 
-                state.http.create_message(ctxt.message.channel_id)
+                ctxt.trigger.reply(&state.http)
                     .content(&format!("```{}```", msg))?
                     .await?;
             },

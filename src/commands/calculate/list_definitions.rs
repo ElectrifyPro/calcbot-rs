@@ -25,7 +25,7 @@ impl Command for ListDefinitions {
     ) -> Result<(), Box<dyn Error + Send + Sync>> {
         let (vars, funcs) = {
             let mut database = database.lock().await;
-            let user_data = database.get_user(ctxt.message.author.id).await;
+            let user_data = database.get_user(ctxt.trigger.author_id()).await;
 
             (
                 user_data.ctxt.get_vars()
@@ -42,7 +42,7 @@ impl Command for ListDefinitions {
             )
         };
 
-        state.http.create_message(ctxt.message.channel_id)
+        ctxt.trigger.reply(&state.http)
             .content(&format!("**Variables**:\n{}\n\n**Functions**:\n{}", vars.join("\n"), funcs.join("\n")))?
             .await?;
 

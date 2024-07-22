@@ -122,7 +122,7 @@ pub fn command(item: TokenStream) -> TokenStream {
             ) -> Result<(), Box<dyn crate::error::Error + Send + Sync>> {
                 // send the help embed by default
                 let embed = self.info().build_embed(ctxt.prefix);
-                state.http.create_message(ctxt.message.channel_id)
+                ctxt.trigger.reply(&state.http)
                     .embeds(&[embed])?
                     .await?;
                 Ok(())

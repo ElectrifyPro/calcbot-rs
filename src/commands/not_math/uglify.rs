@@ -44,7 +44,7 @@ impl Command for Uglify {
             })
             .collect::<String>();
 
-        state.http.create_message(ctxt.message.channel_id)
+        ctxt.trigger.reply(&state.http)
             .content(&content)?
             .await?;
         Ok(())

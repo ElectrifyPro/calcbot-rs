@@ -34,7 +34,7 @@ impl Command for Aegyo {
     ) -> Result<(), Box<dyn Error + Send + Sync>> {
         let replaced_upper = REGEX_UPPER.replace_all(&ctxt.raw_input, "W");
         let replaced_lower = REGEX_LOWER.replace_all(&replaced_upper, "w");
-        state.http.create_message(ctxt.message.channel_id)
+        ctxt.trigger.reply(&state.http)
             .content(&replaced_lower)?
             .await?;
         Ok(())

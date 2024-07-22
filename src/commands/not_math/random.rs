@@ -44,7 +44,7 @@ impl Command for Random {
             (a, None) => (0, a),
         };
         let num = random(min, max + 1);
-        state.http.create_message(ctxt.message.channel_id)
+        ctxt.trigger.reply(&state.http)
             .content(&format!(
                 "**Random number** from {} to {}\n{}",
                 min, max, num

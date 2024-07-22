@@ -63,7 +63,7 @@ impl Command for Sort {
             .join(", ");
         output.push_str(&values);
 
-        state.http.create_message(ctxt.message.channel_id)
+        ctxt.trigger.reply(&state.http)
             .content(&output)?
             .await?;
         Ok(())

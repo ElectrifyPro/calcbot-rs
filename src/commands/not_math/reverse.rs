@@ -26,7 +26,7 @@ impl Command for Reverse {
         _: &Arc<Mutex<Database>>,
         ctxt: &Context,
     ) -> Result<(), Box<dyn Error + Send + Sync>> {
-        state.http.create_message(ctxt.message.channel_id)
+        ctxt.trigger.reply(&state.http)
             .content(&ctxt.raw_input.chars().rev().collect::<String>())?
             .await?;
         Ok(())

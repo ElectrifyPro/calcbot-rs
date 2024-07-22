@@ -48,7 +48,7 @@ impl Command for Calculate {
         match parser.try_parse_full_many() {
             Ok(stmts) => {
                 let mut user_data = database.lock().await
-                    .get_user(ctxt.message.author.id).await
+                    .get_user(ctxt.trigger.author_id()).await
                     .clone();
 
                 let ans = match eval_stmts(&stmts, &mut user_data.ctxt) {
@@ -59,19 +59,19 @@ impl Command for Calculate {
                             .write(("input", Source::from(ctxt.raw_input)), &mut buf)
                             .unwrap();
 
-                        state.http.create_message(ctxt.message.channel_id)
+                        ctxt.trigger.reply(&state.http)
                             .content(&format!("```rs\n{}\n```", String::from_utf8_lossy(&strip(buf).unwrap())))?
                             .await?;
                         return Ok(());
                     },
                 };
-                state.http.create_message(ctxt.message.channel_id)
+                ctxt.trigger.reply(&state.http)
                     .content(&format!("**Calculation** (mode: {})\n{}", user_data.ctxt.trig_mode, ans))?
                     .await?;
 
                 user_data.ctxt.add_var("ans", ans);
                 database.lock().await
-                    .set_user_field(ctxt.message.author.id, UserField::Ctxt(user_data.ctxt)).await;
+                    .set_user_field(ctxt.trigger.author_id(), UserField::Ctxt(user_data.ctxt)).await;
             },
             Err(errs) => {
                 let msg = errs.into_iter()
@@ -85,7 +85,7 @@ impl Command for Calculate {
                     .collect::<Vec<_>>()
                     .join("\n");
 
-                state.http.create_message(ctxt.message.channel_id)
+                ctxt.trigger.reply(&state.http)
                     .content(&format!("```rs\n{}\n```", msg))?
                     .await?;
             },

@@ -56,7 +56,7 @@ impl Command for Help {
             None => self.info(),
         }.build_embed(ctxt.prefix);
 
-        state.http.create_message(ctxt.message.channel_id)
+        ctxt.trigger.reply(&state.http)
             .embeds(&[embed])?
             .await?;
         Ok(())

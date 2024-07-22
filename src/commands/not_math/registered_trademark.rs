@@ -26,7 +26,7 @@ impl Command for RegisteredTrademark {
         _: &Arc<Mutex<Database>>,
         ctxt: &Context,
     ) -> Result<(), Box<dyn Error + Send + Sync>> {
-        state.http.create_message(ctxt.message.channel_id)
+        ctxt.trigger.reply(&state.http)
             .content(&format!("{}:registered:", ctxt.raw_input))?
             .await?;
         Ok(())

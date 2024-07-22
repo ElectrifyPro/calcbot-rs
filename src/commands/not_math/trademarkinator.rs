@@ -26,7 +26,7 @@ impl Command for Trademarkinator {
         _: &Arc<Mutex<Database>>,
         ctxt: &Context,
     ) -> Result<(), Box<dyn Error + Send + Sync>> {
-        state.http.create_message(ctxt.message.channel_id)
+        ctxt.trigger.reply(&state.http)
             .content(&format!("{}:tm:", ctxt.raw_input.split_whitespace().collect::<Vec<_>>().join(":tm: ")))?
             .await?;
         Ok(())

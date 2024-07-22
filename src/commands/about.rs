@@ -65,9 +65,8 @@ impl Command for About {
             ))
             .build();
 
-        state.http.create_message(ctxt.message.channel_id)
-            .embeds(&[embed])
-            .unwrap()
+        ctxt.trigger.reply(&state.http)
+            .embeds(&[embed])?
             .await?;
 
         Ok(())

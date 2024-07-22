@@ -10,7 +10,8 @@ use super::{database::Database, error::Error, global::State};
 use async_trait::async_trait;
 use std::{iter::Peekable, sync::Arc};
 use tokio::sync::Mutex;
-use twilight_model::channel::message::{Embed, Message};
+use twilight_http::{request::channel::message::CreateMessage, Client};
+use twilight_model::{channel::message::{Embed, Message}, id::{marker::{ChannelMarker, UserMarker}, Id}};
 use twilight_util::builder::embed::{EmbedBuilder, EmbedFieldBuilder};
 
 /// Formats a list of commands into a code block. Each string is displayed on a separate line,
@@ -192,11 +193,50 @@ impl CommandInfo {
     }
 }
 
+/// Some event within Discord that triggered a command.
+///
+/// TODO: this will later be extended with slash command support
+pub enum Trigger<'a> {
+    /// A message was sent in a channel.
+    Message(&'a Message),
+}
+
+impl<'a> From<&'a Message> for Trigger<'a> {
+    fn from(msg: &'a Message) -> Self {
+        Trigger::Message(msg)
+    }
+}
+
+impl<'a> Trigger<'a> {
+    /// Returns the ID of the author who triggered this event.
+    pub fn author_id(&self) -> Id<UserMarker> {
+        match self {
+            Trigger::Message(msg) => msg.author.id,
+        }
+    }
+
+    /// Returns the ID of the channel where this event was triggered.
+    ///
+    /// TODO: this is only used for sending paged messages
+    pub fn channel_id(&self) -> Id<ChannelMarker> {
+        match self {
+            Trigger::Message(msg) => msg.channel_id,
+        }
+    }
+
+    /// Create a reply to this event trigger.
+    pub fn reply<'c>(&self, http: &'c Client) -> CreateMessage<'c> {
+        match self {
+            Trigger::Message(msg) => http.create_message(msg.channel_id),
+        }
+    }
+}
+
 /// The context passed to a command's [`Command::execute`] method. This wraps various fields needed
 /// by most commands in one convenient struct.
 pub struct Context<'a> {
-    /// The message that triggered the command.
-    pub message: &'a Message,
+    /// The event that triggered the command.
+    pub trigger: Trigger<'a>,
 
     /// The prefix used to invoke the command. If [`None`], the command was invoked from a DM
     /// channel.
