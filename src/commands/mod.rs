@@ -41,6 +41,12 @@ pub struct CommandGroup {
     pub commands: Vec<Box<dyn Command>>,
 }
 
+impl From<Vec<Box<dyn Command>>> for CommandGroup {
+    fn from(commands: Vec<Box<dyn Command>>) -> Self {
+        Self { commands }
+    }
+}
+
 impl CommandGroup {
     /// Create a new command group.
     pub fn new(commands: Vec<Box<dyn Command>>) -> Self {
