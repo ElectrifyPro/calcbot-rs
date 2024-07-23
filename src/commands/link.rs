@@ -17,11 +17,11 @@ pub struct Link;
 
 #[async_trait]
 impl Command for Link {
-    async fn execute(
-        &self,
+    async fn execute<'c>(
+        &'c self,
         state: &Arc<State>,
         _: &Arc<Mutex<Database>>,
-        ctxt: &Context,
+        ctxt: Context<'c>,
     ) -> Result<(), Box<dyn Error + Send + Sync>> {
         let embed = EmbedBuilder::new()
             .title("Links")

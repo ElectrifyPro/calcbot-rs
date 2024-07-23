@@ -43,11 +43,11 @@ For a list of all commands, run `{prefix}help commands`.",
 
 #[async_trait]
 impl Command for Help {
-    async fn execute(
-        &self,
+    async fn execute<'c>(
+        &'c self,
         state: &Arc<State>,
         _: &Arc<Mutex<Database>>,
-        ctxt: &Context,
+        ctxt: Context<'c>,
     ) -> Result<(), Box<dyn Error + Send + Sync>> {
         // extract the path to the command the user wants help with
         let mut path = ctxt.raw_input.split_whitespace().peekable();

@@ -17,11 +17,11 @@ pub struct ListDefinitions;
 
 #[async_trait]
 impl Command for ListDefinitions {
-    async fn execute(
-        &self,
+    async fn execute<'c>(
+        &'c self,
         state: &Arc<State>,
         database: &Arc<Mutex<Database>>,
-        ctxt: &Context,
+        ctxt: Context<'c>,
     ) -> Result<(), Box<dyn Error + Send + Sync>> {
         let (vars, funcs) = {
             let mut database = database.lock().await;

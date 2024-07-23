@@ -20,11 +20,11 @@ pub struct Trademarkinator;
 
 #[async_trait]
 impl Command for Trademarkinator {
-    async fn execute(
-        &self,
+    async fn execute<'c>(
+        &'c self,
         state: &Arc<State>,
         _: &Arc<Mutex<Database>>,
-        ctxt: &Context,
+        ctxt: Context<'c>,
     ) -> Result<(), Box<dyn Error + Send + Sync>> {
         ctxt.trigger.reply(&state.http)
             .content(&format!("{}:tm:", ctxt.raw_input.split_whitespace().collect::<Vec<_>>().join(":tm: ")))?

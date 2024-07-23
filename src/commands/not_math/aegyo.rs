@@ -26,11 +26,11 @@ pub struct Aegyo;
 
 #[async_trait]
 impl Command for Aegyo {
-    async fn execute(
-        &self,
+    async fn execute<'c>(
+        &'c self,
         state: &Arc<State>,
         _: &Arc<Mutex<Database>>,
-        ctxt: &Context,
+        ctxt: Context<'c>,
     ) -> Result<(), Box<dyn Error + Send + Sync>> {
         let replaced_upper = REGEX_UPPER.replace_all(&ctxt.raw_input, "W");
         let replaced_lower = REGEX_LOWER.replace_all(&replaced_upper, "w");

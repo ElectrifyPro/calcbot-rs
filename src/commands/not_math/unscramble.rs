@@ -70,11 +70,11 @@ pub struct Unscramble;
 
 #[async_trait]
 impl Command for Unscramble {
-    async fn execute(
-        &self,
+    async fn execute<'c>(
+        &'c self,
         state: &Arc<State>,
         _: &Arc<Mutex<Database>>,
-        ctxt: &Context,
+        ctxt: Context<'c>,
     ) -> Result<(), Box<dyn Error + Send + Sync>> {
         let (word, length) = parse_args(ctxt.raw_input.split_whitespace().collect::<Vec<_>>())?;
         let length = length.unwrap_or(word.len());

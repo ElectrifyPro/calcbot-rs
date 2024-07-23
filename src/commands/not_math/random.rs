@@ -33,11 +33,11 @@ pub struct Random;
 
 #[async_trait]
 impl Command for Random {
-    async fn execute(
-        &self,
+    async fn execute<'c>(
+        &'c self,
         state: &Arc<State>,
         _: &Arc<Mutex<Database>>,
-        ctxt: &Context,
+        ctxt: Context<'c>,
     ) -> Result<(), Box<dyn Error + Send + Sync>> {
         let (min, max) = match parse_args(ctxt.raw_input.split_whitespace().collect())? {
             (a, Some(b)) => (a, b),

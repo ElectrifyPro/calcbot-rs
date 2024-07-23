@@ -16,11 +16,11 @@ pub struct Commands;
 
 #[async_trait]
 impl Command for Commands {
-    async fn execute(
-        &self,
+    async fn execute<'c>(
+        &'c self,
         state: &Arc<State>,
         _: &Arc<Mutex<Database>>,
-        ctxt: &Context,
+        ctxt: Context<'c>,
     ) -> Result<(), Box<dyn Error + Send + Sync>> {
         ctxt.trigger.reply(&state.http)
             .embeds(&[state.build_commands_embed(ctxt.prefix)])?

@@ -19,11 +19,11 @@ pub struct About;
 
 #[async_trait]
 impl Command for About {
-    async fn execute(
-        &self,
+    async fn execute<'c>(
+        &'c self,
         state: &Arc<State>,
         _: &Arc<Mutex<Database>>,
-        ctxt: &Context,
+        ctxt: Context<'c>,
     ) -> Result<(), Box<dyn Error + Send + Sync>> {
         let mut system = System::new_all();
         system.refresh_all();

@@ -114,11 +114,11 @@ pub fn command(item: TokenStream) -> TokenStream {
     quote! {
         #[async_trait::async_trait]
         impl crate::commands::Command for #name {
-            async fn execute(
-                &self,
+            async fn execute<'c>(
+                &'c self,
                 state: &std::sync::Arc<crate::global::State>,
                 _: &std::sync::Arc<tokio::sync::Mutex<crate::database::Database>>,
-                ctxt: &crate::commands::Context,
+                ctxt: crate::commands::Context<'c>,
             ) -> Result<(), Box<dyn crate::error::Error + Send + Sync>> {
                 // send the help embed by default
                 let embed = self.info().build_embed(ctxt.prefix);

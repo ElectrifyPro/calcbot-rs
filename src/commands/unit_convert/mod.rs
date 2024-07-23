@@ -32,11 +32,11 @@ pub struct UnitConvert;
 
 #[async_trait]
 impl Command for UnitConvert {
-    async fn execute(
-        &self,
+    async fn execute<'c>(
+        &'c self,
         state: &Arc<State>,
         _: &Arc<Mutex<Database>>, // TODO: custom ratios
-        ctxt: &Context,
+        ctxt: Context<'c>,
     ) -> Result<(), Box<dyn Error + Send + Sync>> {
         let raw_args = ctxt.raw_input.split_whitespace().collect::<Vec<_>>();
         let (quantity, unit, target_unit) = match raw_args.len() {

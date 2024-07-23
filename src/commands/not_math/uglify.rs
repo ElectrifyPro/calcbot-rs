@@ -20,11 +20,11 @@ pub struct Uglify;
 
 #[async_trait]
 impl Command for Uglify {
-    async fn execute(
-        &self,
+    async fn execute<'c>(
+        &'c self,
         state: &Arc<State>,
         _: &Arc<Mutex<Database>>,
-        ctxt: &Context,
+        ctxt: Context<'c>,
     ) -> Result<(), Box<dyn Error + Send + Sync>> {
         let mut lower = true;
         let content = ctxt.raw_input

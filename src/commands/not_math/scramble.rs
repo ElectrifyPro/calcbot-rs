@@ -36,11 +36,11 @@ pub struct Scramble;
 
 #[async_trait]
 impl Command for Scramble {
-    async fn execute(
-        &self,
+    async fn execute<'c>(
+        &'c self,
         state: &Arc<State>,
         _: &Arc<Mutex<Database>>,
-        ctxt: &Context,
+        ctxt: Context<'c>,
     ) -> Result<(), Box<dyn Error + Send + Sync>> {
         ctxt.trigger.reply(&state.http)
             .content(&scramble(ctxt.raw_input))?

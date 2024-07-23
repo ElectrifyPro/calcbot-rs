@@ -38,11 +38,11 @@ pub struct Calculate;
 
 #[async_trait]
 impl Command for Calculate {
-    async fn execute(
-        &self,
+    async fn execute<'c>(
+        &'c self,
         state: &Arc<State>,
         database: &Arc<Mutex<Database>>,
-        ctxt: &Context,
+        ctxt: Context<'c>,
     ) -> Result<(), Box<dyn Error + Send + Sync>> {
         let mut parser = Parser::new(ctxt.raw_input);
         match parser.try_parse_full_many() {

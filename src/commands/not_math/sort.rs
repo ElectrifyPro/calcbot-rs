@@ -22,11 +22,11 @@ pub struct Sort;
 
 #[async_trait]
 impl Command for Sort {
-    async fn execute(
-        &self,
+    async fn execute<'c>(
+        &'c self,
         state: &Arc<State>,
         _: &Arc<Mutex<Database>>,
-        ctxt: &Context,
+        ctxt: Context<'c>,
     ) -> Result<(), Box<dyn Error + Send + Sync>> {
         let mut args = ctxt.raw_input.split_whitespace().collect::<Vec<_>>();
         let descending = args[0] == "-";

@@ -20,11 +20,11 @@ pub struct RegisteredTrademark;
 
 #[async_trait]
 impl Command for RegisteredTrademark {
-    async fn execute(
-        &self,
+    async fn execute<'c>(
+        &'c self,
         state: &Arc<State>,
         _: &Arc<Mutex<Database>>,
-        ctxt: &Context,
+        ctxt: Context<'c>,
     ) -> Result<(), Box<dyn Error + Send + Sync>> {
         ctxt.trigger.reply(&state.http)
             .content(&format!("{}:registered:", ctxt.raw_input))?

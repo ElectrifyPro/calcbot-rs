@@ -183,11 +183,11 @@ pub struct Units;
 
 #[async_trait]
 impl Command for Units {
-    async fn execute(
-        &self,
+    async fn execute<'c>(
+        &'c self,
         state: &Arc<State>,
         database: &Arc<Mutex<Database>>,
-        ctxt: &Context,
+        ctxt: Context<'c>,
     ) -> Result<(), Box<dyn Error + Send + Sync>> {
         let index = ctxt.raw_input.parse::<usize>().unwrap_or(1).saturating_sub(1);
         let embeds = generate_embeds();

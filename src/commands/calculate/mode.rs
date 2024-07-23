@@ -19,11 +19,11 @@ pub struct Mode;
 
 #[async_trait]
 impl Command for Mode {
-    async fn execute(
-        &self,
+    async fn execute<'c>(
+        &'c self,
         state: &Arc<State>,
         database: &Arc<Mutex<Database>>,
-        ctxt: &Context,
+        ctxt: Context<'c>,
     ) -> Result<(), Box<dyn Error + Send + Sync>> {
         let mut user_data = database.lock().await
             .get_user(ctxt.trigger.author_id()).await

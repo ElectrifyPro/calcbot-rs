@@ -196,6 +196,7 @@ impl CommandInfo {
 /// Some event within Discord that triggered a command.
 ///
 /// TODO: this will later be extended with slash command support
+#[derive(Clone, Copy, Debug)]
 pub enum Trigger<'a> {
     /// A message was sent in a channel.
     Message(&'a Message),
@@ -234,6 +235,7 @@ impl<'a> Trigger<'a> {
 
 /// The context passed to a command's [`Command::execute`] method. This wraps various fields needed
 /// by most commands in one convenient struct.
+#[derive(Clone, Copy, Debug)]
 pub struct Context<'a> {
     /// The event that triggered the command.
     pub trigger: Trigger<'a>,
@@ -251,11 +253,11 @@ pub struct Context<'a> {
 #[async_trait]
 pub trait Command: CommandClone + Info + Send + Sync {
     /// Executes the command.
-    async fn execute(
-        &self,
+    async fn execute<'c>(
+        &'c self,
         state: &Arc<State>,
         database: &Arc<Mutex<Database>>,
-        ctxt: &Context,
+        ctxt: Context<'c>,
     ) -> Result<(), Box<dyn Error + Send + Sync>>;
 }
 

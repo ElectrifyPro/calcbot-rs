@@ -155,11 +155,11 @@ pub struct Dictionary;
 
 #[async_trait]
 impl Command for Dictionary {
-    async fn execute(
-        &self,
+    async fn execute<'c>(
+        &'c self,
         state: &Arc<State>,
         _: &Arc<Mutex<Database>>,
-        ctxt: &Context,
+        ctxt: Context<'c>,
     ) -> Result<(), Box<dyn Error + Send + Sync>> {
         let raw_args = ctxt.raw_input.split_whitespace().collect::<Vec<&str>>();
         let (word, language) = match raw_args.split_last() {
