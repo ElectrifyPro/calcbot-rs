@@ -3,6 +3,7 @@ pub mod database;
 pub mod error;
 pub mod global;
 pub mod handler;
+pub mod timer;
 pub mod util;
 
 use database::Database;

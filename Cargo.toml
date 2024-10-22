@@ -33,6 +33,7 @@ getrandom = "0.2.9"
 lazy_static = "1.4.0"
 log = "0.4.17"
 mysql_async = "0.32.1"
+random-string = "1.1.0"
 regex = "1.7.3"
 reqwest = { version = "0.11.18", features = ["json"] }
 serde = { version = "1.0.181", features = ["derive"] }

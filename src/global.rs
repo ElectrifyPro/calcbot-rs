@@ -6,6 +6,8 @@ use twilight_model::{channel::message::Embed, id::{marker::ApplicationMarker, Id
 use twilight_util::builder::embed::{EmbedBuilder, EmbedFieldBuilder};
 
 /// The global state of the bot.
+///
+/// This state cannot be mutated by commands, and is shared across all commands.
 pub struct State {
     /// The application ID of the bot.
     pub application_id: Id<ApplicationMarker>,

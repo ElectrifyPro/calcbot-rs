@@ -4,6 +4,7 @@ pub mod dictionary;
 pub mod help;
 pub mod link;
 pub mod not_math;
+pub mod remind;
 pub mod unit_convert;
 
 use super::{database::Database, error::Error, global::State};
@@ -294,6 +295,7 @@ pub fn root() -> CommandGroup {
             Box::new(help::Help),
             Box::new(link::Link),
             Box::new(not_math::NotMath),
+            Box::new(remind::Remind),
             Box::new(unit_convert::UnitConvert),
         ],
     }

@@ -1,5 +1,6 @@
 pub mod user;
 
+use crate::timer::Timer;
 use dotenv::var;
 use mysql_async::{
     prelude::{Query, WithParams},
@@ -28,6 +29,9 @@ pub struct Database {
 
     /// Paged messages that are currently being displayed.
     paged: HashMap<(Id<ChannelMarker>, Id<MessageMarker>), UnboundedSender<InteractionCreate>>,
+
+    /// Active timers set by users.
+    timers: HashMap<String, Timer>,
 }
 
 impl Default for Database {
@@ -51,6 +55,7 @@ impl Database {
             servers: HashMap::new(),
             users: HashMap::new(),
             paged: HashMap::new(),
+            timers: HashMap::new(),
         }
     }
 
@@ -138,7 +143,7 @@ impl Database {
             return &self.users[&id];
         }
 
-        let data = match "SELECT ctxt FROM users WHERE id = ? LIMIT 1"
+        let data = match "SELECT ctxt, timers FROM users WHERE id = ? LIMIT 1"
             .with((id.get(),))
             .first::<UserData, _>(&self.pool)
             .await
@@ -146,8 +151,12 @@ impl Database {
         {
             Some(data) => data,
             None => {
-                "INSERT INTO users (id, ctxt) VALUES (?, ?)"
-                    .with((id.get(), to_value(cas_compute::numerical::ctxt::Ctxt::default()).unwrap(),))
+                "INSERT INTO users (id, ctxt, timers) VALUES (?, ?, ?)"
+                    .with((
+                        id.get(),
+                        to_value(cas_compute::numerical::ctxt::Ctxt::default()).unwrap(),
+                        to_value(HashMap::<(), ()>::new()).unwrap(),
+                    ))
                     .ignore(&self.pool)
                     .await
                     .unwrap();
@@ -162,8 +171,12 @@ impl Database {
     ///
     /// This will update the cached value and the database value.
     pub async fn set_user(&mut self, id: Id<UserMarker>, data: UserData) {
-        "UPDATE users SET ctxt = ? WHERE id = ?"
-            .with((to_value(&data.ctxt).unwrap(), id.get()))
+        "UPDATE users SET ctxt = ?, timers = ? WHERE id = ?"
+            .with((
+                to_value(&data.ctxt).unwrap(),
+                to_value(&data.timers).unwrap(),
+                id.get(),
+            ))
             .ignore(&self.pool)
             .await
             .unwrap();
@@ -183,6 +196,19 @@ impl Database {
                     .unwrap();
                 self.users.get_mut(&id).unwrap().ctxt = ctxt;
             },
+            UserField::Timers(timers) => {
+                "UPDATE users SET timers = ? WHERE id = ?"
+                    .with((to_value(&timers).unwrap(), id.get()))
+                    .ignore(&self.pool)
+                    .await
+                    .unwrap();
+                self.users.get_mut(&id).unwrap().timers = timers;
+            },
         }
+    }
+
+    /// Add a managed timer to the database.
+    pub fn add_timer(&mut self, timer: Timer) {
+        self.timers.insert(timer.id.clone(), timer);
     }
 }
