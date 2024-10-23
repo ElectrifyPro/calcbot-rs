@@ -29,9 +29,6 @@ pub struct Database {
 
     /// Paged messages that are currently being displayed.
     paged: HashMap<(Id<ChannelMarker>, Id<MessageMarker>), UnboundedSender<InteractionCreate>>,
-
-    /// Active timers set by users.
-    timers: HashMap<String, Timer>,
 }
 
 impl Default for Database {
@@ -55,7 +52,6 @@ impl Database {
             servers: HashMap::new(),
             users: HashMap::new(),
             paged: HashMap::new(),
-            timers: HashMap::new(),
         }
     }
 
@@ -208,7 +204,20 @@ impl Database {
     }
 
     /// Add a managed timer to the database.
-    pub fn add_timer(&mut self, timer: Timer) {
-        self.timers.insert(timer.id.clone(), timer);
+    pub async fn add_timer(&mut self, timer: Timer) {
+        let user_id = timer.user_id.clone();
+        let mut user_timers = self.get_user(timer.user_id)
+            .await
+            .timers
+            .clone();
+        user_timers.insert(timer.id.clone(), timer);
+
+        self.set_user_field(user_id, UserField::Timers(user_timers)).await;
+    }
+
+    /// Remove a managed timer from the database. Returns the removed instance.
+    pub async fn remove_timer(&mut self, id: &Id<UserMarker>, timer_id: &str) -> Option<Timer> {
+        let user = self.users.get_mut(id)?;
+        user.timers.remove(timer_id)
     }
 }

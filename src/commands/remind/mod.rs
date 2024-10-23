@@ -1,5 +1,5 @@
 // pub mod at;
-// pub mod delete;
+pub mod delete;
 // pub mod edit;
 // pub mod every;
 // pub mod increment;
@@ -13,7 +13,7 @@ use calcbot_attrs::Info;
 use cas_math::unit_conversion::{unit::Time, Measurement, Quantity, Unit};
 use crate::{
     commands::{Command, Context},
-    database::{user::UserField, Database},
+    database::Database,
     error::Error,
     global::State,
     timer::Timer,
@@ -35,6 +35,9 @@ use tokio::sync::Mutex;
     syntax = ["<quantity> <time unit> [message]"],
     examples = ["10 minutes", "10 minutes stop watching tv"],
     args = [f64, String, Unlimited],
+    children = [
+        delete::Delete,
+    ],
 )]
 pub struct Remind;
     // children = [
@@ -81,18 +84,7 @@ impl Command for Remind {
         let id = timer.id.clone();
 
         // add to local and remote database so timer can be loaded if bot restarts mid-timer
-        {
-            let mut database = database.lock().await;
-            let mut timers = database.get_user(ctxt.trigger.author_id())
-                .await
-                .timers
-                .clone();
-            timers.insert(timer.id.clone(), timer.clone());
-
-            database.set_user_field(ctxt.trigger.author_id(), UserField::Timers(timers)).await;
-
-            database.add_timer(timer);
-        }
+        database.lock().await.add_timer(timer).await;
 
         ctxt.trigger.reply(&state.http)
             .content(&format!("**You will be mentioned in this channel in `{quantity} {unit}`.** This reminder's ID is `{id}`."))?

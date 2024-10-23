@@ -49,6 +49,14 @@ pub struct Timer {
     task: Option<JoinHandle<Result<(), Box<dyn Error + Send + Sync>>>>,
 }
 
+impl Drop for Timer {
+    fn drop(&mut self) {
+        if let Some(ref mut task) = self.task {
+            task.abort();
+        }
+    }
+}
+
 impl Clone for Timer {
     fn clone(&self) -> Self {
         Self {

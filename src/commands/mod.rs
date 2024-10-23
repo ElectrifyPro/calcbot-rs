@@ -245,7 +245,9 @@ pub struct Context<'a> {
     /// channel.
     pub prefix: Option<&'a str>,
 
-    /// The raw input to the command, not including the prefix.
+    /// The user's raw input to the command. This includes only the arguments passed to the command
+    /// and does not include the prefix, command name, or any whitespace at the start or end of the
+    /// string.
     pub raw_input: &'a str,
 }
 
