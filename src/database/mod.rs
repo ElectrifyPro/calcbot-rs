@@ -10,11 +10,14 @@ use mysql_async::{
 use serde_json::to_value;
 use std::collections::HashMap;
 use tokio::sync::mpsc::{UnboundedReceiver, UnboundedSender, unbounded_channel};
-use twilight_model::{
-    gateway::payload::incoming::InteractionCreate,
-    id::{Id, marker::{ChannelMarker, GuildMarker, MessageMarker, UserMarker}},
-};
+use twilight_model::id::{Id, marker::{ChannelMarker, GuildMarker, MessageMarker, UserMarker}};
 use user::{UserData, UserField};
+
+#[cfg(feature = "twilight")]
+use twilight_model::gateway::payload::incoming::InteractionCreate;
+
+#[cfg(feature = "mock")]
+use crate::mock::InteractionCreate;
 
 /// Helper struct to access and manage the database.
 pub struct Database {

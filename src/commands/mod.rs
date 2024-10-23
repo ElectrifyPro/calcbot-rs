@@ -11,9 +11,19 @@ use super::{database::Database, error::Error, global::State};
 use async_trait::async_trait;
 use std::{iter::Peekable, sync::Arc};
 use tokio::sync::Mutex;
+use twilight_model::{channel::message::Embed, id::{marker::{ChannelMarker, UserMarker}, Id}};
+
+#[cfg(feature = "twilight")]
+use twilight_model::channel::message::Message;
+
+#[cfg(feature = "twilight")]
 use twilight_http::{request::channel::message::CreateMessage, Client};
-use twilight_model::{channel::message::{Embed, Message}, id::{marker::{ChannelMarker, UserMarker}, Id}};
+
+#[cfg(feature = "twilight")]
 use twilight_util::builder::embed::{EmbedBuilder, EmbedFieldBuilder};
+
+#[cfg(feature = "mock")]
+use crate::mock::Message;
 
 /// Formats a list of commands into a code block. Each string is displayed on a separate line,
 /// prepended with the given prefix.

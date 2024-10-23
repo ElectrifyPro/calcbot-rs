@@ -1,7 +1,12 @@
 use super::{commands::Context, database::Database, global::State};
 use std::{error::Error, sync::Arc, time::Instant};
 use tokio::sync::Mutex;
+
+#[cfg(feature = "twilight")]
 use twilight_model::gateway::payload::incoming::MessageCreate;
+
+#[cfg(feature = "mock")]
+use crate::mock::MessageCreate;
 
 /// Handles a message being created in some text channel.
 pub async fn message_create(

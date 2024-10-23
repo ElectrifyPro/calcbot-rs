@@ -1,13 +1,28 @@
 use super::commands::{self, CommandGroup};
-use std::{collections::HashMap, time::Instant};
+use std::time::Instant;
+
+#[cfg(feature = "twilight")]
+use std::collections::HashMap;
+
+#[cfg(feature = "twilight")]
 use twilight_cache_inmemory::{InMemoryCache, ResourceType};
+
+#[cfg(feature = "twilight")]
 use twilight_http::Client as HttpClient;
+
+#[cfg(feature = "twilight")]
 use twilight_model::{channel::message::Embed, id::{marker::ApplicationMarker, Id}};
+
+#[cfg(feature = "twilight")]
 use twilight_util::builder::embed::{EmbedBuilder, EmbedFieldBuilder};
+
+#[cfg(feature = "mock")]
+use crate::mock::{Event, HttpClient};
 
 /// The global state of the bot.
 ///
 /// This state cannot be mutated by commands, and is shared across all commands.
+#[cfg(feature = "twilight")]
 pub struct State {
     /// The application ID of the bot.
     pub application_id: Id<ApplicationMarker>,
@@ -25,6 +40,7 @@ pub struct State {
     pub cache: InMemoryCache,
 }
 
+#[cfg(feature = "twilight")]
 impl State {
     /// Creates a new [`State`] with the given token.
     pub async fn new(token: String) -> Self {
@@ -90,5 +106,50 @@ impl State {
         }
 
         embed.build()
+    }
+}
+
+#[cfg(feature = "mock")]
+pub struct Cache {
+    pub messages: std::sync::Mutex<Vec<String>>,
+}
+
+#[cfg(feature = "mock")]
+impl Cache {
+    pub fn new() -> Self {
+        Self {
+            messages: std::sync::Mutex::new(Vec::new()),
+        }
+    }
+
+    pub fn update(&self, event: &Event) {
+        match event {
+            Event::MessageCreate(msg) => {
+                self.messages.lock().unwrap().push(msg.content.clone());
+            },
+            _ => {
+                log::info!("Ignoring event");
+            },
+        }
+    }
+}
+
+#[cfg(feature = "mock")]
+pub struct State {
+    pub start_time: Instant,
+    pub commands: CommandGroup,
+    pub http: HttpClient,
+    pub cache: Cache,
+}
+
+#[cfg(feature = "mock")]
+impl State {
+    pub fn new() -> Self {
+        Self {
+            start_time: Instant::now(),
+            commands: commands::root(),
+            http: HttpClient::new(),
+            cache: Cache::new(),
+        }
     }
 }
