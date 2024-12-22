@@ -19,7 +19,7 @@ features = ["mysql", "serde"]
 
 [dependencies.cas-math]
 git = "https://github.com/ElectrifyPro/cas-rs.git"
-branch = "dev"
+branch = "main"
 
 [dependencies.cas-parser]
 git = "https://github.com/ElectrifyPro/cas-rs.git"

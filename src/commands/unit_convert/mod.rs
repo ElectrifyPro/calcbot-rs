@@ -2,7 +2,7 @@ pub mod units;
 
 use async_trait::async_trait;
 use calcbot_attrs::Info;
-use cas_math::unit_conversion::{Measurement, Quantity};
+use cas_math::unit_conversion::{Measurement, Unit};
 use crate::{
     commands::{Command, Context},
     database::Database,
@@ -40,7 +40,7 @@ impl Command for UnitConvert {
     ) -> Result<(), Box<dyn Error + Send + Sync>> {
         let raw_args = ctxt.raw_input.split_whitespace().collect::<Vec<_>>();
         let (quantity, unit, target_unit) = match raw_args.len() {
-            3 => (raw_args[0].parse().unwrap(), Quantity::try_from(raw_args[1]).unwrap(), Quantity::try_from(raw_args[2]).unwrap()),
+            3 => (raw_args[0].parse().unwrap(), Unit::try_from(raw_args[1]).unwrap(), Unit::try_from(raw_args[2]).unwrap()),
             _ => todo!(),
         };
 
@@ -50,7 +50,7 @@ impl Command for UnitConvert {
                 format!("**Converting** `{} {}` to `{}`\n{}", quantity, unit, target_unit, end.value())
             },
             Err(_) => {
-                format!("**There is no conversion path from `{}` to `{}`.**", unit, target_unit)
+                format!("**Can't convert from from `{}` to `{}`.**", unit, target_unit)
             },
         };
         ctxt.trigger.reply(&state.http)

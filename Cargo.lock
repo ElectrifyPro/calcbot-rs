@@ -372,7 +372,7 @@ dependencies = [
 [[package]]
 name = "cas-math"
 version = "0.1.0"
-source = "git+https://github.com/ElectrifyPro/cas-rs.git?branch=dev#55039ecd8250603da92034738e93661cb477e810"
+source = "git+https://github.com/ElectrifyPro/cas-rs.git?branch=main#fa91bb9304240fec28f48852b9af69e4a5954abd"
 
 [[package]]
 name = "cas-parser"
