@@ -4,6 +4,7 @@ use crate::timer::Timer;
 use dotenv::var;
 use mysql_async::{
     prelude::{Query, WithParams},
+    Error,
     OptsBuilder,
     Pool,
 };
@@ -103,29 +104,27 @@ impl Database {
     /// will be fetched from the database, cached, then returned.
     ///
     /// If the data does not exist anywhere, a default is created.
-    pub async fn get_server(&mut self, id: Id<GuildMarker>) -> &str {
+    pub async fn get_server(&mut self, id: Id<GuildMarker>) -> Result<&str, Error> {
         if self.servers.contains_key(&id) {
-            return &self.servers[&id];
+            return Ok(&self.servers[&id]);
         }
 
         let prefix = match "SELECT prefix FROM servers WHERE id = ? LIMIT 1"
             .with((id.get(),))
             .first::<String, _>(&self.pool)
-            .await
-            .unwrap()
+            .await?
         {
             Some(prefix) => prefix,
             None => {
                 "INSERT INTO servers (id, prefix) VALUES (?, 'c-')"
                     .with((id.get(),))
                     .ignore(&self.pool)
-                    .await
-                    .unwrap();
+                    .await?;
                 String::from("c-")
             },
         };
 
-        self.servers.entry(id).or_insert(prefix)
+        Ok(self.servers.entry(id).or_insert(prefix))
     }
 
     /// Returns the user data for the given user ID.
