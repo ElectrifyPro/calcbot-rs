@@ -9,7 +9,7 @@ use mysql_async::{
     Pool,
 };
 use serde_json::to_value;
-use std::collections::HashMap;
+use std::{collections::HashMap, time::Duration};
 use tokio::sync::mpsc::{UnboundedReceiver, UnboundedSender, unbounded_channel};
 use twilight_model::{
     gateway::payload::incoming::InteractionCreate,
@@ -218,5 +218,19 @@ impl Database {
     pub async fn remove_timer(&mut self, id: &Id<UserMarker>, timer_id: &str) -> Option<Timer> {
         let user = self.users.get_mut(id)?;
         user.timers.remove(timer_id)
+    }
+
+    /// Increments a managed timer in the database.
+    pub async fn increment_timer(
+        &mut self,
+        id: &Id<UserMarker>,
+        timer_id: &str,
+        duration: Duration,
+    ) -> Option<&Timer> {
+        let user = self.users.get_mut(id)?;
+        let timer = user.timers.get_mut(timer_id)?;
+        *timer += duration;
+
+        Some(timer)
     }
 }

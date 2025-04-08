@@ -2,11 +2,11 @@
 pub mod delete;
 // pub mod edit;
 // pub mod every;
-// pub mod increment;
+pub mod increment;
 // pub mod pause;
 // pub mod recur;
 // pub mod resume;
-// pub mod view;
+pub mod view;
 
 use async_trait::async_trait;
 use calcbot_attrs::Info;
@@ -37,19 +37,18 @@ use tokio::sync::Mutex;
     args = [f64, String, Unlimited],
     children = [
         delete::Delete,
+        increment::Increment,
+        view::View,
     ],
 )]
 pub struct Remind;
     // children = [
     //     at::At,
-    //     delete::Delete,
     //     edit::Edit,
     //     every::Every,
-    //     increment::Increment,
     //     pause::Pause,
     //     recur::Recur,
     //     resume::Resume,
-    //     view::View,
     // ],
 
 #[async_trait]
