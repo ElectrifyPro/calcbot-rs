@@ -11,9 +11,9 @@ use tokio::sync::Mutex;
 
 lazy_static::lazy_static! {
     /// The list of words to search through (~250K words).
-    static ref WORDS: Vec<&'static str> = {
-        let words = include_str!("./words.json");
-        serde_json::from_str(words).unwrap()
+    static ref WORDS: Vec<String> = {
+        let words = std::fs::read_to_string("words.json").unwrap();
+        serde_json::from_str(&words).unwrap()
     };
 }
 
@@ -47,7 +47,7 @@ fn unscramble(letters: &str, length: usize) -> Vec<&'static str> {
             .iter()
             .all(|(letter, count)| letters.get(letter).map(|c| c >= count).unwrap_or(false))
         {
-            words.push(*candidate);
+            words.push(&**candidate);
         }
 
         if words.len() >= 100 {
