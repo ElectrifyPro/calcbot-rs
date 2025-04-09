@@ -1,10 +1,10 @@
 use serde::{Deserialize, Serialize};
 use twilight_mention::{timestamp::{Timestamp, TimestampStyle}, Mention};
 use std::{error::Error, ops::{Add, AddAssign}, sync::Arc, time::{Duration, SystemTime}};
-use tokio::{task::JoinHandle, time::Sleep};
+use tokio::{sync::Mutex, task::JoinHandle, time::Sleep};
 use twilight_model::id::{marker::{ChannelMarker, UserMarker}, Id};
 
-use crate::global::State;
+use crate::{database::Database, global::State};
 
 /// State of a timer.
 #[derive(Debug, Clone, Deserialize, Serialize)]
@@ -25,7 +25,7 @@ pub enum TimerState {
 /// A timer set by a user using the `c-remind` and its related commands.
 ///
 /// When cloning a timer, the task that sends the reminder message is not cloned.
-#[derive(Deserialize, Serialize)]
+#[derive(Debug, Deserialize, Serialize)]
 pub struct Timer {
     /// The ID of the timer.
     pub id: String,
@@ -45,25 +45,9 @@ pub struct Timer {
     /// The message to send when the timer ends.
     pub message: String,
 
-    /// Global state of the bot.
-    #[serde(skip)]
-    bot_state: Option<Arc<State>>,
-
     /// The task that will send the reminder message.
     #[serde(skip)]
     task: Option<JoinHandle<Result<(), Box<dyn Error + Send + Sync>>>>,
-}
-
-impl std::fmt::Debug for Timer {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        f.debug_struct("Timer")
-            .field("id", &self.id)
-            .field("user_id", &self.user_id)
-            .field("channel_id", &self.channel_id)
-            .field("state", &self.state)
-            .field("message", &self.message)
-            .finish()
-    }
 }
 
 impl Drop for Timer {
@@ -82,7 +66,6 @@ impl Clone for Timer {
             channel_id: self.channel_id,
             state: self.state.clone(),
             message: self.message.clone(),
-            bot_state: self.bot_state.clone(),
             task: None,
         }
     }
@@ -91,25 +74,22 @@ impl Clone for Timer {
 impl Timer {
     /// Creates a new timer that ends at the given time.
     ///
-    /// The created timer is actively running.
+    /// The [`Timer::create_task`] function must be called after this to create the task that
+    /// sends the reminder message.
     pub fn running(
-        state: &Arc<State>,
         user_id: Id<UserMarker>,
         channel_id: Id<ChannelMarker>,
         end_time: SystemTime,
         message: String,
     ) -> Self {
-        let mut timer = Self {
+        Self {
             id: random_string::generate(4, random_string::charsets::ALPHA_LOWER),
             user_id,
             channel_id,
             state: TimerState::Running { end_time },
             message,
-            bot_state: Some(Arc::clone(state)),
             task: None,
-        };
-        timer.create_task();
-        timer
+        }
     }
 
     /// Creates a [`Sleep`] future that will complete when the timer ends.
@@ -165,15 +145,17 @@ impl Timer {
 
     /// Create the timer's task that will send a reminder message to the given channel when the
     /// timer ends.
-    fn create_task(&mut self) {
-        let bot_state = Arc::clone(self.bot_state.as_ref().unwrap());
+    ///
+    /// This function **must** be called when the timer is created or when the timer is modified.
+    pub(crate) fn create_task(&mut self, bot_state: Arc<State>, db: Arc<Mutex<Database>>) {
+        let timer_id = self.id.clone();
         let user_id = self.user_id;
         let channel_id = self.channel_id;
         let message = self.message.clone();
         let future = self.sleep();
 
         // kill the old task if it exists
-        if let Some(ref mut task) = self.task {
+        if let Some(task) = self.task.take() {
             task.abort();
         }
 
@@ -187,6 +169,9 @@ impl Timer {
             bot_state.http.create_message(channel_id)
                 .content(&msg)?
                 .await?;
+
+            db.lock().await.remove_timer(&user_id, &timer_id).await;
+
             Ok::<_, Box<dyn std::error::Error + Send + Sync>>(())
         }));
     }
@@ -204,7 +189,6 @@ impl Add<Duration> for Timer {
                 TimerState::Paused { remaining: remaining + rhs }
             },
         };
-        self.create_task();
         self
     }
 }
@@ -219,6 +203,5 @@ impl AddAssign<Duration> for Timer {
                 TimerState::Paused { remaining: remaining + rhs }
             },
         };
-        self.create_task();
     }
 }

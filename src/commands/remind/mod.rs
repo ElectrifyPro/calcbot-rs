@@ -73,13 +73,13 @@ impl Command for Remind {
             .value());
 
         let end_time = SystemTime::now() + time_amount;
-        let timer = Timer::running(
-            state,
+        let mut timer = Timer::running(
             ctxt.trigger.author_id(),
             ctxt.trigger.channel_id(),
             end_time,
             message,
         );
+        timer.create_task(Arc::clone(&state), Arc::clone(&database));
         let id = timer.id.clone();
 
         // add to local and remote database so timer can be loaded if bot restarts mid-timer

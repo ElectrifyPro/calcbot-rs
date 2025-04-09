@@ -1,6 +1,6 @@
 pub mod user;
 
-use crate::timer::Timer;
+use crate::{global::State, timer::Timer};
 use dotenv::var;
 use mysql_async::{
     prelude::{Query, WithParams},
@@ -9,8 +9,8 @@ use mysql_async::{
     Pool,
 };
 use serde_json::to_value;
-use std::{collections::HashMap, time::Duration};
-use tokio::sync::mpsc::{UnboundedReceiver, UnboundedSender, unbounded_channel};
+use std::{collections::HashMap, sync::Arc, time::Duration};
+use tokio::sync::{mpsc::{unbounded_channel, UnboundedReceiver, UnboundedSender}, Mutex};
 use twilight_model::{
     gateway::payload::incoming::InteractionCreate,
     id::{Id, marker::{ChannelMarker, GuildMarker, MessageMarker, UserMarker}},
@@ -127,6 +127,22 @@ impl Database {
         Ok(self.servers.entry(id).or_insert(prefix))
     }
 
+    /// Loads all users that have timers set in the database, allowing timers to continue running
+    /// even if the bot is restarted.
+    pub async fn resume_users_with_timers(&mut self, state: Arc<State>, db: Arc<Mutex<Database>>) {
+        let users = "SELECT id, ctxt, timers FROM users WHERE timers != '{}'"
+            .fetch::<UserData, _>(&self.pool)
+            .await
+            .unwrap();
+
+        for mut user in users {
+            for timer in user.timers.values_mut() {
+                timer.create_task(Arc::clone(&state), Arc::clone(&db));
+            }
+            self.users.insert(user.id, user);
+        }
+    }
+
     /// Returns the user data for the given user ID.
     ///
     /// If the data was cached previously, the cached value will be returned. Otherwise, the data
@@ -155,7 +171,7 @@ impl Database {
                     .ignore(&self.pool)
                     .await
                     .unwrap();
-                UserData::default()
+                UserData::new(id)
             },
         };
 
@@ -217,7 +233,12 @@ impl Database {
     /// Remove a managed timer from the database. Returns the removed instance.
     pub async fn remove_timer(&mut self, id: &Id<UserMarker>, timer_id: &str) -> Option<Timer> {
         let user = self.users.get_mut(id)?;
-        user.timers.remove(timer_id)
+        let timer = user.timers.remove(timer_id);
+        if timer.is_some() {
+            let timers = user.timers.clone();
+            self.set_user_field(*id, UserField::Timers(timers)).await;
+        }
+        timer
     }
 
     /// Increments a managed timer in the database.

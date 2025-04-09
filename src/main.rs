@@ -36,6 +36,13 @@ async fn main() -> Result<(), Box<dyn Error + Send + Sync>> {
 
     let state = Arc::new(State::new(token).await);
     let database = Arc::new(Mutex::new(Database::new()));
+    {
+        let state_clone = Arc::clone(&state);
+        let database_clone = Arc::clone(&database);
+        database.lock().await
+            .resume_users_with_timers(state_clone, database_clone).await;
+        log::info!("Resumed users with active timers");
+    }
 
     loop {
         let event = match shard.next_event().await {
