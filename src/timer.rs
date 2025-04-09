@@ -4,7 +4,7 @@ use std::{error::Error, ops::{Add, AddAssign}, sync::Arc, time::{Duration, Syste
 use tokio::{sync::Mutex, task::JoinHandle, time::Sleep};
 use twilight_model::id::{marker::{ChannelMarker, UserMarker}, Id};
 
-use crate::{database::Database, global::State, util::format_duration};
+use crate::{database::{user::Timers, Database}, global::State, util::format_duration};
 
 /// State of a timer.
 #[derive(Debug, Clone, Deserialize, Serialize)]
@@ -170,7 +170,8 @@ impl Timer {
                 .content(&msg)?
                 .await?;
 
-            db.lock().await.remove_timer(&user_id, &timer_id).await;
+            let mut db = db.lock().await;
+            db.get_user_field_mut::<Timers>(user_id).await.remove(&timer_id);
 
             Ok::<_, Box<dyn std::error::Error + Send + Sync>>(())
         }));

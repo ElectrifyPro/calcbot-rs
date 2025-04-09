@@ -9,7 +9,7 @@ use cas_compute::numerical::eval::eval_stmts;
 use cas_parser::parser::Parser;
 use crate::{
     commands::{Command, Context},
-    database::{user::UserField, Database},
+    database::{user::Ctxt, Database},
     error::Error,
     global::State,
 };
@@ -47,11 +47,10 @@ impl Command for Calculate {
         let mut parser = Parser::new(ctxt.raw_input);
         match parser.try_parse_full_many() {
             Ok(stmts) => {
-                let mut user_data = database.lock().await
-                    .get_user(ctxt.trigger.author_id()).await
-                    .clone();
+                let mut database = database.lock().await;
+                let eval_ctxt = database.get_user_field_mut::<Ctxt>(ctxt.trigger.author_id()).await;
 
-                let ans = match eval_stmts(&stmts, &mut user_data.ctxt) {
+                let ans = match eval_stmts(&stmts, eval_ctxt) {
                     Ok(ans) => ans,
                     Err(err) => {
                         let mut buf = Vec::new();
@@ -66,12 +65,11 @@ impl Command for Calculate {
                     },
                 };
                 ctxt.trigger.reply(&state.http)
-                    .content(&format!("**Calculation** (mode: {})\n{}", user_data.ctxt.trig_mode, ans))?
+                    .content(&format!("**Calculation** (mode: {})\n{}", eval_ctxt.trig_mode, ans))?
                     .await?;
 
-                user_data.ctxt.add_var("ans", ans);
-                database.lock().await
-                    .set_user_field(ctxt.trigger.author_id(), UserField::Ctxt(user_data.ctxt)).await;
+                eval_ctxt.add_var("ans", ans);
+                database.commit_user_field::<Ctxt>(ctxt.trigger.author_id()).await;
             },
             Err(errs) => {
                 let msg = errs.into_iter()

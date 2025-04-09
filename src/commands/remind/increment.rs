@@ -3,7 +3,7 @@ use calcbot_attrs::Info;
 use cas_math::unit_conversion::{unit::Time, Measurement, Quantity, Unit};
 use crate::{
     commands::{Command, Context},
-    database::Database,
+    database::{user::Timers, Database},
     error::Error,
     global::State,
 };
@@ -46,21 +46,25 @@ impl Command for Increment {
         };
 
         let time_amount = Duration::from_secs_f64(*Measurement::new(quantity, unit)
-            .convert(Unit::new(Quantity::Time(Time::Second)))
+            .convert(Time::Second)
             .unwrap()
             .value());
 
-        let mut database = database.lock().await;
-
-        if database.increment_timer(&ctxt.trigger.author_id(), &timer_id, time_amount).await.is_some() {
-            ctxt.trigger.reply(&state.http)
-                .content(&format!("**Successfully added `{quantity} {unit}` to the reminder with ID `{timer_id}`.**"))?
-                .await?;
-        } else {
+        let mut db = database.lock().await;
+        let Some(timer) = db.get_user_field_mut::<Timers>(ctxt.trigger.author_id()).await
+            .get_mut(&timer_id) else {
             ctxt.trigger.reply(&state.http)
                 .content(&format!("**You do not have a reminder set with the ID `{timer_id}`.**"))?
                 .await?;
-        }
+            return Ok(());
+        };
+
+        *timer += time_amount;
+        timer.create_task(Arc::clone(state), Arc::clone(database));
+
+        ctxt.trigger.reply(&state.http)
+            .content(&format!("**Successfully added `{quantity} {unit}` to the reminder with ID `{timer_id}`.**"))?
+        .await?;
 
         Ok(())
     }

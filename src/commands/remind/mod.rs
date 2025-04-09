@@ -13,7 +13,7 @@ use calcbot_attrs::Info;
 use cas_math::unit_conversion::{unit::Time, Measurement, Quantity, Unit};
 use crate::{
     commands::{Command, Context},
-    database::Database,
+    database::{user::Timers, Database},
     error::Error,
     global::State,
     timer::Timer,
@@ -68,7 +68,7 @@ impl Command for Remind {
             return Ok(());
         };
         let time_amount = Duration::from_secs_f64(*Measurement::new(quantity, Unit::new(Quantity::Time(unit)))
-            .convert(Unit::new(Quantity::Time(Time::Second)))
+            .convert(Time::Second)
             .unwrap()
             .value());
 
@@ -83,7 +83,10 @@ impl Command for Remind {
         let id = timer.id.clone();
 
         // add to local and remote database so timer can be loaded if bot restarts mid-timer
-        database.lock().await.add_timer(timer).await;
+        let mut database = database.lock().await;
+        database.get_user_field_mut::<Timers>(ctxt.trigger.author_id()).await
+            .insert(id.clone(), timer);
+        database.commit_user_field::<Timers>(ctxt.trigger.author_id()).await;
 
         ctxt.trigger.reply(&state.http)
             .content(&format!("**You will be mentioned in this channel in `{quantity} {unit}`.** This reminder's ID is `{id}`."))?

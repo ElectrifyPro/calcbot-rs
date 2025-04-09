@@ -1,4 +1,5 @@
-use cas_compute::numerical::ctxt::Ctxt;
+use cas_compute::numerical::ctxt::Ctxt as EvalCtxt;
+use serde::Serialize;
 use twilight_model::id::{marker::UserMarker, Id};
 use crate::timer::Timer;
 use mysql_async::{prelude::FromRow, FromRowError};
@@ -12,7 +13,7 @@ pub struct UserData {
     pub id: Id<UserMarker>,
 
     /// The user's evaluation context.
-    pub ctxt: Ctxt,
+    pub ctxt: EvalCtxt,
 
     /// The timers the user has set.
     pub timers: HashMap<String, Timer>,
@@ -33,18 +34,53 @@ impl UserData {
     pub fn new(id: Id<UserMarker>) -> Self {
         Self {
             id,
-            ctxt: Ctxt::default(),
+            ctxt: EvalCtxt::default(),
             timers: HashMap::new(),
         }
     }
 }
 
-/// Represents a specific field of [`UserData`] and its value.
-#[derive(Debug, Clone)]
-pub enum UserField {
-    /// The user's evaluation context.
-    Ctxt(Ctxt),
+/// A helper trait used to generically access and modify specific fields of [`UserData`].
+///
+/// This makes it easy to fetch specific fields from the database and modify them without having to
+/// manually specify the field as a string. When fetching a specific field from the database,
+/// simply use one of the following types as the generic parameter to get the field:
+///
+/// - [`Ctxt`]: The user's evaluation context.
+/// - [`Timers`]: The timers the user has set.
+pub trait UserField {
+    /// The name of the column in the database that corresponds to this field.
+    const COLUMN_NAME: &'static str;
 
-    /// The timers the user has set.
-    Timers(HashMap<String, Timer>),
+    /// The type of the field to be serialized to and deserialized from the database.
+    type Type: Serialize;
+
+    /// Gets mutable access to the field in the [`UserData`] instance.
+    fn get_mut(user_data: &mut UserData) -> &mut Self::Type;
+}
+
+/// [`UserData::ctxt`]
+pub struct Ctxt;
+
+/// [`UserData::timers`]
+pub struct Timers;
+
+impl UserField for Ctxt {
+    const COLUMN_NAME: &'static str = "ctxt";
+
+    type Type = EvalCtxt;
+
+    fn get_mut(user_data: &mut UserData) -> &mut Self::Type {
+        &mut user_data.ctxt
+    }
+}
+
+impl UserField for Timers {
+    const COLUMN_NAME: &'static str = "timers";
+
+    type Type = HashMap<String, Timer>;
+
+    fn get_mut(user_data: &mut UserData) -> &mut Self::Type {
+        &mut user_data.timers
+    }
 }

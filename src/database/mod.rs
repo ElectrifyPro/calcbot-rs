@@ -1,6 +1,8 @@
+mod const_str;
 pub mod user;
 
-use crate::{global::State, timer::Timer};
+use crate::global::State;
+use const_str::ConstStr;
 use dotenv::var;
 use mysql_async::{
     prelude::{Query, WithParams},
@@ -9,7 +11,7 @@ use mysql_async::{
     Pool,
 };
 use serde_json::to_value;
-use std::{collections::HashMap, sync::Arc, time::Duration};
+use std::{collections::HashMap, sync::Arc};
 use tokio::sync::{mpsc::{unbounded_channel, UnboundedReceiver, UnboundedSender}, Mutex};
 use twilight_model::{
     gateway::payload::incoming::InteractionCreate,
@@ -142,16 +144,15 @@ impl Database {
             self.users.insert(user.id, user);
         }
     }
-
-    /// Returns the user data for the given user ID.
+    /// Gets mutable access to the user data for the given user ID.
     ///
     /// If the data was cached previously, the cached value will be returned. Otherwise, the data
     /// will be fetched from the database, cached, then returned.
     ///
     /// If the data does not exist anywhere, a default is created.
-    pub async fn get_user(&mut self, id: Id<UserMarker>) -> &UserData {
+    async fn get_user_mut(&mut self, id: Id<UserMarker>) -> &mut UserData {
         if self.users.contains_key(&id) {
-            return &self.users[&id];
+            return self.users.get_mut(&id).unwrap();
         }
 
         let data = match "SELECT ctxt, timers FROM users WHERE id = ? LIMIT 1"
@@ -178,80 +179,49 @@ impl Database {
         self.users.entry(id).or_insert(data)
     }
 
-    /// Sets the user data for the given user ID.
+    /// Gets immutable access to the user data for the given user ID.
     ///
-    /// This will update the cached value and the database value.
-    pub async fn set_user(&mut self, id: Id<UserMarker>, data: UserData) {
-        "UPDATE users SET ctxt = ?, timers = ? WHERE id = ?"
+    /// If the data was cached previously, the cached value will be returned. Otherwise, the data
+    /// will be fetched from the database, cached, then returned.
+    ///
+    /// If the data does not exist anywhere, a default is created.
+    pub async fn get_user(&mut self, id: Id<UserMarker>) -> &UserData {
+        self.get_user_mut(id).await
+    }
+
+    /// Gets mutable access to the specified field of the user data for the given user ID.
+    ///
+    /// After modifying the data, use [`Database::commit_user_field`] to commit the changes to the
+    /// database.
+    pub async fn get_user_field_mut<'a, T: UserField>(
+        &'a mut self,
+        id: Id<UserMarker>,
+    ) -> &'a mut T::Type
+    where
+        T::Type: 'a,
+    {
+        let user = self.get_user_mut(id).await;
+        T::get_mut(user)
+    }
+
+    /// Commits changes made to the specified field of the user data for the given user ID to the
+    /// database.
+    ///
+    /// After calling [`Database::get_user_field_mut`], call this function to commit the changes to
+    /// the database.
+    pub async fn commit_user_field<T: UserField>(&mut self, id: Id<UserMarker>) {
+        let user = self.get_user_mut(id).await;
+        const { ConstStr::new()
+            .append("UPDATE users SET ")
+            .append(T::COLUMN_NAME)
+            .append(" = ? WHERE id = ?") }
+            .as_str()
             .with((
-                to_value(&data.ctxt).unwrap(),
-                to_value(&data.timers).unwrap(),
+                to_value(T::get_mut(user)).unwrap(),
                 id.get(),
             ))
             .ignore(&self.pool)
             .await
             .unwrap();
-        self.users.insert(id, data);
-    }
-
-    /// Sets a specific field of the user data for the given user ID.
-    ///
-    /// This will update the cached value and the database value.
-    pub async fn set_user_field(&mut self, id: Id<UserMarker>, field: UserField) {
-        match field {
-            UserField::Ctxt(ctxt) => {
-                "UPDATE users SET ctxt = ? WHERE id = ?"
-                    .with((to_value(&ctxt).unwrap(), id.get()))
-                    .ignore(&self.pool)
-                    .await
-                    .unwrap();
-                self.users.get_mut(&id).unwrap().ctxt = ctxt;
-            },
-            UserField::Timers(timers) => {
-                "UPDATE users SET timers = ? WHERE id = ?"
-                    .with((to_value(&timers).unwrap(), id.get()))
-                    .ignore(&self.pool)
-                    .await
-                    .unwrap();
-                self.users.get_mut(&id).unwrap().timers = timers;
-            },
-        }
-    }
-
-    /// Add a managed timer to the database.
-    pub async fn add_timer(&mut self, timer: Timer) {
-        let user_id = timer.user_id.clone();
-        let mut user_timers = self.get_user(timer.user_id)
-            .await
-            .timers
-            .clone();
-        user_timers.insert(timer.id.clone(), timer);
-
-        self.set_user_field(user_id, UserField::Timers(user_timers)).await;
-    }
-
-    /// Remove a managed timer from the database. Returns the removed instance.
-    pub async fn remove_timer(&mut self, id: &Id<UserMarker>, timer_id: &str) -> Option<Timer> {
-        let user = self.users.get_mut(id)?;
-        let timer = user.timers.remove(timer_id);
-        if timer.is_some() {
-            let timers = user.timers.clone();
-            self.set_user_field(*id, UserField::Timers(timers)).await;
-        }
-        timer
-    }
-
-    /// Increments a managed timer in the database.
-    pub async fn increment_timer(
-        &mut self,
-        id: &Id<UserMarker>,
-        timer_id: &str,
-        duration: Duration,
-    ) -> Option<&Timer> {
-        let user = self.users.get_mut(id)?;
-        let timer = user.timers.get_mut(timer_id)?;
-        *timer += duration;
-
-        Some(timer)
     }
 }
