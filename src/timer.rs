@@ -4,7 +4,7 @@ use std::{error::Error, ops::{Add, AddAssign}, sync::Arc, time::{Duration, Syste
 use tokio::{sync::Mutex, task::JoinHandle, time::Sleep};
 use twilight_model::id::{marker::{ChannelMarker, UserMarker}, Id};
 
-use crate::{database::Database, global::State};
+use crate::{database::Database, global::State, util::format_duration};
 
 /// State of a timer.
 #[derive(Debug, Clone, Deserialize, Serialize)]
@@ -115,13 +115,13 @@ impl Timer {
                     .as_secs();
                 let duration = end_time.duration_since(SystemTime::now()).unwrap_or_default();
                 (
-                    format!("Running, {} sec left", duration.as_secs_f64()),
+                    format!("Running, {} left", format_duration(duration)),
                     Some(Timestamp::new(unix_secs, Some(TimestampStyle::LongDateTime)).mention()),
                 )
             },
             TimerState::Paused { remaining } => {
                 (
-                    format!("Paused, {} sec left", remaining.as_secs_f64()),
+                    format!("Paused, {} left", format_duration(*remaining)),
                     None,
                 )
             },
