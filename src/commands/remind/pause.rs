@@ -9,18 +9,18 @@ use crate::{
 use std::sync::Arc;
 use tokio::sync::Mutex;
 
-/// Delete a specified reminder by its reminder ID. You can view your reminders and their reminder
-/// IDs with `{prefix}remind view`.
+/// Pause a specified reminder by its reminder ID. You can view your active reminders and their IDs
+/// with `{prefix}remind view`.
 #[derive(Clone, Info)]
 #[info(
-    aliases = ["delete", "del", "d"],
+    aliases = ["pause", "p"],
     syntax = ["<reminder id>"],
     examples = ["4bxB"],
 )]
-pub struct Delete;
+pub struct Pause;
 
 #[async_trait]
-impl Command for Delete {
+impl Command for Pause {
     async fn execute<'c>(
         &'c self,
         state: &Arc<State>,
@@ -31,12 +31,13 @@ impl Command for Delete {
 
         let mut database = database.lock().await;
         let timer = database.get_user_field_mut::<Timers>(ctxt.trigger.author_id()).await
-            .remove(timer_id);
+            .get_mut(timer_id);
 
-        if timer.is_some() {
+        if let Some(timer) = timer {
+            timer.pause();
             database.commit_user_field::<Timers>(ctxt.trigger.author_id()).await;
             ctxt.trigger.reply(&state.http)
-                .content(&format!("**Successfully deleted the reminder with ID `{timer_id}`.**"))?
+                .content(&format!("**Successfully paused the reminder with ID `{timer_id}`.**"))?
                 .await?;
         } else {
             ctxt.trigger.reply(&state.http)

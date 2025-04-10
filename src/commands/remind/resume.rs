@@ -9,18 +9,18 @@ use crate::{
 use std::sync::Arc;
 use tokio::sync::Mutex;
 
-/// Delete a specified reminder by its reminder ID. You can view your reminders and their reminder
+/// Resume a specified reminder by its reminder ID. You can view your active reminders and their
 /// IDs with `{prefix}remind view`.
 #[derive(Clone, Info)]
 #[info(
-    aliases = ["delete", "del", "d"],
+    aliases = ["resume", "res", "r"],
     syntax = ["<reminder id>"],
     examples = ["4bxB"],
 )]
-pub struct Delete;
+pub struct Resume;
 
 #[async_trait]
-impl Command for Delete {
+impl Command for Resume {
     async fn execute<'c>(
         &'c self,
         state: &Arc<State>,
@@ -29,14 +29,16 @@ impl Command for Delete {
     ) -> Result<(), Box<dyn Error + Send + Sync>> {
         let timer_id = ctxt.raw_input;
 
-        let mut database = database.lock().await;
-        let timer = database.get_user_field_mut::<Timers>(ctxt.trigger.author_id()).await
-            .remove(timer_id);
+        let mut db = database.lock().await;
+        let timer = db.get_user_field_mut::<Timers>(ctxt.trigger.author_id()).await
+            .get_mut(timer_id);
 
-        if timer.is_some() {
-            database.commit_user_field::<Timers>(ctxt.trigger.author_id()).await;
+        if let Some(timer) = timer {
+            timer.resume();
+            timer.create_task(Arc::clone(state), Arc::clone(database));
+            db.commit_user_field::<Timers>(ctxt.trigger.author_id()).await;
             ctxt.trigger.reply(&state.http)
-                .content(&format!("**Successfully deleted the reminder with ID `{timer_id}`.**"))?
+                .content(&format!("**Successfully resumed the reminder with ID `{timer_id}`.**"))?
                 .await?;
         } else {
             ctxt.trigger.reply(&state.http)

@@ -1,11 +1,11 @@
 // pub mod at;
 pub mod delete;
-// pub mod edit;
+pub mod edit;
 // pub mod every;
 pub mod increment;
-// pub mod pause;
+pub mod pause;
 // pub mod recur;
-// pub mod resume;
+pub mod resume;
 pub mod view;
 
 use async_trait::async_trait;
@@ -22,8 +22,8 @@ use std::{sync::Arc, time::{Duration, SystemTime}};
 use tokio::sync::Mutex;
 
 /// Set a reminder with an optional message for a specified interval. You can find the available
-/// time units with `{prefix}unitconvert units`. You can view your reminders and their IDs with
-/// `{prefix}remind view`. See the **children commands** field to see the various ways you can
+/// time units with `{prefix}unitconvert units`. You can view your active reminders and their IDs
+/// with `{prefix}remind view`. See the **children commands** field to see the various ways you can
 /// interact with reminders.
 ///
 /// For reminders (set in servers) that are 2 minutes or longer, members can click the `Remind me`
@@ -37,18 +37,18 @@ use tokio::sync::Mutex;
     args = [f64, String, Unlimited],
     children = [
         delete::Delete,
+        edit::Edit,
         increment::Increment,
+        pause::Pause,
+        resume::Resume,
         view::View,
     ],
 )]
 pub struct Remind;
     // children = [
     //     at::At,
-    //     edit::Edit,
     //     every::Every,
-    //     pause::Pause,
     //     recur::Recur,
-    //     resume::Resume,
     // ],
 
 #[async_trait]

@@ -92,6 +92,57 @@ impl Timer {
         }
     }
 
+    /// Returns true if the timer is running.
+    ///
+    /// This does not check the task, only [`Timer::state`].
+    pub fn is_running(&self) -> bool {
+        matches!(self.state, TimerState::Running { .. })
+    }
+
+    /// Pauses a running timer. The underlying task will be aborted until [`Timer::create_task`] is
+    /// called again. This is a no-op if the timer is already paused.
+    pub fn pause(&mut self) {
+        if let TimerState::Running { end_time } = &self.state {
+            let remaining = end_time.duration_since(SystemTime::now()).unwrap_or_default();
+            self.state = TimerState::Paused { remaining };
+        }
+
+        if let Some(task) = self.task.take() {
+            task.abort();
+        }
+    }
+
+    /// Resumes a paused timer. This is a no-op if the timer is already running.
+    ///
+    /// After resuming, call [`Timer::create_task`] to create the task that sends the reminder
+    /// message.
+    pub fn resume(&mut self) {
+        if let TimerState::Paused { remaining } = &self.state {
+            let end_time = SystemTime::now() + *remaining;
+            self.state = TimerState::Running { end_time };
+        }
+
+        if let Some(task) = self.task.take() {
+            task.abort();
+        }
+    }
+
+    /// Sets a new remaining duration of the timer.
+    ///
+    /// After calling this function, call [`Timer::create_task`] to update the task that sends the
+    /// reminder message.
+    pub fn set_new_duration(&mut self, duration: Duration) {
+        match &self.state {
+            TimerState::Running { .. } => {
+                let new_end_time = SystemTime::now() + duration;
+                self.state = TimerState::Running { end_time: new_end_time };
+            },
+            TimerState::Paused { .. } => {
+                self.state = TimerState::Paused { remaining: duration };
+            },
+        }
+    }
+
     /// Creates a [`Sleep`] future that will complete when the timer ends.
     pub fn sleep(&self) -> Sleep {
         match &self.state {
