@@ -155,7 +155,7 @@ impl Database {
             return self.users.get_mut(&id).unwrap();
         }
 
-        let data = match "SELECT ctxt, timers FROM users WHERE id = ? LIMIT 1"
+        let data = match "SELECT id, ctxt, timers FROM users WHERE id = ? LIMIT 1"
             .with((id.get(),))
             .first::<UserData, _>(&self.pool)
             .await
