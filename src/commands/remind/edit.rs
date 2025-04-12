@@ -62,11 +62,11 @@ impl Command for Edit {
 
         if is_running {
             ctxt.trigger.reply(&state.http)
-                .content(&format!("**Successfully edited the reminder with ID `{timer_id}`.** It will trigger in `{time_amount:?}`."))?
+                .content(&format!("**Successfully edited the reminder with ID `{timer_id}`.** It will trigger in `{quantity} {unit}`."))?
                 .await?;
         } else {
             ctxt.trigger.reply(&state.http)
-                .content(&format!("**Successfully edited the reminder with ID `{timer_id}`.**"))?
+                .content(&format!("**Successfully edited the reminder with ID `{timer_id}`.** Once resumed, it will trigger in `{quantity} {unit}`."))?
                 .await?;
         }
 

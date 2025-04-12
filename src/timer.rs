@@ -36,11 +36,12 @@ pub struct Timer {
     /// The ID of the channel where the message setting the timer was sent.
     pub channel_id: Id<ChannelMarker>,
 
-    /// The instant in time the timer was set. TODO: unneeded?
-    // pub start_time: Instant,
-
     /// State of the timer.
     pub state: TimerState,
+
+    /// The amount of time to recur with once the timer triggers. If [`None`], the timer does not
+    /// recur (e.g. one-shot).
+    pub recur: Option<Duration>,
 
     /// The message to send when the timer ends.
     pub message: String,
@@ -65,6 +66,7 @@ impl Clone for Timer {
             user_id: self.user_id,
             channel_id: self.channel_id,
             state: self.state.clone(),
+            recur: self.recur,
             message: self.message.clone(),
             task: None,
         }
@@ -87,6 +89,7 @@ impl Timer {
             user_id,
             channel_id,
             state: TimerState::Running { end_time },
+            recur: None,
             message,
             task: None,
         }
@@ -143,6 +146,22 @@ impl Timer {
         }
     }
 
+    /// Sets a new end time for the timer. If the timer is paused, the remaining time is
+    /// calculated from the new end time.
+    ///
+    /// After calling this function, call [`Timer::create_task`] to update the task that sends the
+    /// reminder message.
+    pub fn set_new_end_time(&mut self, new_end_time: SystemTime) {
+        match &mut self.state {
+            TimerState::Running { end_time } => {
+                *end_time = new_end_time;
+            },
+            TimerState::Paused { remaining } => {
+                *remaining = new_end_time.duration_since(SystemTime::now()).unwrap_or(*remaining)
+            },
+        }
+    }
+
     /// Creates a [`Sleep`] future that will complete when the timer ends.
     pub fn sleep(&self) -> Sleep {
         match &self.state {
@@ -178,6 +197,11 @@ impl Timer {
             },
         };
         let trigger_location = self.channel_id.mention();
+        let recur = if let Some(recur) = self.recur {
+            format!("\nRecurs for: {}", recur.fmt())
+        } else {
+            String::new()
+        };
         let message = if self.message.is_empty() {
             String::new()
         } else {
@@ -188,8 +212,7 @@ impl Timer {
         } else {
             String::new()
         };
-
-        format!("{state}\nTriggers in: {trigger_location}{message}{timestamp}")
+        format!("{state}\nTriggers in: {trigger_location}{recur}{message}{timestamp}")
     }
 
     /// Create the timer's task that will send a reminder message to the given channel when the
@@ -197,9 +220,14 @@ impl Timer {
     ///
     /// This function **must** be called when the timer is created or when the timer is modified.
     pub(crate) fn create_task(&mut self, bot_state: Arc<State>, db: Arc<Mutex<Database>>) {
+        let TimerState::Running { end_time } = self.state else {
+            return;
+        };
+
         let timer_id = self.id.clone();
         let user_id = self.user_id;
         let channel_id = self.channel_id;
+        let recur = self.recur;
         let message = self.message.clone();
         let future = self.sleep();
 
@@ -209,18 +237,52 @@ impl Timer {
         }
 
         self.task = Some(tokio::spawn(async move {
-            future.await;
+            let mut end_time = end_time;
+            let mut future = future;
 
-            let msg = match message.len() {
-                0 => format!("<@{}>'s reminder: _no message provided_", user_id),
-                _ => format!("<@{}>'s reminder: **{}**", user_id, message),
-            };
-            bot_state.http.create_message(channel_id)
-                .content(&msg)?
-                .await?;
+            loop {
+                future.await;
+
+                let msg = match message.len() {
+                    0 => format!("{}'s reminder: _no message provided_", user_id.mention()),
+                    _ => format!("{}'s reminder: **{}**", user_id.mention(), message),
+                };
+                bot_state.http.create_message(channel_id).content(&msg)?.await?;
+
+                if let Some(recur) = recur {
+                    // to handle cases where the bot restarts after a recurring timer has
+                    // triggered, we calculate the new end time based on the number of times the
+                    // timer would have triggered while the bot was offline
+                    let secs_since_end = SystemTime::now()
+                        .duration_since(end_time)
+                        .unwrap_or_default()
+                        .as_secs_f64();
+                    let recur_secs = recur.as_secs_f64();
+                    let num_triggers = 1.0 + (secs_since_end / recur_secs).floor();
+                    let adjusted_offset = Duration::from_secs_f64(recur_secs * num_triggers);
+                    let new_end_time = end_time + adjusted_offset;
+
+                    let mut db = db.lock().await;
+                    let timer = db.get_user_field_mut::<Timers>(user_id).await
+                        .get_mut(&timer_id)
+                        .unwrap();
+                    timer.set_new_end_time(new_end_time);
+
+                    end_time = new_end_time;
+                    future = timer.sleep();
+
+                    // TODO: could committing clog the database with too many writes? if the bot
+                    // does restart, we can figure out where we were anyway, that's the whole point
+                    // of doing that calculation at the start of this `if let`
+                    db.commit_user_field::<Timers>(user_id).await;
+                } else {
+                    break;
+                }
+            }
 
             let mut db = db.lock().await;
             db.get_user_field_mut::<Timers>(user_id).await.remove(&timer_id);
+            db.commit_user_field::<Timers>(user_id).await;
 
             Ok::<_, Box<dyn std::error::Error + Send + Sync>>(())
         }));

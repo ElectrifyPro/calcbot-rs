@@ -1,13 +1,3 @@
-// pub mod at;
-pub mod delete;
-pub mod edit;
-pub mod every;
-pub mod increment;
-pub mod pause;
-pub mod recur;
-pub mod resume;
-pub mod view;
-
 use async_trait::async_trait;
 use calcbot_attrs::Info;
 use cas_math::unit_conversion::{unit::Time, Measurement, Quantity, Unit};
@@ -21,38 +11,20 @@ use crate::{
 use std::{sync::Arc, time::{Duration, SystemTime}};
 use tokio::sync::Mutex;
 
-/// Set a reminder with an optional message for a specified interval. You can find the available
-/// time units with `{prefix}unitconvert units`. You can view your active reminders and their IDs
-/// with `{prefix}remind view`. See the **children commands** field to see the various ways you can
-/// interact with reminders.
-///
-/// For reminders (set in servers) that are 2 minutes or longer, members can click the `Remind me`
-/// button on the reminder message in order to receive the reminder with you.
+/// Set a **recurring** reminder with an optional message for a specified interval. Upon
+/// triggering, the reminder will automatically be renewed for the specified time interval. To
+/// avoid spam, the reminder interval must be **at least 1 minute.**
 #[derive(Clone, Info)]
 #[info(
-    category = "Miscellaneous",
-    aliases = ["remind", "rem"],
+    aliases = ["every", "ev"],
     syntax = ["<quantity> <time unit> [message]"],
-    examples = ["10 minutes", "10 minutes stop watching tv"],
+    examples = ["10 min", "1 min level up"],
     args = [f64, String, Unlimited],
-    children = [
-        delete::Delete,
-        edit::Edit,
-        every::Every,
-        increment::Increment,
-        pause::Pause,
-        recur::Recur,
-        resume::Resume,
-        view::View,
-    ],
 )]
-pub struct Remind;
-    // children = [
-    //     at::At,
-    // ],
+pub struct Every;
 
 #[async_trait]
-impl Command for Remind {
+impl Command for Every {
     async fn execute<'c>(
         &'c self,
         state: &Arc<State>,
@@ -72,6 +44,13 @@ impl Command for Remind {
             .unwrap()
             .value());
 
+        if time_amount < Duration::from_secs(60) {
+            ctxt.trigger.reply(&state.http)
+                .content("**The recurring reminder interval must be at least 1 minute.**")?
+                .await?;
+            return Ok(());
+        }
+
         let end_time = SystemTime::now() + time_amount;
         let mut timer = Timer::running(
             ctxt.trigger.author_id(),
@@ -79,6 +58,7 @@ impl Command for Remind {
             end_time,
             message,
         );
+        timer.recur = Some(time_amount);
         timer.create_task(Arc::clone(&state), Arc::clone(&database));
         let id = timer.id.clone();
 
@@ -89,7 +69,7 @@ impl Command for Remind {
         database.commit_user_field::<Timers>(ctxt.trigger.author_id()).await;
 
         ctxt.trigger.reply(&state.http)
-            .content(&format!("**You will be mentioned in this channel in `{quantity} {unit}`.** This reminder's ID is `{id}`."))?
+            .content(&format!("**You will be mentioned repeatedly in this channel every `{quantity} {unit}`.** This reminder's ID is `{id}`."))?
             .await?;
 
         Ok(())
