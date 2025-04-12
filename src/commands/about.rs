@@ -4,12 +4,13 @@ use crate::{
     commands::{Command, Context},
     database::Database,
     error::Error,
+    fmt::DurationExt,
     global::State,
-    util::format_duration,
 };
 use std::{env, num::NonZeroU64, sync::Arc};
 use sysinfo::{Pid, ProcessExt, System, SystemExt};
 use tokio::sync::Mutex;
+use twilight_mention::Mention;
 use twilight_util::builder::embed::EmbedBuilder;
 
 /// View information about CalcBot.
@@ -39,26 +40,24 @@ impl Command for About {
             format!("{}#{}", user.name, user.discriminator())
         };
 
-        let bot_id = state.cache
-            .current_user()
+        let bot = state.cache.current_user()
             .expect("should be received upon login")
-            .id
-            .get();
+            .mention();
 
         let embed = EmbedBuilder::new()
             .title("About me")
             .color(0x988bc2)
             .description(format!("
-            <@{}> is being constantly developed by **{}**.
+            {} is constantly being developed by **@{}**.
 
             Uptime: {}
             Shard CPU usage: {}%
             Shard memory usage: {} MB
             Commands: {}
             ",
-                bot_id,
+                bot,
                 author,
-                format_duration(state.start_time.elapsed()),
+                state.start_time.elapsed().fmt(),
                 process.cpu_usage(),
                 process.memory() / 1024 / 1024,
                 state.commands.count(),

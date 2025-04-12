@@ -4,7 +4,7 @@ use std::{error::Error, ops::{Add, AddAssign}, sync::Arc, time::{Duration, Syste
 use tokio::{sync::Mutex, task::JoinHandle, time::Sleep};
 use twilight_model::id::{marker::{ChannelMarker, UserMarker}, Id};
 
-use crate::{database::{user::Timers, Database}, global::State, util::format_duration};
+use crate::{database::{user::Timers, Database}, fmt::DurationExt, global::State};
 
 /// State of a timer.
 #[derive(Debug, Clone, Deserialize, Serialize)]
@@ -166,13 +166,13 @@ impl Timer {
                     .as_secs();
                 let duration = end_time.duration_since(SystemTime::now()).unwrap_or_default();
                 (
-                    format!("Running, {} left", format_duration(duration)),
+                    format!("Running, {} left", duration.fmt()),
                     Some(Timestamp::new(unix_secs, Some(TimestampStyle::LongDateTime)).mention()),
                 )
             },
             TimerState::Paused { remaining } => {
                 (
-                    format!("Paused, {} left", format_duration(*remaining)),
+                    format!("Paused, {} left", remaining.fmt()),
                     None,
                 )
             },
@@ -183,15 +183,13 @@ impl Timer {
         } else {
             format!("\n\"{}\"", self.message)
         };
+        let timestamp = if let Some(timestamp) = timestamp {
+            format!("\n{timestamp}")
+        } else {
+            String::new()
+        };
 
-        format!(
-            "{state}\nTriggers in: {trigger_location}{message}{}",
-            if let Some(timestamp) = timestamp {
-                format!("\n{timestamp}")
-            } else {
-                "".to_string()
-            },
-        )
+        format!("{state}\nTriggers in: {trigger_location}{message}{timestamp}")
     }
 
     /// Create the timer's task that will send a reminder message to the given channel when the

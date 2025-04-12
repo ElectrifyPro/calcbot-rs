@@ -5,7 +5,8 @@ use crate::{
     commands::{Command, Context},
     database::Database,
     error::Error,
-    global::State, util::pluralize,
+    fmt::pluralize,
+    global::State,
 };
 use std::sync::Arc;
 use tokio::sync::Mutex;

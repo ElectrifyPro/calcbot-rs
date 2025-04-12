@@ -1,6 +1,7 @@
 pub mod commands;
 pub mod database;
 pub mod error;
+pub mod fmt;
 pub mod global;
 pub mod handler;
 pub mod timer;
