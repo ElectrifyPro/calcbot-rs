@@ -22,7 +22,7 @@ impl Command for Link {
         state: &Arc<State>,
         _: &Arc<Mutex<Database>>,
         ctxt: Context<'c>,
-    ) -> Result<(), Box<dyn Error + Send + Sync>> {
+    ) -> Result<(), Error> {
         let embed = EmbedBuilder::new()
             .title("Links")
             .color(0x641964)

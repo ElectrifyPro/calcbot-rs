@@ -37,7 +37,7 @@ impl Command for UnitConvert {
         state: &Arc<State>,
         _: &Arc<Mutex<Database>>, // TODO: custom ratios
         ctxt: Context<'c>,
-    ) -> Result<(), Box<dyn Error + Send + Sync>> {
+    ) -> Result<(), Error> {
         let raw_args = ctxt.raw_input.split_whitespace().collect::<Vec<_>>();
         let (quantity, unit, target_unit) = match raw_args.len() {
             3 => (raw_args[0].parse().unwrap(), Unit::try_from(raw_args[1]).unwrap(), Unit::try_from(raw_args[2]).unwrap()),

@@ -31,7 +31,7 @@ impl Command for Aegyo {
         state: &Arc<State>,
         _: &Arc<Mutex<Database>>,
         ctxt: Context<'c>,
-    ) -> Result<(), Box<dyn Error + Send + Sync>> {
+    ) -> Result<(), Error> {
         let replaced_upper = REGEX_UPPER.replace_all(&ctxt.raw_input, "W");
         let replaced_lower = REGEX_LOWER.replace_all(&replaced_upper, "w");
         ctxt.trigger.reply(&state.http)

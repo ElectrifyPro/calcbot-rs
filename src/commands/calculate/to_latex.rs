@@ -28,7 +28,7 @@ impl Command for ToLatex {
         state: &Arc<State>,
         _: &Arc<Mutex<Database>>,
         ctxt: Context<'c>,
-    ) -> Result<(), Box<dyn Error + Send + Sync>> {
+    ) -> Result<(), Error> {
         let mut parser = Parser::new(ctxt.raw_input);
         match parser.try_parse_full::<Expr>() {
             Ok(expr) => {

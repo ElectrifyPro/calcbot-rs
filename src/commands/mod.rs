@@ -261,7 +261,7 @@ pub trait Command: CommandClone + Info + Send + Sync {
         state: &Arc<State>,
         database: &Arc<Mutex<Database>>,
         ctxt: Context<'c>,
-    ) -> Result<(), Box<dyn Error + Send + Sync>>;
+    ) -> Result<(), Error>;
 }
 
 /// A trait that allows cloning of any command.

@@ -22,7 +22,7 @@ impl Command for ListDefinitions {
         state: &Arc<State>,
         database: &Arc<Mutex<Database>>,
         ctxt: Context<'c>,
-    ) -> Result<(), Box<dyn Error + Send + Sync>> {
+    ) -> Result<(), Error> {
         let (vars, funcs) = {
             let mut database = database.lock().await;
             let user_data = database.get_user(ctxt.trigger.author_id()).await;

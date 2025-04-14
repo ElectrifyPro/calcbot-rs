@@ -21,7 +21,7 @@ impl Command for Commands {
         state: &Arc<State>,
         _: &Arc<Mutex<Database>>,
         ctxt: Context<'c>,
-    ) -> Result<(), Box<dyn Error + Send + Sync>> {
+    ) -> Result<(), Error> {
         ctxt.trigger.reply(&state.http)
             .embeds(&[state.build_commands_embed(ctxt.prefix)])?
             .await?;

@@ -119,7 +119,7 @@ pub fn command(item: TokenStream) -> TokenStream {
                 state: &std::sync::Arc<crate::global::State>,
                 _: &std::sync::Arc<tokio::sync::Mutex<crate::database::Database>>,
                 ctxt: crate::commands::Context<'c>,
-            ) -> Result<(), Box<dyn crate::error::Error + Send + Sync>> {
+            ) -> Result<(), crate::error::Error> {
                 // send the help embed by default
                 let embed = crate::commands::Info::info(self).build_embed(ctxt.prefix);
                 ctxt.trigger.reply(&state.http)

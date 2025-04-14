@@ -3,7 +3,7 @@ use calcbot_attrs::Info;
 use crate::{
     commands::{Command, Context},
     database::Database,
-    error::Error,
+    error::{CustomErrorFmt, Error},
     global::State,
 };
 use reqwest::get;
@@ -98,7 +98,7 @@ enum FetchError {
     Reqwest,
 }
 
-impl Error for FetchError {
+impl CustomErrorFmt for FetchError {
     fn rich_fmt<'a>(&self, init: CreateMessage<'a>) -> Result<ResponseFuture<Message>, MessageValidationError> {
         match self {
             FetchError::InvalidLanguageCode(language) => Ok(init.content(&format!("**The language code `{}` is invalid.** See [this link](<https://chillant.gitbook.io/calcbot/commands/dictionary>) for a list of valid language codes.", language))?.into_future()),
@@ -160,7 +160,7 @@ impl Command for Dictionary {
         state: &Arc<State>,
         _: &Arc<Mutex<Database>>,
         ctxt: Context<'c>,
-    ) -> Result<(), Box<dyn Error + Send + Sync>> {
+    ) -> Result<(), Error> {
         let raw_args = ctxt.raw_input.split_whitespace().collect::<Vec<&str>>();
         let (word, language) = match raw_args.split_last() {
             Some((last, remainder)) => {

@@ -26,7 +26,7 @@ impl Command for Pause {
         state: &Arc<State>,
         database: &Arc<Mutex<Database>>,
         ctxt: Context<'c>,
-    ) -> Result<(), Box<dyn Error + Send + Sync>> {
+    ) -> Result<(), Error> {
         let timer_id = ctxt.raw_input;
 
         let mut database = database.lock().await;

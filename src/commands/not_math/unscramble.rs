@@ -75,7 +75,7 @@ impl Command for Unscramble {
         state: &Arc<State>,
         _: &Arc<Mutex<Database>>,
         ctxt: Context<'c>,
-    ) -> Result<(), Box<dyn Error + Send + Sync>> {
+    ) -> Result<(), Error> {
         let (word, length) = parse_args(ctxt.raw_input.split_whitespace().collect::<Vec<_>>())?;
         let length = length.unwrap_or(word.len());
 

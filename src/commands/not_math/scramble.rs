@@ -41,7 +41,7 @@ impl Command for Scramble {
         state: &Arc<State>,
         _: &Arc<Mutex<Database>>,
         ctxt: Context<'c>,
-    ) -> Result<(), Box<dyn Error + Send + Sync>> {
+    ) -> Result<(), Error> {
         ctxt.trigger.reply(&state.http)
             .content(&scramble(ctxt.raw_input))?
             .await?;

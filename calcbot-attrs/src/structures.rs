@@ -175,7 +175,7 @@ impl Args {
         }
 
         Ok(quote! {
-            fn parse_args(words: Vec<&str>) -> Result<(#(#arg_types),*), Box<dyn Error + Send + Sync>> {
+            fn parse_args(words: Vec<&str>) -> Result<(#(#arg_types),*), crate::error::Error> {
                 let mut args = words.into_iter();
                 #(#arg_parsers)*
                 Ok((#(#arg_names),*))

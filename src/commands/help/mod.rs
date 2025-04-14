@@ -48,7 +48,7 @@ impl Command for Help {
         state: &Arc<State>,
         _: &Arc<Mutex<Database>>,
         ctxt: Context<'c>,
-    ) -> Result<(), Box<dyn Error + Send + Sync>> {
+    ) -> Result<(), Error> {
         // extract the path to the command the user wants help with
         let mut path = ctxt.raw_input.split_whitespace().peekable();
         let embed = match state.commands.find_command(&mut path) {

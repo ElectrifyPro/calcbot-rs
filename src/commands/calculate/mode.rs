@@ -24,7 +24,7 @@ impl Command for Mode {
         state: &Arc<State>,
         database: &Arc<Mutex<Database>>,
         ctxt: Context<'c>,
-    ) -> Result<(), Box<dyn Error + Send + Sync>> {
+    ) -> Result<(), Error> {
         let mut database = database.lock().await;
         let eval_ctxt = database.get_user_field_mut::<Ctxt>(ctxt.trigger.author_id()).await;
 

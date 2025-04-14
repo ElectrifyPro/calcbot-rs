@@ -25,7 +25,7 @@ impl Command for About {
         state: &Arc<State>,
         _: &Arc<Mutex<Database>>,
         ctxt: Context<'c>,
-    ) -> Result<(), Box<dyn Error + Send + Sync>> {
+    ) -> Result<(), Error> {
         let mut system = System::new_all();
         system.refresh_all();
 

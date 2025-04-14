@@ -29,7 +29,7 @@ impl Command for Recur {
         state: &Arc<State>,
         database: &Arc<Mutex<Database>>,
         ctxt: Context<'c>,
-    ) -> Result<(), Box<dyn Error + Send + Sync>> {
+    ) -> Result<(), Error> {
         let (timer_id, quantity, unit) = parse_args(ctxt.raw_input.split_whitespace().collect::<Vec<_>>())?;
 
         let mut db = database.lock().await;

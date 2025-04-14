@@ -25,7 +25,7 @@ impl Command for Trademark {
         state: &Arc<State>,
         _: &Arc<Mutex<Database>>,
         ctxt: Context<'c>,
-    ) -> Result<(), Box<dyn Error + Send + Sync>> {
+    ) -> Result<(), Error> {
         ctxt.trigger.reply(&state.http)
             .content(&format!("{}:tm:", ctxt.raw_input))?
             .await?;

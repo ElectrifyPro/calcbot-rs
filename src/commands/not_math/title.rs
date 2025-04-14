@@ -41,7 +41,7 @@ impl Command for Title {
         state: &Arc<State>,
         _: &Arc<Mutex<Database>>,
         ctxt: Context<'c>,
-    ) -> Result<(), Box<dyn Error + Send + Sync>> {
+    ) -> Result<(), Error> {
         let content = ctxt.raw_input
             .split_whitespace()
             .into_iter()

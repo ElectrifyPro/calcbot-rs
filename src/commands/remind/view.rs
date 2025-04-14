@@ -23,7 +23,7 @@ impl Command for View {
         state: &Arc<State>,
         database: &Arc<Mutex<Database>>,
         ctxt: Context<'c>,
-    ) -> Result<(), Box<dyn Error + Send + Sync>> {
+    ) -> Result<(), Error> {
         let prefix = ctxt.prefix.unwrap_or_default();
         let mut database = database.lock().await;
         let user_data = database

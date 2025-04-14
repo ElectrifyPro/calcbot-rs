@@ -54,7 +54,7 @@ fn send_paged_message(
     channel_id: Id<ChannelMarker>,
     pages: &[Embed],
     index: usize,
-) -> Result<(), Box<dyn Error + Send + Sync>> {
+) -> Result<(), Error> {
     // validate before sending
     let component = Component::ActionRow(ActionRow {
         components: vec![
@@ -137,7 +137,7 @@ fn send_paged_message(
 
         log::info!("paged message task ended: delete interaction button clicked");
 
-        Ok::<(), Box<dyn Error + Send + Sync>>(())
+        Ok::<(), Box<dyn std::error::Error + Send + Sync>>(())
     });
 
     Ok(())
@@ -188,7 +188,7 @@ impl Command for Units {
         state: &Arc<State>,
         database: &Arc<Mutex<Database>>,
         ctxt: Context<'c>,
-    ) -> Result<(), Box<dyn Error + Send + Sync>> {
+    ) -> Result<(), Error> {
         let index = ctxt.raw_input.parse::<usize>().unwrap_or(1).saturating_sub(1);
         let embeds = generate_embeds();
         send_paged_message(state, database, ctxt.trigger.channel_id(), &embeds, index)?;

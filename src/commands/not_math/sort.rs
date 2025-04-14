@@ -27,7 +27,7 @@ impl Command for Sort {
         state: &Arc<State>,
         _: &Arc<Mutex<Database>>,
         ctxt: Context<'c>,
-    ) -> Result<(), Box<dyn Error + Send + Sync>> {
+    ) -> Result<(), Error> {
         let mut args = ctxt.raw_input.split_whitespace().collect::<Vec<_>>();
         let descending = args[0] == "-";
         if descending {

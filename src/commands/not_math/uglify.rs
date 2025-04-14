@@ -25,7 +25,7 @@ impl Command for Uglify {
         state: &Arc<State>,
         _: &Arc<Mutex<Database>>,
         ctxt: Context<'c>,
-    ) -> Result<(), Box<dyn Error + Send + Sync>> {
+    ) -> Result<(), Error> {
         let mut lower = true;
         let content = ctxt.raw_input
             .chars()

@@ -43,7 +43,7 @@ impl Command for Calculate {
         state: &Arc<State>,
         database: &Arc<Mutex<Database>>,
         ctxt: Context<'c>,
-    ) -> Result<(), Box<dyn Error + Send + Sync>> {
+    ) -> Result<(), Error> {
         let mut parser = Parser::new(ctxt.raw_input);
         match parser.try_parse_full_many() {
             Ok(stmts) => {
