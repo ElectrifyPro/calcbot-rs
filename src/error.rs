@@ -11,6 +11,12 @@ pub enum Error {
     /// A command is missing an argument.
     MissingArgument(MissingArgument),
 
+    /// A required argument was not provided.
+    NoArgument,
+
+    /// A command has too many arguments.
+    TooManyArguments,
+
     /// Show an embed.
     Embed(Embed),
 
@@ -62,6 +68,8 @@ impl Error {
         match self {
             Self::String(err) => Ok(init.content(&err)?.into_future()),
             Self::MissingArgument(missing) => Ok(init.content(&format!("Missing argument at index {}.", missing.index))?.into_future()),
+            Self::NoArgument => Ok(init.content("No argument provided.")?.into_future()),
+            Self::TooManyArguments => Ok(init.content("Too many arguments.")?.into_future()),
             Self::Embed(embed) => Ok(init.embeds(&[embed])?.into_future()),
             Self::Custom(custom) => custom.rich_fmt(init),
         }

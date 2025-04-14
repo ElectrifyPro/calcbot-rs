@@ -2,7 +2,8 @@ use async_trait::async_trait;
 use calcbot_attrs::Info;
 use cas_math::unit_conversion::{unit::Time, Measurement, Quantity, Unit};
 use crate::{
-    commands::{Command, Context},
+    arg_parse::{Word, Remainder, parse_args_full},
+    commands::{Command, Context, Info},
     database::{user::Timers, Database},
     error::Error,
     global::State,
@@ -19,7 +20,6 @@ use tokio::sync::Mutex;
     aliases = ["edit", "e"],
     syntax = ["<reminder id> <new quantity> <new time unit> [new message]"],
     examples = ["10 minutes", "10 minutes stop watching tv"],
-    args = [String, f64, String, Unlimited],
 )]
 pub struct Edit;
 
@@ -31,11 +31,20 @@ impl Command for Edit {
         database: &Arc<Mutex<Database>>,
         ctxt: Context<'c>,
     ) -> Result<(), Error> {
-        let (timer_id, quantity, unit, message) = parse_args(ctxt.raw_input.split_whitespace().collect::<Vec<_>>())?;
+        let parsed = parse_args_full::<(Word, f64, Word, Remainder)>(ctxt.raw_input)
+            .map_err(|err| if matches!(err, Error::NoArgument | Error::TooManyArguments) {
+                Error::Embed(self.info().build_embed(ctxt.prefix))
+            } else {
+                err
+            })?;
+        let timer_id = parsed.0.0;
+        let quantity = parsed.1;
+        let unit = parsed.2.0;
+        let message = parsed.3.0;
 
         let mut db = database.lock().await;
         let Some(timer) = db.get_user_field_mut::<Timers>(ctxt.trigger.author_id()).await
-            .get_mut(&timer_id) else {
+            .get_mut(timer_id) else {
             ctxt.trigger.reply(&state.http)
                 .content(&format!("**You do not have a reminder set with the ID `{timer_id}`.**"))?
                 .await?;
@@ -53,7 +62,7 @@ impl Command for Edit {
             .unwrap()
             .value());
 
-        timer.message = message;
+        timer.message = message.to_string();
         timer.set_new_duration(time_amount);
         timer.create_task(Arc::clone(&state), Arc::clone(&database));
         let is_running = timer.is_running();

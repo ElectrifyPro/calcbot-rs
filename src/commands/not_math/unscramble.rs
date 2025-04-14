@@ -1,7 +1,8 @@
 use async_trait::async_trait;
 use calcbot_attrs::Info;
 use crate::{
-    commands::{Command, Context},
+    arg_parse::{Word, parse_args_full},
+    commands::{Command, Context, Info},
     database::Database,
     error::Error,
     global::State,
@@ -12,7 +13,7 @@ use tokio::sync::Mutex;
 lazy_static::lazy_static! {
     /// The list of words to search through (~250K words).
     static ref WORDS: Vec<String> = {
-        let words = std::fs::read_to_string("words.json").unwrap();
+        let words = std::fs::read_to_string("src/commands/not_math/words.json").unwrap();
         serde_json::from_str(&words).unwrap()
     };
 }
@@ -64,7 +65,6 @@ fn unscramble(letters: &str, length: usize) -> Vec<&'static str> {
     aliases = ["unscramble", "unsc", "uns"],
     syntax = ["<word> [word length]"],
     examples = ["itonnnive"],
-    args = [&str, Option<usize>],
 )]
 pub struct Unscramble;
 
@@ -76,8 +76,14 @@ impl Command for Unscramble {
         _: &Arc<Mutex<Database>>,
         ctxt: Context<'c>,
     ) -> Result<(), Error> {
-        let (word, length) = parse_args(ctxt.raw_input.split_whitespace().collect::<Vec<_>>())?;
-        let length = length.unwrap_or(word.len());
+        let parsed = parse_args_full::<(Word, Option<_>)>(ctxt.raw_input)
+            .map_err(|err| if matches!(err, Error::NoArgument | Error::TooManyArguments) {
+                Error::Embed(self.info().build_embed(ctxt.prefix))
+            } else {
+                err
+            })?;
+        let word = parsed.0.0;
+        let length = parsed.1.unwrap_or(word.len());
 
         let words = unscramble(word, length);
         let output = if words.is_empty() {

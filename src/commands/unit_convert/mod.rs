@@ -4,7 +4,8 @@ use async_trait::async_trait;
 use calcbot_attrs::Info;
 use cas_math::unit_conversion::{Measurement, Unit};
 use crate::{
-    commands::{Command, Context},
+    arg_parse::{Word, parse_args_full},
+    commands::{Command, Context, Info},
     database::Database,
     error::Error,
     global::State,
@@ -38,13 +39,29 @@ impl Command for UnitConvert {
         _: &Arc<Mutex<Database>>, // TODO: custom ratios
         ctxt: Context<'c>,
     ) -> Result<(), Error> {
-        let raw_args = ctxt.raw_input.split_whitespace().collect::<Vec<_>>();
-        let (quantity, unit, target_unit) = match raw_args.len() {
-            3 => (raw_args[0].parse().unwrap(), Unit::try_from(raw_args[1]).unwrap(), Unit::try_from(raw_args[2]).unwrap()),
-            _ => todo!(),
+        let parsed = parse_args_full::<(f64, Word, Word)>(ctxt.raw_input)
+            .map_err(|err| if matches!(err, Error::NoArgument | Error::TooManyArguments) {
+                Error::Embed(self.info().build_embed(ctxt.prefix))
+            } else {
+                err
+            })?;
+        let quantity = parsed.0;
+
+        let prefix = ctxt.prefix.unwrap_or_default();
+        let Ok(unit) = parsed.1.0.parse::<Unit>() else {
+            ctxt.trigger.reply(&state.http)
+                .content(&format!("**`{}` is not a valid unit.** Run the `{prefix}unitconvert units` for a list of supported units.", parsed.1.0))?
+                .await?;
+            return Ok(());
+        };
+        let Ok(target_unit) = parsed.2.0.parse::<Unit>() else {
+            ctxt.trigger.reply(&state.http)
+                .content(&format!("**`{}` is not a valid unit.** Run the `{prefix}unitconvert units` for a list of supported units.", parsed.2.0))?
+                .await?;
+            return Ok(());
         };
 
-        let start = Measurement::<f64>::new(quantity, unit);
+        let start = Measurement::new(quantity, unit);
         let out_msg = match start.convert(target_unit) {
             Ok(end) => {
                 format!("**Converting** `{} {}` to `{}`\n{}", quantity, unit, target_unit, end.value())

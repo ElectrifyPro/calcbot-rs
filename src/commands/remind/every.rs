@@ -2,7 +2,8 @@ use async_trait::async_trait;
 use calcbot_attrs::Info;
 use cas_math::unit_conversion::{unit::Time, Measurement, Quantity, Unit};
 use crate::{
-    commands::{Command, Context},
+    arg_parse::{Word, Remainder, parse_args_full},
+    commands::{Command, Context, Info},
     database::{user::Timers, Database},
     error::Error,
     global::State,
@@ -19,7 +20,6 @@ use tokio::sync::Mutex;
     aliases = ["every", "ev"],
     syntax = ["<quantity> <time unit> [message]"],
     examples = ["10 min", "1 min level up"],
-    args = [f64, String, Unlimited],
 )]
 pub struct Every;
 
@@ -31,7 +31,15 @@ impl Command for Every {
         database: &Arc<Mutex<Database>>,
         ctxt: Context<'c>,
     ) -> Result<(), Error> {
-        let (quantity, unit, message) = parse_args(ctxt.raw_input.split_whitespace().collect::<Vec<_>>())?;
+        let parsed = parse_args_full::<(f64, Word, Remainder)>(ctxt.raw_input)
+            .map_err(|err| if matches!(err, Error::NoArgument | Error::TooManyArguments) {
+                Error::Embed(self.info().build_embed(ctxt.prefix))
+            } else {
+                err
+            })?;
+        let quantity = parsed.0;
+        let unit = parsed.1.0;
+        let message = parsed.2.0;
 
         let Ok(unit) = (&*unit).try_into() else {
             ctxt.trigger.reply(&state.http)
@@ -46,7 +54,7 @@ impl Command for Every {
 
         if time_amount < Duration::from_secs(60) {
             ctxt.trigger.reply(&state.http)
-                .content("**The recurring reminder interval must be at least 1 minute.**")?
+                .content("**The recurring reminder interval must be at least 1 minute long.**")?
                 .await?;
             return Ok(());
         }
@@ -56,7 +64,7 @@ impl Command for Every {
             ctxt.trigger.author_id(),
             ctxt.trigger.channel_id(),
             end_time,
-            message,
+            message.to_string(),
         );
         timer.recur = Some(time_amount);
         timer.create_task(Arc::clone(&state), Arc::clone(&database));

@@ -12,7 +12,8 @@ use async_trait::async_trait;
 use calcbot_attrs::Info;
 use cas_math::unit_conversion::{unit::Time, Measurement, Quantity, Unit};
 use crate::{
-    commands::{Command, Context},
+    arg_parse::{Word, Remainder, parse_args_full},
+    commands::{Command, Context, Info},
     database::{user::Timers, Database},
     error::Error,
     global::State,
@@ -34,7 +35,6 @@ use tokio::sync::Mutex;
     aliases = ["remind", "rem"],
     syntax = ["<quantity> <time unit> [message]"],
     examples = ["10 minutes", "10 minutes stop watching tv"],
-    args = [f64, String, Unlimited],
     children = [
         delete::Delete,
         edit::Edit,
@@ -59,9 +59,17 @@ impl Command for Remind {
         database: &Arc<Mutex<Database>>,
         ctxt: Context<'c>,
     ) -> Result<(), Error> {
-        let (quantity, unit, message) = parse_args(ctxt.raw_input.split_whitespace().collect::<Vec<_>>())?;
+        let parsed = parse_args_full::<(f64, Word, Remainder)>(ctxt.raw_input)
+            .map_err(|err| if matches!(err, Error::NoArgument | Error::TooManyArguments) {
+                Error::Embed(self.info().build_embed(ctxt.prefix))
+            } else {
+                err
+            })?;
+        let quantity = parsed.0;
+        let unit = parsed.1.0;
+        let message = parsed.2.0;
 
-        let Ok(unit) = (&*unit).try_into() else {
+        let Ok(unit) = unit.try_into() else {
             ctxt.trigger.reply(&state.http)
                 .content(&format!("**`{unit}` is not a valid time unit.**"))?
                 .await?;
@@ -77,7 +85,7 @@ impl Command for Remind {
             ctxt.trigger.author_id(),
             ctxt.trigger.channel_id(),
             end_time,
-            message,
+            message.to_string(),
         );
         timer.create_task(Arc::clone(&state), Arc::clone(&database));
         let id = timer.id.clone();

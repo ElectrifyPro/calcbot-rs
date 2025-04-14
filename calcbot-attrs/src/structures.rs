@@ -2,8 +2,6 @@ use proc_macro2::TokenStream as TokenStream2;
 use quote::{quote, ToTokens};
 use syn::{
     parse::{Parse, ParseStream},
-    spanned::Spanned,
-    AngleBracketedGenericArguments,
     Attribute,
     Expr,
     Ident,
@@ -11,7 +9,6 @@ use syn::{
     Lit,
     LitStr,
     Meta,
-    PathArguments,
     Result,
     Token,
     Type,
@@ -84,124 +81,6 @@ impl ToTokens for CommandGroup {
     }
 }
 
-/// The `args` argument of the `info` attribute. This tag consists of a [`Vec`] of
-/// types.
-#[derive(Debug, Default)]
-pub struct Args(pub Vec<Type>);
-
-impl Args {
-    /// Create the specialized parser for the special given type. Returns `None` if the type is not
-    /// special.
-    fn parse_special_type(&self, ty: &Type) -> Result<Option<TokenStream2>> {
-        Ok(match ty {
-            Type::Path(path) => {
-                let path = &path.path;
-                let last = path.segments.last().unwrap();
-                let ident = &last.ident;
-
-                if ident == "Option" { // use the inner type of the Option
-                    let PathArguments::AngleBracketed(AngleBracketedGenericArguments { args, .. }) = &last.arguments else {
-                        return Err(syn::Error::new(last.arguments.span(), "expected angle bracketed generic arguments"));
-                    };
-                    Some(quote! {
-                        args.next().map(|s| <#args as std::str::FromStr>::from_str(s).unwrap_or_default())
-                    })
-                } else if ident == "Unlimited" { // make the remaining arguments a string
-                    // TODO: handle the case when "Unlimited" is not the final argument
-                    Some(quote! { args.collect::<Vec<_>>().join(" ") })
-                } else { // not special sad face
-                    None
-                }
-            },
-            Type::Reference(reference) => { // handle &str
-                let Type::Path(path) = &*reference.elem else {
-                    return Ok(None);
-                };
-                let path = &path.path;
-                let last = path.segments.last().unwrap();
-                let ident = &last.ident;
-
-                if ident == "str" {
-                    Some(quote! { args.next().unwrap_or_default() })
-                } else { // not special sad face
-                    None
-                }
-            },
-            _ => None,
-        })
-    }
-
-    /// Generates the `parse_args` function that parses the arguments of the command.
-    pub fn generate_parse_args(&self) -> Result<TokenStream2> {
-        let mut args = Vec::new();
-        let mut arg_names = Vec::new();
-        let mut arg_types = Vec::new();
-        let mut arg_parsers = Vec::new();
-
-        for (i, arg) in self.0.iter().enumerate() {
-            let arg_name = Ident::new(&format!("arg{}", i), arg.span());
-            let arg_type = arg;
-
-            let arg_parser = if let Some(parser) = self.parse_special_type(arg)? {
-                parser
-            } else {
-                quote! {
-                    {
-                        let s = args.next().ok_or(crate::error::MissingArgument { index: #i })?;
-                        let arg = <#arg_type as std::str::FromStr>::from_str(s).unwrap_or_default();
-                        arg
-                    }
-                }
-            };
-
-            args.push(quote! { #arg_name });
-            arg_names.push(quote! { #arg_name });
-
-            // handle Unlimited
-            if let Type::Path(path) = arg {
-                let path = &path.path;
-                let last = path.segments.last().unwrap();
-                let ident = &last.ident;
-
-                if ident == "Unlimited" {
-                    arg_types.push(quote! { String });
-                } else {
-                    arg_types.push(quote! { #arg_type });
-                }
-            } else {
-                    arg_types.push(quote! { #arg_type });
-            }
-            arg_parsers.push(quote! { let #arg_name = #arg_parser; });
-        }
-
-        Ok(quote! {
-            fn parse_args(words: Vec<&str>) -> Result<(#(#arg_types),*), crate::error::Error> {
-                let mut args = words.into_iter();
-                #(#arg_parsers)*
-                Ok((#(#arg_names),*))
-            }
-        })
-    }
-}
-
-impl Parse for Args {
-    fn parse(input: ParseStream) -> Result<Self> {
-        let mut result = Vec::new();
-
-        let content;
-        syn::bracketed!(content in input);
-
-        while !content.is_empty() {
-            result.push(content.parse()?);
-            if content.parse::<Token![,]>().is_err() {
-                break;
-            }
-        }
-
-        Ok(Args(result))
-    }
-}
-
 /// The arguments that can be passed to the `info` attribute.
 #[derive(Debug, Default)]
 pub struct InfoArgs {
@@ -210,7 +89,6 @@ pub struct InfoArgs {
     pub syntax: Option<SliceLitStr>,
     pub examples: Option<SliceLitStr>,
     pub children: CommandGroup,
-    pub args: Option<Args>,
 }
 
 impl InfoArgs {
@@ -226,7 +104,6 @@ impl InfoArgs {
             "syntax" => self.syntax = Some(input.parse()?),
             "examples" => self.examples = Some(input.parse()?),
             "children" => self.children = input.parse()?,
-            "args" => self.args = Some(input.parse()?),
             _ => return Err(syn::Error::new_spanned(ident, format!("unknown tag `{}`", ident_str))),
         }
 

@@ -2,7 +2,8 @@ use async_trait::async_trait;
 use calcbot_attrs::Info;
 use cas_math::unit_conversion::{unit::Time, Measurement, Quantity, Unit};
 use crate::{
-    commands::{Command, Context},
+    arg_parse::{Word, parse_args_full},
+    commands::{Command, Context, Info},
     database::{user::Timers, Database},
     error::Error,
     global::State,
@@ -19,7 +20,6 @@ use tokio::sync::Mutex;
     aliases = ["increment", "incr", "inc", "i"],
     syntax = ["<reminder id> <quantity> <time unit>"],
     examples = ["4bxB 1", "4bxB 2.5 hr", "4bxB -10 min"],
-    args = [String, f64, Option<String>],
 )]
 pub struct Increment;
 
@@ -31,10 +31,19 @@ impl Command for Increment {
         database: &Arc<Mutex<Database>>,
         ctxt: Context<'c>,
     ) -> Result<(), Error> {
-        let (timer_id, quantity, unit) = parse_args(ctxt.raw_input.split_whitespace().collect::<Vec<_>>())?;
+        let parsed = parse_args_full::<(Word, f64, Option<Word>)>(ctxt.raw_input)
+            .map_err(|err| if matches!(err, Error::NoArgument | Error::TooManyArguments) {
+                Error::Embed(self.info().build_embed(ctxt.prefix))
+            } else {
+                err
+            })?;
+        let timer_id = parsed.0.0;
+        let quantity = parsed.1;
+        let unit = parsed.2.map(|unit| unit.0);
+
         let unit = match unit {
             Some(unit) => {
-                let Ok(unit) = (&*unit).try_into() else {
+                let Ok(unit) = unit.try_into() else {
                     ctxt.trigger.reply(&state.http)
                         .content(&format!("**`{unit}` is not a valid time unit.**"))?
                     .await?;
@@ -52,7 +61,7 @@ impl Command for Increment {
 
         let mut db = database.lock().await;
         let Some(timer) = db.get_user_field_mut::<Timers>(ctxt.trigger.author_id()).await
-            .get_mut(&timer_id) else {
+            .get_mut(timer_id) else {
             ctxt.trigger.reply(&state.http)
                 .content(&format!("**You do not have a reminder set with the ID `{timer_id}`.**"))?
                 .await?;

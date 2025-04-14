@@ -1,7 +1,8 @@
 use async_trait::async_trait;
 use calcbot_attrs::Info;
 use crate::{
-    commands::{Command, Context},
+    arg_parse::parse_args_full,
+    commands::{Command, Context, Info},
     database::Database,
     error::Error,
     global::State,
@@ -25,9 +26,8 @@ fn random(min: u32, max: u32) -> u32 {
 #[derive(Clone, Info)]
 #[info(
     aliases = ["random", "rand", "r"],
-    syntax = ["<max>", "<min> <max>"],
+    syntax = ["<maximum>", "<minimum> <maximum>"],
     examples = ["11", "4 11"],
-    args = [u32, Option<u32>],
 )]
 pub struct Random;
 
@@ -39,10 +39,18 @@ impl Command for Random {
         _: &Arc<Mutex<Database>>,
         ctxt: Context<'c>,
     ) -> Result<(), Error> {
-        let (min, max) = match parse_args(ctxt.raw_input.split_whitespace().collect())? {
+        let parsed = parse_args_full(ctxt.raw_input)
+            .map_err(|err| if matches!(err, Error::NoArgument | Error::TooManyArguments) {
+                Error::Embed(self.info().build_embed(ctxt.prefix))
+            } else {
+                err
+            })?;
+        let (min, max) = match parsed {
+            (a, Some(b)) if a > b => (b, a),
             (a, Some(b)) => (a, b),
             (a, None) => (0, a),
         };
+
         let num = random(min, max + 1);
         ctxt.trigger.reply(&state.http)
             .content(&format!(

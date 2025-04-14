@@ -1,3 +1,4 @@
+pub mod arg_parse;
 pub mod commands;
 pub mod database;
 pub mod error;

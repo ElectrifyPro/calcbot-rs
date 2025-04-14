@@ -1,7 +1,8 @@
 use async_trait::async_trait;
 use calcbot_attrs::Info;
 use crate::{
-    commands::{Command, Context},
+    arg_parse::{Word, parse_args_full},
+    commands::{Command, Context, Info},
     database::Database,
     error::{CustomErrorFmt, Error},
     global::State,
@@ -161,23 +162,20 @@ impl Command for Dictionary {
         _: &Arc<Mutex<Database>>,
         ctxt: Context<'c>,
     ) -> Result<(), Error> {
-        let raw_args = ctxt.raw_input.split_whitespace().collect::<Vec<&str>>();
-        let (word, language) = match raw_args.split_last() {
-            Some((last, remainder)) => {
-                if raw_args.len() > 1 {
-                    (remainder.join(" "), last.to_ascii_lowercase())
-                } else {
-                    (raw_args[0].to_string(), "en".to_string())
-                }
-            },
-            None => {
-                return Err("**You must provide a word or phrase to search for.**".into());
-            },
-        };
+        let parsed = parse_args_full::<(Word, Option<Word>)>(ctxt.raw_input)
+            .map_err(|err| if matches!(err, Error::NoArgument | Error::TooManyArguments) {
+                Error::Embed(self.info().build_embed(ctxt.prefix))
+            } else {
+                err
+            })?;
+        let word = parsed.0.0;
+        let language = parsed.1
+            .map(|lang| lang.0.to_ascii_lowercase())
+            .unwrap_or_else(|| "en".to_string());
 
-        let entries = get_dictionary_entry(&word, &language).await?;
+        let entries = get_dictionary_entry(word, &language).await?;
         let mut embed = EmbedBuilder::new()
-            .title(&word)
+            .title(word)
             .color(0x3468eb);
 
         for (superscript, domain) in entries.into_iter().enumerate() {
