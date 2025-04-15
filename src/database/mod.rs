@@ -17,7 +17,7 @@ use twilight_model::{
     gateway::payload::incoming::InteractionCreate,
     id::{Id, marker::{ChannelMarker, GuildMarker, MessageMarker, UserMarker}},
 };
-use user::{UserData, UserField};
+use user::{UserData, UserField, UserSettings};
 
 /// Helper struct to access and manage the database.
 pub struct Database {
@@ -29,6 +29,9 @@ pub struct Database {
 
     /// The user cache. This stores the user data of users that have recently used CalcBot.
     users: HashMap<Id<UserMarker>, UserData>,
+
+    /// The user settings cache. This stores the settings of users that have recently used CalcBot.
+    user_settings: HashMap<Id<UserMarker>, UserSettings>,
 
     /// Paged messages that are currently being displayed.
     paged: HashMap<(Id<ChannelMarker>, Id<MessageMarker>), UnboundedSender<InteractionCreate>>,
@@ -54,6 +57,7 @@ impl Database {
             ),
             servers: HashMap::new(),
             users: HashMap::new(),
+            user_settings: HashMap::new(),
             paged: HashMap::new(),
         }
     }
@@ -127,6 +131,37 @@ impl Database {
         };
 
         Ok(self.servers.entry(id).or_insert(prefix))
+    }
+
+    /// Gets immutable access to the user settings for the given user ID.
+    ///
+    /// If the data was cached previously, the cached value will be returned. Otherwise, the data
+    /// will be fetched from the database, cached, then returned.
+    ///
+    /// If the data does not exist anywhere, a default is created.
+    pub async fn get_user_settings(&mut self, id: Id<UserMarker>) -> &UserSettings {
+        if self.user_settings.contains_key(&id) {
+            return self.user_settings.get(&id).unwrap();
+        }
+
+        let settings = match "SELECT time_zone FROM user_settings WHERE id = ? LIMIT 1"
+            .with((id.get(),))
+            .first::<UserSettings, _>(&self.pool)
+            .await
+            .unwrap()
+        {
+            Some(settings) => settings,
+            None => {
+                "INSERT INTO user_settings (id, time_zone) VALUES (?, ?)"
+                    .with((id.get(), i8::default()))
+                    .ignore(&self.pool)
+                    .await
+                    .unwrap();
+                UserSettings::default()
+            },
+        };
+
+        self.user_settings.entry(id).or_insert(settings)
     }
 
     /// Loads all users that have timers set in the database, allowing timers to continue running

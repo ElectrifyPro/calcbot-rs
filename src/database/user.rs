@@ -6,6 +6,21 @@ use mysql_async::{prelude::FromRow, FromRowError};
 use serde_json::from_str;
 use std::collections::HashMap;
 
+/// Represents user preferences and settings.
+#[derive(Debug, Default, Clone)]
+pub struct UserSettings {
+    /// The user's timezone offset.
+    pub time_zone: i8,
+}
+
+impl FromRow for UserSettings {
+    fn from_row_opt(row: mysql_async::Row) -> Result<Self, FromRowError> {
+        Ok(Self {
+            time_zone: row.get::<i8, _>("time_zone").unwrap(),
+        })
+    }
+}
+
 /// Represents user-specific data across all sessions.
 #[derive(Debug, Clone)]
 pub struct UserData {

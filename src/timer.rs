@@ -289,6 +289,8 @@ impl Timer {
             // this results in timers only being removed from local cache, but not database;
             // whenever the restarts, the timer will still be in the database and will always get
             // restored again and again
+            // i think we only have to make this distinction inside the task; elsewhere, we can
+            // call `remove` without binding
             let _timer = db.get_user_field_mut::<Timers>(user_id).await.remove(&timer_id);
             db.commit_user_field::<Timers>(user_id).await;
 

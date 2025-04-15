@@ -1,4 +1,4 @@
-// pub mod at;
+pub mod at;
 pub mod delete;
 pub mod edit;
 pub mod every;
@@ -36,6 +36,7 @@ use tokio::sync::Mutex;
     syntax = ["<quantity> <time unit> [message]"],
     examples = ["10 minutes", "10 minutes stop watching tv"],
     children = [
+        at::At,
         delete::Delete,
         edit::Edit,
         every::Every,
@@ -47,9 +48,6 @@ use tokio::sync::Mutex;
     ],
 )]
 pub struct Remind;
-    // children = [
-    //     at::At,
-    // ],
 
 #[async_trait]
 impl Command for Remind {
