@@ -18,6 +18,7 @@ use tokio::sync::Mutex;
     aliases = ["tolatex", "tolat", "latex", "tl"],
     syntax = ["<expression>"],
     examples = ["sin(root(2, 16) / 4)"],
+    parent = super::Calculate,
 )]
 pub struct ToLatex;
 

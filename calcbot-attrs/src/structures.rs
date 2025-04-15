@@ -4,6 +4,7 @@ use syn::{
     parse::{Parse, ParseStream},
     Attribute,
     Expr,
+    ExprPath,
     Ident,
     ItemStruct,
     Lit,
@@ -89,6 +90,7 @@ pub struct InfoArgs {
     pub syntax: Option<SliceLitStr>,
     pub examples: Option<SliceLitStr>,
     pub children: CommandGroup,
+    pub parent: Option<ExprPath>,
 }
 
 impl InfoArgs {
@@ -104,6 +106,7 @@ impl InfoArgs {
             "syntax" => self.syntax = Some(input.parse()?),
             "examples" => self.examples = Some(input.parse()?),
             "children" => self.children = input.parse()?,
+            "parent" => self.parent = Some(input.parse()?),
             _ => return Err(syn::Error::new_spanned(ident, format!("unknown tag `{}`", ident_str))),
         }
 
@@ -166,7 +169,7 @@ impl Parse for CommandInfo {
                         description.push_str(&string);
                     }
                 },
-                "info" => info_args = attr.parse_args::<InfoArgs>().unwrap(),
+                "info" => info_args = attr.parse_args::<InfoArgs>()?,
                 _ => (), // TODO: may need to add back these ignored attributes
             }
         }

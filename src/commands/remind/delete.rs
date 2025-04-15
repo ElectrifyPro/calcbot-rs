@@ -16,6 +16,7 @@ use tokio::sync::Mutex;
     aliases = ["delete", "del", "d"],
     syntax = ["<reminder id>"],
     examples = ["4bxB"],
+    parent = super::Remind,
 )]
 pub struct Delete;
 

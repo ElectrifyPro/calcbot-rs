@@ -13,7 +13,10 @@ use tokio::sync::Mutex;
 
 /// View all of your active reminders.
 #[derive(Clone, Info)]
-#[info(aliases = ["view", "list", "v", "l"])]
+#[info(
+    aliases = ["view", "list", "v", "l"],
+    parent = super::Remind,
+)]
 pub struct View;
 
 #[async_trait]

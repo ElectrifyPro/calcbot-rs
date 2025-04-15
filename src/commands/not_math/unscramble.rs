@@ -65,6 +65,7 @@ fn unscramble(letters: &str, length: usize) -> Vec<&'static str> {
     aliases = ["unscramble", "unsc", "uns"],
     syntax = ["<word> [word length]"],
     examples = ["itonnnive"],
+    parent = super::NotMath,
 )]
 pub struct Unscramble;
 

@@ -15,6 +15,7 @@ use tokio::sync::Mutex;
     aliases = ["trademark", "tm"],
     syntax = ["<string>"],
     examples = ["The Perfect Bite"],
+    parent = super::NotMath,
 )]
 pub struct Trademark;
 

@@ -19,6 +19,7 @@ use tokio::sync::Mutex;
     aliases = ["recur", "rec"],
     syntax = ["<reminder id> [<quantity> <time unit>]"],
     examples = ["4bxB", "4bxB 1 min"],
+    parent = super::Remind,
 )]
 pub struct Recur;
 

@@ -15,6 +15,7 @@ use tokio::sync::Mutex;
     aliases = ["reverse", "rev"],
     syntax = ["<string>"],
     examples = ["!yadhtrib yppah"],
+    parent = super::NotMath,
 )]
 pub struct Reverse;
 

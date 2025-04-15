@@ -12,7 +12,10 @@ use tokio::sync::Mutex;
 
 /// Lists all variables and functions defined using `{prefix}calculate`.
 #[derive(Clone, Info)]
-#[info(aliases = ["listdefs", "listdef", "ld", "ls"])]
+#[info(
+    aliases = ["listdefs", "listdef", "ld", "ls"],
+    parent = super::Calculate,
+)]
 pub struct ListDefinitions;
 
 #[async_trait]

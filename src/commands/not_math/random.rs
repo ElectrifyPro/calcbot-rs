@@ -28,6 +28,7 @@ fn random(min: u32, max: u32) -> u32 {
     aliases = ["random", "rand", "r"],
     syntax = ["<maximum>", "<minimum> <maximum>"],
     examples = ["11", "4 11"],
+    parent = super::NotMath,
 )]
 pub struct Random;
 

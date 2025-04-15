@@ -178,7 +178,11 @@ fn generate_embeds() -> Vec<Embed> {
 
 /// Show a list of units supported by the unit conversion command.
 #[derive(Clone, Info)]
-#[info(aliases = ["units", "unit", "u"], syntax = ["[page number]"])]
+#[info(
+    aliases = ["units", "unit", "u"],
+    syntax = ["[page number]"],
+    parent = super::UnitConvert,
+)]
 pub struct Units;
 
 #[async_trait]

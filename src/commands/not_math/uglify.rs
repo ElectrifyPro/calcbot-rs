@@ -15,6 +15,7 @@ use tokio::sync::Mutex;
     aliases = ["uglify", "ug"],
     syntax = ["<string>"],
     examples = ["mock your friends, but only if they let you"],
+    parent = super::NotMath,
 )]
 pub struct Uglify;
 

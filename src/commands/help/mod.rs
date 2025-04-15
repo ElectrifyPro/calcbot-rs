@@ -37,6 +37,7 @@ For a list of all commands, run `{prefix}help commands`.",
             syntax: Some(&["[command]"]),
             examples: Some(&["calculate stats"]),
             children: vec![Box::new(commands::Commands) as Box<dyn Command>].into(),
+            parent: None,
         }
     }
 }

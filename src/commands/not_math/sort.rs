@@ -17,6 +17,7 @@ use tokio::sync::Mutex;
     aliases = ["sort", "so"],
     syntax = ["<number | word>...", "- <number | word>..."],
     examples = ["9 5 28 12", "5 11 this sentence is not in alphabetical order 2"],
+    parent = super::NotMath,
 )]
 pub struct Sort;
 

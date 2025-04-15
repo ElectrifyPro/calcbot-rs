@@ -17,15 +17,16 @@ use syn::{parse_macro_input, ItemStruct};
 ///
 /// This is where the macro gets its information from to implement the trait:
 ///
-/// | Tag           | Description                       | Accepts (types are converted automatically) | Obtained from                                                        |
-/// |---------------|-----------------------------------|---------------------------------------------|----------------------------------------------------------------------|
-/// | `name`        | The name of the command.          | `&str`                                      | The struct's name.                                                   |
-/// | `description` | The description of the command.   | `&str`                                      | The struct's doc comment.                                            |
-/// | `category`    | The category of the root command. | `&str`                                      | The `category` tag in the `info` attribute.                          |
-/// | `aliases`     | Allowed aliases for the command.  | `[&str]`                                    | The struct's name, or via the `aliases` tag in the `info` attribute. |
-/// | `syntax`      | The syntax of the command.        | `[&str]`                                    | The `syntax` tag in the `info` attribute.                            |
-/// | `examples`    | Example usage of the command.     | `[&str]`                                    | The `examples` tag in the `info` attribute.                          |
-/// | `children`    | The subcommands of the command.   | `[impl Command]`                            | The `children` tag in the `info` attribute.                          |
+/// | Tag           | Description                                             | Accepts (types are converted automatically) | Obtained from                                                        |
+/// |---------------|---------------------------------------------------------|---------------------------------------------|----------------------------------------------------------------------|
+/// | `name`        | The name of the command.                                | `&str`                                      | The struct's name.                                                   |
+/// | `description` | The description of the command.                         | `&str`                                      | The struct's doc comment.                                            |
+/// | `category`    | The category of the root command.                       | `&str`                                      | The `category` tag in the `info` attribute.                          |
+/// | `aliases`     | Allowed aliases for the command.                        | `[&str]`                                    | The struct's name, or via the `aliases` tag in the `info` attribute. |
+/// | `syntax`      | The syntax of the command.                              | `[&str]`                                    | The `syntax` tag in the `info` attribute.                            |
+/// | `examples`    | Example usage of the command.                           | `[&str]`                                    | The `examples` tag in the `info` attribute.                          |
+/// | `children`    | The subcommands of the command.                         | `[impl Command]`                            | The `children` tag in the `info` attribute.                          |
+/// | `parent`      | The command's parent, used to implement its help embed. | `impl Command`                              | The `parent` tag in the `info` attribute.                            |
 #[proc_macro_derive(Info, attributes(info))]
 pub fn info(item: TokenStream) -> TokenStream {
     let info = parse_macro_input!(item as CommandInfo);
@@ -42,6 +43,9 @@ pub fn info(item: TokenStream) -> TokenStream {
     let syntax = util::wrap(info_args.syntax);
     let examples = util::wrap(info_args.examples);
     let children = info_args.children;
+    let parent = util::wrap(info_args.parent.map(|path| quote! {
+        Box::new(#path)
+    }));
 
     quote! {
         impl crate::commands::Info for #name {
@@ -54,6 +58,7 @@ pub fn info(item: TokenStream) -> TokenStream {
                     syntax: #syntax,
                     examples: #examples,
                     children: #children,
+                    parent: #parent,
                 }
             }
         }

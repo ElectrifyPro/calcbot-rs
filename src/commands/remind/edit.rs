@@ -20,6 +20,7 @@ use tokio::sync::Mutex;
     aliases = ["edit", "e"],
     syntax = ["<reminder id> <new quantity> <new time unit> [new message]"],
     examples = ["10 minutes", "10 minutes stop watching tv"],
+    parent = super::Remind,
 )]
 pub struct Edit;
 

@@ -20,6 +20,7 @@ use tokio::sync::Mutex;
     aliases = ["every", "ev"],
     syntax = ["<quantity> <time unit> [message]"],
     examples = ["10 min", "1 min level up"],
+    parent = super::Remind,
 )]
 pub struct Every;
 

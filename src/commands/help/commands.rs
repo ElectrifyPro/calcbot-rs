@@ -11,7 +11,10 @@ use tokio::sync::Mutex;
 
 /// View a list of available commands.
 #[derive(Clone, Info)]
-#[info(aliases = ["commands", "cmds", "list", "cmd", "l"])]
+#[info(
+    aliases = ["commands", "cmds", "list", "cmd", "l"],
+    parent = super::Help,
+)]
 pub struct Commands;
 
 #[async_trait]

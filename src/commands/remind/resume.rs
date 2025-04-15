@@ -16,6 +16,7 @@ use tokio::sync::Mutex;
     aliases = ["resume", "res", "r"],
     syntax = ["<reminder id>"],
     examples = ["4bxB"],
+    parent = super::Remind,
 )]
 pub struct Resume;
 

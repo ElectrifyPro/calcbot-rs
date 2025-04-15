@@ -15,6 +15,7 @@ use tokio::sync::Mutex;
     aliases = ["spacer", "space", "sp"],
     syntax = ["<string>"],
     examples = ["patience, mortal", "he is the captain now"],
+    parent = super::NotMath,
 )]
 pub struct Spacer;
 

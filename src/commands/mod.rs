@@ -20,17 +20,17 @@ use twilight_util::builder::embed::{EmbedBuilder, EmbedFieldBuilder};
 ///
 /// The output will look like this:
 /// ```text
-/// <prefix><default_alias> <string1>
-/// <prefix><default_alias> <string2>
-/// <prefix><default_alias> <string3>
+/// <prefix> <string1>
+/// <prefix> <string2>
+/// <prefix> <string3>
 /// ...
 /// ```
-pub fn format_code_block(prefix: &str, default_alias: &str, strings: &[&str]) -> String {
+pub fn format_code_block(prefix: &str, strings: &[&str]) -> String {
     format!(
         "```\n{}\n```",
         strings
             .iter()
-            .map(|string| format!("{}{} {}", prefix, default_alias, string))
+            .map(|string| format!("{} {}", prefix, string))
             .collect::<Vec<_>>()
             .join("\n")
     )
@@ -117,6 +117,9 @@ pub struct CommandInfo {
 
     /// The children of this command. This will be displayed in the help embed.
     pub children: CommandGroup,
+
+    /// The parent of this command. This is used to build the command tree.
+    pub parent: Option<Box<dyn Command>>,
 }
 
 impl CommandInfo {
@@ -127,11 +130,37 @@ impl CommandInfo {
             .unwrap_or(&self.name)
     }
 
+    /// Retrieves the shortest alias for this command.
+    fn shortest_alias(&self) -> &'static str {
+        self.aliases
+            .and_then(|aliases| aliases.iter().min_by_key(|s| s.len()))
+            .unwrap_or(&self.name)
+    }
+
     /// Returns true if the given string is an alias for this command.
     pub fn is_alias(&self, alias: &str) -> bool {
         self.aliases
             .map(|aliases| aliases.contains(&alias))
             .unwrap_or(self.name == alias)
+    }
+
+    /// Builds the path of commands to type to execute `self`. The first path is the normalized
+    /// path, while the second path is a shortened version of the path that uses the shortest
+    /// aliases of each command in the tree.
+    fn build_path(&self) -> (String, String) {
+        let mut out = (String::from(self.default_alias()), String::from(self.shortest_alias()));
+        let mut current = self.parent.as_ref().map(|p| p.clone_box());
+
+        while let Some(parent) = current {
+            let parent_info = parent.info();
+            out.0.insert(0, ' ');
+            out.0.insert_str(0, parent_info.default_alias());
+            out.1.insert(0, ' ');
+            out.1.insert_str(0, parent_info.shortest_alias());
+            current = parent_info.parent;
+        }
+
+        out
     }
 
     /// Build the help embed for this command.
@@ -143,9 +172,12 @@ impl CommandInfo {
     /// - `{setting}`: if this command is a setting, the value of the setting
     pub fn build_embed(&self, prefix: Option<&str>) -> Embed {
         let prefix = prefix.unwrap_or("");
+        let (path, short_path) = self.build_path();
+        let full_path = format!("{}{}", prefix, path);
+
         let mut embed =
             EmbedBuilder::new()
-                .title(self.name)
+                .title(&full_path)
                 .color(0x66d2e8)
                 .field(EmbedFieldBuilder::new(
                     "Description",
@@ -154,25 +186,25 @@ impl CommandInfo {
 
         if let Some(syntax) = self
             .syntax
-            .map(|syntax| format_code_block(prefix, self.default_alias(), syntax))
+            .map(|syntax| format_code_block(&full_path, syntax))
         {
             embed = embed.field(EmbedFieldBuilder::new("Syntax", syntax));
         }
 
         if let Some(examples) = self
             .examples
-            .map(|examples| format_code_block(prefix, self.default_alias(), examples))
+            .map(|examples| format_code_block(&full_path, examples))
         {
             embed = embed.field(EmbedFieldBuilder::new("Examples", examples));
         }
 
+        embed = embed.field(EmbedFieldBuilder::new(
+            "Shorthand",
+            format!("`{}{}`", prefix, short_path),
+        ));
+
         if let Some(aliases) = self.aliases {
-            let shortest = aliases.iter().min_by_key(|s| s.len()).unwrap();
             embed = embed
-                .field(EmbedFieldBuilder::new(
-                    "Shorthand",
-                    format!("`{}{}`", prefix, shortest),
-                ))
                 .field(EmbedFieldBuilder::new(
                     "Aliases",
                     format!("`{}`", aliases.join("`, `")),

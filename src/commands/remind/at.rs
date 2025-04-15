@@ -56,6 +56,7 @@ impl<'a> Parse<'a> for ClockMode {
     aliases = ["at", "@"],
     syntax = ["<hour>:<minute> [\"AM\" | \"PM\"] [message]"],
     examples = ["10:30 am party time", "22:00 stop watching youtube"],
+    parent = super::Remind,
 )]
 pub struct At;
 

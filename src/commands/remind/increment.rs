@@ -20,6 +20,7 @@ use tokio::sync::Mutex;
     aliases = ["increment", "incr", "inc", "i"],
     syntax = ["<reminder id> <quantity> <time unit>"],
     examples = ["4bxB 1", "4bxB 2.5 hr", "4bxB -10 min"],
+    parent = super::Remind,
 )]
 pub struct Increment;
 

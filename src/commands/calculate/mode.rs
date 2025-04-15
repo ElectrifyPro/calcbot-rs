@@ -14,6 +14,7 @@ use tokio::sync::Mutex;
 #[derive(Clone, Info)]
 #[info(
     syntax = ["", "[radians | radian | rad | r]", "[degrees | degree | deg | d]"],
+    parent = super::Calculate,
 )]
 pub struct Mode;
 

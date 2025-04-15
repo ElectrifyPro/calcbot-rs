@@ -21,6 +21,7 @@ lazy_static::lazy_static! {
     aliases = ["aegyo", "애교"],
     syntax = ["<string>"],
     examples = ["please don't be mean to me, please?"],
+    parent = super::NotMath,
 )]
 pub struct Aegyo;
 

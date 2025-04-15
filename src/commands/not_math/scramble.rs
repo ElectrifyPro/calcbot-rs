@@ -31,6 +31,7 @@ fn scramble(string: &str) -> String {
     aliases = ["scramble", "sc"],
     syntax = ["<string>"],
     examples = ["invention", "life is quite a mystery."],
+    parent = super::NotMath,
 )]
 pub struct Scramble;
 

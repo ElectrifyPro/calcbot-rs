@@ -31,6 +31,7 @@ fn capitalize(string: &str) -> String {
     aliases = ["title", "t"],
     syntax = ["<string>"],
     examples = ["the great escape", "what you should do in the event of apocalypse"],
+    parent = super::NotMath,
 )]
 pub struct Title;
 
