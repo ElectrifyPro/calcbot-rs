@@ -197,15 +197,13 @@ impl<'a> Parse<'a> for Word<'a> {
 }
 
 /// Gets the rest of the string after the current byte index.
-///
-/// TODO: this does not advance the parser, so attempting to parse multiple [`Remainder`]s results
-/// in the same string. it only makes sense to use [`Remainder`] at the end of the argument list
-/// though, so this is probably not a problem
 pub struct Remainder<'a>(pub &'a str);
 
 impl<'a> Parse<'a> for Remainder<'a> {
     fn parse(parser: &mut Parser<'a>) -> Result<Self, Error> {
         let start_byte_idx = parser.byte_idx();
+        // NOTE: must consume the rest of the string in order to avoid TooManyArguments error
+        while parser.next_char().is_some() {}
         Ok(Remainder(parser.raw[start_byte_idx..].trim()))
     }
 }
