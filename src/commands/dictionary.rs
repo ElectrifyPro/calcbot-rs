@@ -100,7 +100,7 @@ enum FetchError {
 }
 
 impl CustomErrorFmt for FetchError {
-    fn rich_fmt<'a>(&self, init: CreateMessage<'a>) -> Result<ResponseFuture<Message>, MessageValidationError> {
+    fn rich_fmt(&self, init: CreateMessage<'_>) -> Result<ResponseFuture<Message>, MessageValidationError> {
         match self {
             FetchError::InvalidLanguageCode(language) => Ok(init.content(&format!("**The language code `{}` is invalid.** See [this link](<https://chillant.gitbook.io/calcbot/commands/dictionary>) for a list of valid language codes.", language))?.into_future()),
             FetchError::NotFound(word, language) => Ok(init.content(&format!("**Could not find a dictionary entry for `{}` in the `{}` dictionary.**", word, language))?.into_future()),
@@ -115,7 +115,7 @@ async fn get_dictionary_entry<'a>(
     language: LanguageCode<'a>,
 ) -> Result<Vec<Domain>, FetchError> {
     if !LANGUAGES.contains(&language) {
-        return Err(FetchError::InvalidLanguageCode(language.to_string()).into());
+        return Err(FetchError::InvalidLanguageCode(language.to_string()));
     }
 
     if let Some(entry) = CACHE.get(language).and_then(|domains| {
@@ -164,7 +164,7 @@ impl Command for Dictionary {
     ) -> Result<(), Error> {
         let parsed = parse_args_full::<(Word, Option<Word>)>(ctxt.raw_input)
             .map_err(|err| if matches!(err, Error::NoArgument | Error::TooManyArguments) {
-                Error::Embed(self.info().build_embed(ctxt.prefix))
+                self.info().build_embed(ctxt.prefix).into()
             } else {
                 err
             })?;

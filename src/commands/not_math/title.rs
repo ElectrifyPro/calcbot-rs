@@ -44,7 +44,6 @@ impl Command for Title {
     ) -> Result<(), Error> {
         let content = ctxt.raw_input
             .split_whitespace()
-            .into_iter()
             .enumerate()
             .map(|(i, word)| {
                 let lowercase = word.to_lowercase();

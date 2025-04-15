@@ -69,7 +69,7 @@ impl Command for At {
     ) -> Result<(), Error> {
         let parsed = parse_args_full::<(Word, ClockMode, Remainder)>(ctxt.raw_input)
             .map_err(|err| if matches!(err, Error::NoArgument | Error::TooManyArguments) {
-                Error::Embed(self.info().build_embed(ctxt.prefix))
+                self.info().build_embed(ctxt.prefix).into()
             } else {
                 err
             })?;
@@ -150,7 +150,7 @@ impl Command for At {
             SystemTime::now() + duration,
             message.to_string(),
         );
-        timer.create_task(Arc::clone(&state), Arc::clone(&database));
+        timer.create_task(Arc::clone(state), Arc::clone(database));
         let id = timer.id.clone();
 
         // add to local and remote database so timer can be loaded if bot restarts mid-timer

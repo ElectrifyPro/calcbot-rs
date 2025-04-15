@@ -35,7 +35,7 @@ impl Command for View {
             .footer(EmbedFooterBuilder::new(pluralize(user_data.timers.len(), "reminder")));
 
         if user_data.timers.is_empty() {
-            embed = embed.description(&format!("You have no active reminders. Use the `{prefix}remind` command to set one."));
+            embed = embed.description(format!("You have no active reminders. Use the `{prefix}remind` command to set one."));
         } else {
             for (id, timer) in &user_data.timers {
                 embed = embed.field(EmbedFieldBuilder::new(format!("`{id}`"), timer.build_description()).inline());

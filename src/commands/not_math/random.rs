@@ -41,7 +41,7 @@ impl Command for Random {
     ) -> Result<(), Error> {
         let parsed = parse_args_full(ctxt.raw_input)
             .map_err(|err| if matches!(err, Error::NoArgument | Error::TooManyArguments) {
-                Error::Embed(self.info().build_embed(ctxt.prefix))
+                self.info().build_embed(ctxt.prefix).into()
             } else {
                 err
             })?;

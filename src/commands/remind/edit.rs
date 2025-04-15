@@ -33,7 +33,7 @@ impl Command for Edit {
     ) -> Result<(), Error> {
         let parsed = parse_args_full::<(Word, f64, Word, Remainder)>(ctxt.raw_input)
             .map_err(|err| if matches!(err, Error::NoArgument | Error::TooManyArguments) {
-                Error::Embed(self.info().build_embed(ctxt.prefix))
+                self.info().build_embed(ctxt.prefix).into()
             } else {
                 err
             })?;
@@ -51,7 +51,7 @@ impl Command for Edit {
             return Ok(());
         };
 
-        let Ok(unit) = (&*unit).try_into() else {
+        let Ok(unit) = unit.try_into() else {
             ctxt.trigger.reply(&state.http)
                 .content(&format!("**`{unit}` is not a valid time unit.**"))?
                 .await?;
@@ -64,7 +64,7 @@ impl Command for Edit {
 
         timer.message = message.to_string();
         timer.set_new_duration(time_amount);
-        timer.create_task(Arc::clone(&state), Arc::clone(&database));
+        timer.create_task(Arc::clone(state), Arc::clone(database));
         let is_running = timer.is_running();
 
         db.commit_user_field::<Timers>(ctxt.trigger.author_id()).await;

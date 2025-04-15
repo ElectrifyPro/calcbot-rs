@@ -33,7 +33,7 @@ impl Command for Increment {
     ) -> Result<(), Error> {
         let parsed = parse_args_full::<(Word, f64, Option<Word>)>(ctxt.raw_input)
             .map_err(|err| if matches!(err, Error::NoArgument | Error::TooManyArguments) {
-                Error::Embed(self.info().build_embed(ctxt.prefix))
+                self.info().build_embed(ctxt.prefix).into()
             } else {
                 err
             })?;

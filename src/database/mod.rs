@@ -85,7 +85,7 @@ impl Database {
     ) -> Option<&UnboundedSender<InteractionCreate>> {
         let sender_is_closed = self.paged
             .get(&(channel_id, message_id))
-            .map_or(false, |sender| sender.is_closed());
+            .is_some_and(|sender| sender.is_closed());
         if sender_is_closed {
             self.paged.remove(&(channel_id, message_id));
             None

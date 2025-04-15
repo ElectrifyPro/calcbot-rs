@@ -209,7 +209,7 @@ impl<'a> From<&'a Message> for Trigger<'a> {
     }
 }
 
-impl<'a> Trigger<'a> {
+impl Trigger<'_> {
     /// Returns the ID of the author who triggered this event.
     pub fn author_id(&self) -> Id<UserMarker> {
         match self {
