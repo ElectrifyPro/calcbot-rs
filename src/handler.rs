@@ -14,6 +14,11 @@ pub async fn message_create(
         return Ok(());
     }
 
+    // NOTE: using old CalcBot
+    if !database.lock().await.force_get_user_mut(msg.author.id).await.using_preview {
+        return Ok(());
+    }
+
     // if in guild, fetch guild's prefix
     // in dm channels, there is no prefix
     // NOTE: async closures are unstable

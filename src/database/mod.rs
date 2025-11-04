@@ -167,7 +167,7 @@ impl Database {
     /// Loads all users that have timers set in the database, allowing timers to continue running
     /// even if the bot is restarted.
     pub async fn resume_users_with_timers(&mut self, state: Arc<State>, db: Arc<Mutex<Database>>) {
-        let users = "SELECT id, ctxt, timers FROM users WHERE timers != '{}'"
+        let users = "SELECT id, ctxt, timers, using_preview FROM users WHERE timers != '{}'"
             .fetch::<UserData, _>(&self.pool)
             .await
             .unwrap();
@@ -179,6 +179,7 @@ impl Database {
             self.users.insert(user.id, user);
         }
     }
+
     /// Gets mutable access to the user data for the given user ID.
     ///
     /// If the data was cached previously, the cached value will be returned. Otherwise, the data
@@ -190,7 +191,15 @@ impl Database {
             return self.users.get_mut(&id).unwrap();
         }
 
-        let data = match "SELECT id, ctxt, timers FROM users WHERE id = ? LIMIT 1"
+        self.force_get_user_mut(id).await
+    }
+
+    /// Gets mutable access to the user data for the given user ID. This function will always hit
+    /// the database and replace any cached value.
+    ///
+    /// If the data does not exist anywhere, a default is created.
+    pub async fn force_get_user_mut(&mut self, id: Id<UserMarker>) -> &mut UserData {
+        let data = match "SELECT id, ctxt, timers, using_preview FROM users WHERE id = ? LIMIT 1"
             .with((id.get(),))
             .first::<UserData, _>(&self.pool)
             .await
@@ -198,11 +207,12 @@ impl Database {
         {
             Some(data) => data,
             None => {
-                "INSERT INTO users (id, ctxt, timers) VALUES (?, ?, ?)"
+                "INSERT INTO users (id, ctxt, timers, using_preview) VALUES (?, ?, ?, ?)"
                     .with((
                         id.get(),
                         to_value(cas_compute::numerical::ctxt::Ctxt::default()).unwrap(),
                         to_value(HashMap::<(), ()>::new()).unwrap(),
+                        false,
                     ))
                     .ignore(&self.pool)
                     .await
@@ -211,7 +221,9 @@ impl Database {
             },
         };
 
-        self.users.entry(id).or_insert(data)
+        self.users.entry(id)
+            .insert_entry(data)
+            .into_mut()
     }
 
     /// Gets immutable access to the user data for the given user ID.
@@ -251,10 +263,7 @@ impl Database {
             .append(T::COLUMN_NAME)
             .append(" = ? WHERE id = ?") }
             .as_str()
-            .with((
-                to_value(T::get_mut(user)).unwrap(),
-                id.get(),
-            ))
+            .with((T::value(user), id.get()))
             .ignore(&self.pool)
             .await
             .unwrap();
