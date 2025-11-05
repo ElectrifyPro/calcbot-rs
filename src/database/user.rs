@@ -1,7 +1,8 @@
 use cas_compute::numerical::ctxt::Ctxt as EvalCtxt;
 use twilight_model::id::{marker::UserMarker, Id};
 use crate::timer::Timer;
-use mysql_async::{FromRowError, Value, prelude::FromRow};
+use mysql_async::{FromRowError, prelude::FromRow};
+use serde::Serialize;
 use serde_json::from_str;
 use std::collections::HashMap;
 
@@ -31,14 +32,6 @@ pub struct UserData {
 
     /// The timers the user has set.
     pub timers: HashMap<String, Timer>,
-
-    /// Whether the user is in preview mode.
-    ///
-    /// This is a temporary mode that exists while the new CalcBot is being developed. Both
-    /// instances of CalcBot run simultaneously, but will selectively ignore users based on this
-    /// flag. If this is `true`, the user is using the new CalcBot (i.e. this instance). If
-    /// `false`, the user is using the old Node.js-based CalcBot.
-    pub using_preview: bool,
 }
 
 impl FromRow for UserData {
@@ -47,7 +40,6 @@ impl FromRow for UserData {
             id: row.get::<String, _>("id").unwrap().parse().unwrap(),
             ctxt: from_str(&row.get::<String, _>("ctxt").unwrap()).unwrap(),
             timers: from_str(&row.get::<String, _>("timers").unwrap()).unwrap(),
-            using_preview: row.get::<bool, _>("using_preview").unwrap(),
         })
     }
 }
@@ -59,7 +51,6 @@ impl UserData {
             id,
             ctxt: EvalCtxt::default(),
             timers: HashMap::new(),
-            using_preview: false,
         }
     }
 }
@@ -77,13 +68,10 @@ pub trait UserField {
     const COLUMN_NAME: &'static str;
 
     /// The type of the field to be serialized to and deserialized from the database.
-    type Type;
+    type Type: Serialize;
 
     /// Gets mutable access to the field in the [`UserData`] instance.
     fn get_mut(user_data: &mut UserData) -> &mut Self::Type;
-
-    /// Gets the [`Value`] from the field in the [`UserData`] instance.
-    fn value(user_data: &UserData) -> Value;
 }
 
 /// [`UserData::ctxt`]
@@ -92,9 +80,6 @@ pub struct Ctxt;
 /// [`UserData::timers`]
 pub struct Timers;
 
-/// [`UserData::using_preview`]
-pub struct UsingPreview;
-
 impl UserField for Ctxt {
     const COLUMN_NAME: &'static str = "ctxt";
 
@@ -102,12 +87,6 @@ impl UserField for Ctxt {
 
     fn get_mut(user_data: &mut UserData) -> &mut Self::Type {
         &mut user_data.ctxt
-    }
-
-    fn value(user_data: &UserData) -> Value {
-        serde_json::to_string(&user_data.ctxt)
-            .unwrap()
-            .into()
     }
 }
 
@@ -118,25 +97,5 @@ impl UserField for Timers {
 
     fn get_mut(user_data: &mut UserData) -> &mut Self::Type {
         &mut user_data.timers
-    }
-
-    fn value(user_data: &UserData) -> Value {
-        serde_json::to_string(&user_data.timers)
-            .unwrap()
-            .into()
-    }
-}
-
-impl UserField for UsingPreview {
-    const COLUMN_NAME: &'static str = "using_preview";
-
-    type Type = bool;
-
-    fn get_mut(user_data: &mut UserData) -> &mut Self::Type {
-        &mut user_data.using_preview
-    }
-
-    fn value(user_data: &UserData) -> Value {
-        user_data.using_preview.into()
     }
 }

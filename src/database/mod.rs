@@ -62,6 +62,34 @@ impl Database {
         }
     }
 
+    /// Returns true if the user with the given ID is in preview mode.
+    ///
+    /// This is a temporary mode that exists while the new CalcBot is being developed. Both
+    /// instances of CalcBot run simultaneously, but will selectively ignore users based on this
+    /// flag. If this is `true`, the user is using the new CalcBot (i.e. this instance). If
+    /// `false`, the user is using the old Node.js-based CalcBot.
+    pub async fn is_using_preview(&self, id: Id<UserMarker>) -> bool {
+        match "SELECT using_preview FROM using_preview WHERE id = ? LIMIT 1"
+            .with((id.get(),))
+            .first::<bool, _>(&self.pool)
+            .await
+            .unwrap()
+        {
+            Some(using_preview) => using_preview,
+            None => false,
+        }
+    }
+
+    /// Sets whether the user with the given ID is in preview mode.
+    pub async fn set_using_preview(&self, id: Id<UserMarker>, using_preview: bool) {
+        "INSERT INTO using_preview (id, using_preview) VALUES (?, ?)
+            ON DUPLICATE KEY UPDATE using_preview = ?"
+            .with((id.get(), using_preview, using_preview))
+            .ignore(&self.pool)
+            .await
+            .unwrap();
+    }
+
     /// Sets the paged message sender for the given channel and message IDs. This is used to listen
     /// for interactions on messages with multiple pages.
     pub fn set_paged_message(
@@ -167,7 +195,7 @@ impl Database {
     /// Loads all users that have timers set in the database, allowing timers to continue running
     /// even if the bot is restarted.
     pub async fn resume_users_with_timers(&mut self, state: Arc<State>, db: Arc<Mutex<Database>>) {
-        let users = "SELECT id, ctxt, timers, using_preview FROM users WHERE timers != '{}'"
+        let users = "SELECT id, ctxt, timers FROM users_vRUST WHERE timers != '{}'"
             .fetch::<UserData, _>(&self.pool)
             .await
             .unwrap();
@@ -191,15 +219,7 @@ impl Database {
             return self.users.get_mut(&id).unwrap();
         }
 
-        self.force_get_user_mut(id).await
-    }
-
-    /// Gets mutable access to the user data for the given user ID. This function will always hit
-    /// the database and replace any cached value.
-    ///
-    /// If the data does not exist anywhere, a default is created.
-    pub async fn force_get_user_mut(&mut self, id: Id<UserMarker>) -> &mut UserData {
-        let data = match "SELECT id, ctxt, timers, using_preview FROM users WHERE id = ? LIMIT 1"
+        let data = match "SELECT id, ctxt, timers FROM users_vRUST WHERE id = ? LIMIT 1"
             .with((id.get(),))
             .first::<UserData, _>(&self.pool)
             .await
@@ -207,12 +227,11 @@ impl Database {
         {
             Some(data) => data,
             None => {
-                "INSERT INTO users (id, ctxt, timers, using_preview) VALUES (?, ?, ?, ?)"
+                "INSERT INTO users_vRUST (id, ctxt, timers) VALUES (?, ?, ?)"
                     .with((
                         id.get(),
                         to_value(cas_compute::numerical::ctxt::Ctxt::default()).unwrap(),
                         to_value(HashMap::<(), ()>::new()).unwrap(),
-                        false,
                     ))
                     .ignore(&self.pool)
                     .await
@@ -259,11 +278,14 @@ impl Database {
     pub async fn commit_user_field<T: UserField>(&mut self, id: Id<UserMarker>) {
         let user = self.get_user_mut(id).await;
         const { ConstStr::new()
-            .append("UPDATE users SET ")
+            .append("UPDATE users_vRUST SET ")
             .append(T::COLUMN_NAME)
             .append(" = ? WHERE id = ?") }
             .as_str()
-            .with((T::value(user), id.get()))
+            .with((
+                to_value(T::get_mut(user)).unwrap(),
+                id.get(),
+            ))
             .ignore(&self.pool)
             .await
             .unwrap();

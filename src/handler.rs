@@ -15,7 +15,7 @@ pub async fn message_create(
     }
 
     // NOTE: using old CalcBot
-    if !database.lock().await.force_get_user_mut(msg.author.id).await.using_preview {
+    if !database.lock().await.is_using_preview(msg.author.id).await {
         return Ok(());
     }
 

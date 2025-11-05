@@ -2,7 +2,7 @@ use async_trait::async_trait;
 use calcbot_attrs::Info;
 use crate::{
     commands::{Command, Context},
-    database::{Database, user::UsingPreview},
+    database::Database,
     error::Error,
     global::State,
 };
@@ -35,10 +35,8 @@ impl Command for Preview {
             return Ok(());
         }
 
-        let mut database = database.lock().await;
-        let using_preview = database.get_user_field_mut::<UsingPreview>(ctxt.trigger.author_id()).await;
-        *using_preview = false;
-        database.commit_user_field::<UsingPreview>(ctxt.trigger.author_id()).await;
+        database.lock().await
+            .set_using_preview(ctxt.trigger.author_id(), false).await;
 
         ctxt.trigger.reply(&state.http)
             .content("**Preview mode disabled.** You are now using the stable version of CalcBot.")?
