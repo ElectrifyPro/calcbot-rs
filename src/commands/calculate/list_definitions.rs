@@ -1,6 +1,5 @@
 use async_trait::async_trait;
 use calcbot_attrs::Info;
-use cas_compute::numerical::ctxt::{Func, UserFunc};
 use crate::{
     commands::{Command, Context},
     database::Database,
@@ -23,25 +22,27 @@ impl Command for ListDefinitions {
     async fn execute<'c>(
         &'c self,
         state: &Arc<State>,
-        database: &Arc<Mutex<Database>>,
+        _database: &Arc<Mutex<Database>>,
         ctxt: Context<'c>,
     ) -> Result<(), Error> {
         let (vars, funcs) = {
-            let mut database = database.lock().await;
-            let user_data = database.get_user(ctxt.trigger.author_id()).await;
+            // let mut database = database.lock().await;
+            // let user_data = database.get_user(ctxt.trigger.author_id()).await;
 
             (
-                user_data.ctxt.get_vars()
-                    .iter()
-                    .map(|(name, value)| format!("`{} = {}`", name, value))
-                    .collect::<Vec<_>>(),
-                user_data.ctxt.get_funcs()
-                    .values()
-                    .filter_map(|func| match func {
-                        Func::UserFunc(UserFunc { header, body, .. }) => Some(format!("`{} = {}`", header, body)),
-                        Func::Builtin(_) => None,
-                    })
-                    .collect::<Vec<_>>(),
+                vec![""],
+                vec![""],
+                // user_data.ctxt.get_vars()
+                //     .iter()
+                //     .map(|(name, value)| format!("`{} = {}`", name, value))
+                //     .collect::<Vec<_>>(),
+                // user_data.ctxt.get_funcs()
+                //     .values()
+                //     .filter_map(|func| match func {
+                //         Func::UserFunc(UserFunc { header, body, .. }) => Some(format!("`{} = {}`", header, body)),
+                //         Func::Builtin(_) => None,
+                //     })
+                //     .collect::<Vec<_>>(),
             )
         };
 

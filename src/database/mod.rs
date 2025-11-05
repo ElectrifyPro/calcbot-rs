@@ -230,7 +230,8 @@ impl Database {
                 "INSERT INTO users_vRUST (id, ctxt, timers) VALUES (?, ?, ?)"
                     .with((
                         id.get(),
-                        to_value(cas_compute::numerical::ctxt::Ctxt::default()).unwrap(),
+                        // to_value(cas_compute::numerical::ctxt::Ctxt::default()).unwrap(),
+                        to_value(HashMap::<(), ()>::new()).unwrap(),
                         to_value(HashMap::<(), ()>::new()).unwrap(),
                     ))
                     .ignore(&self.pool)

@@ -15,13 +15,17 @@ path = "calcbot-attrs"
 [dependencies.cas-compute]
 git = "https://github.com/ElectrifyPro/cas-rs.git"
 branch = "dev"
-features = ["mysql", "serde"]
-
-[dependencies.cas-math]
-git = "https://github.com/ElectrifyPro/cas-rs.git"
-branch = "main"
+features = ["mysql", "serde", "sync"]
 
 [dependencies.cas-parser]
+git = "https://github.com/ElectrifyPro/cas-rs.git"
+branch = "dev"
+
+[dependencies.cas-unit-convert]
+git = "https://github.com/ElectrifyPro/cas-rs.git"
+branch = "dev"
+
+[dependencies.cas-vm]
 git = "https://github.com/ElectrifyPro/cas-rs.git"
 branch = "dev"
 

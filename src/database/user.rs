@@ -1,4 +1,3 @@
-use cas_compute::numerical::ctxt::Ctxt as EvalCtxt;
 use twilight_model::id::{marker::UserMarker, Id};
 use crate::timer::Timer;
 use mysql_async::{FromRowError, prelude::FromRow};
@@ -27,8 +26,7 @@ pub struct UserData {
     /// The ID of the user.
     pub id: Id<UserMarker>,
 
-    /// The user's evaluation context.
-    pub ctxt: EvalCtxt,
+    // TODO: ctxt needs to be updated to use cas-vm data
 
     /// The timers the user has set.
     pub timers: HashMap<String, Timer>,
@@ -38,7 +36,6 @@ impl FromRow for UserData {
     fn from_row_opt(row: mysql_async::Row) -> Result<Self, FromRowError> {
         Ok(Self {
             id: row.get::<String, _>("id").unwrap().parse().unwrap(),
-            ctxt: from_str(&row.get::<String, _>("ctxt").unwrap()).unwrap(),
             timers: from_str(&row.get::<String, _>("timers").unwrap()).unwrap(),
         })
     }
@@ -49,7 +46,6 @@ impl UserData {
     pub fn new(id: Id<UserMarker>) -> Self {
         Self {
             id,
-            ctxt: EvalCtxt::default(),
             timers: HashMap::new(),
         }
     }
@@ -74,21 +70,20 @@ pub trait UserField {
     fn get_mut(user_data: &mut UserData) -> &mut Self::Type;
 }
 
-/// [`UserData::ctxt`]
-pub struct Ctxt;
+// /// [`UserData::ctxt`]
+// pub struct Ctxt;
 
 /// [`UserData::timers`]
 pub struct Timers;
 
-impl UserField for Ctxt {
-    const COLUMN_NAME: &'static str = "ctxt";
-
-    type Type = EvalCtxt;
-
-    fn get_mut(user_data: &mut UserData) -> &mut Self::Type {
-        &mut user_data.ctxt
-    }
-}
+// impl UserField for Ctxt {
+//     const COLUMN_NAME: &'static str = "ctxt";
+//
+//     type Type = EvalCtxt;
+//
+//     fn get_mut(user_data: &mut UserData) -> &mut Self::Type {
+//         &mut user_data.ctxt
+//     }
 
 impl UserField for Timers {
     const COLUMN_NAME: &'static str = "timers";

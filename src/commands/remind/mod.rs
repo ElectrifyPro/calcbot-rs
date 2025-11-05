@@ -10,7 +10,7 @@ pub mod view;
 
 use async_trait::async_trait;
 use calcbot_attrs::Info;
-use cas_math::unit_conversion::{unit::Time, Measurement, Quantity, Unit};
+use cas_unit_convert::{unit::Time, Base, Measurement, Unit};
 use crate::{
     arg_parse::{Word, Remainder, parse_args_full},
     commands::{Command, Context, Info},
@@ -73,7 +73,7 @@ impl Command for Remind {
                 .await?;
             return Ok(());
         };
-        let time_amount = Duration::from_secs_f64(*Measurement::new(quantity, Unit::new(Quantity::Time(unit)))
+        let time_amount = Duration::from_secs_f64(*Measurement::new(quantity, Unit::new(Base::Time(unit)))
             .convert(Time::Second)
             .unwrap()
             .value());

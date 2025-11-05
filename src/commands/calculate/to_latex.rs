@@ -41,7 +41,7 @@ impl Command for ToLatex {
                 let msg = errs.into_iter()
                     .map(|err| {
                         let mut buf = Vec::new();
-                        err.build_report()
+                        err.build_report("input")
                             .write(("input", Source::from(ctxt.raw_input)), &mut buf)
                             .unwrap();
                         String::from_utf8(strip(buf).unwrap()).unwrap()

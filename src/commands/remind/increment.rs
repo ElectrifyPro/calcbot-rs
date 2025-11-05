@@ -1,6 +1,6 @@
 use async_trait::async_trait;
 use calcbot_attrs::Info;
-use cas_math::unit_conversion::{unit::Time, Measurement, Quantity, Unit};
+use cas_unit_convert::{unit::Time, Base, Measurement, Unit};
 use crate::{
     arg_parse::{Word, parse_args_full},
     commands::{Command, Context, Info},
@@ -52,7 +52,7 @@ impl Command for Increment {
                 };
                 unit
             },
-            None => Unit::new(Quantity::Time(Time::Second)),
+            None => Unit::new(Base::Time(Time::Second)),
         };
 
         let time_amount = Duration::from_secs_f64(*Measurement::new(quantity, unit)

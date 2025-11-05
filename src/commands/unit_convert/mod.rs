@@ -2,7 +2,7 @@ pub mod units;
 
 use async_trait::async_trait;
 use calcbot_attrs::Info;
-use cas_math::unit_conversion::{Measurement, Unit};
+use cas_unit_convert::{Measurement, Unit};
 use crate::{
     arg_parse::{Word, parse_args_full},
     commands::{Command, Context, Info},
