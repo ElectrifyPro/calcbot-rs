@@ -51,27 +51,38 @@ impl Command for Calculate {
                 // let eval_ctxt = database.get_user_field_mut::<Ctxt>(ctxt.trigger.author_id()).await;
 
                 let mut vm = Vm::compile_program(stmts).unwrap();
-                let ans = match vm.run() {
-                    Ok(ans) => ans,
-                    Err(err) => {
-                        let mut buf = Vec::new();
-                        err.build_report("input")
-                            .write(("input", Source::from(ctxt.raw_input)), &mut buf)
-                            .unwrap();
-
+                let cancel = vm.stop_execution.clone();
+                tokio::select! {
+                    _ = tokio::time::sleep(std::time::Duration::from_secs(4)) => {
+                        cancel.store(true, std::sync::atomic::Ordering::Relaxed);
                         ctxt.trigger.reply(&state.http)
-                            .content(&format!("```rs\n{}\n```", String::from_utf8_lossy(&strip(buf).unwrap())))?
+                            .content("**Timeout: The calculation took too long (4+ seconds) and was cancelled.** Check your expression to see if there are any mistakes or infinite loops.")?
                             .await?;
-                        return Ok(());
-                    },
-                };
-                ctxt.trigger.reply(&state.http)
-                    .content(&format!("**Calculation**\n{}", ans))?
-                    // .content(&format!("**Calculation** (mode: {})\n{}", eval_ctxt.trig_mode, ans))?
-                    .await?;
+                    }
+                    Ok(out) = tokio::task::spawn_blocking(move || vm.run()) => {
+                        let ans = match out {
+                            Ok(ans) => ans,
+                            Err(err) => {
+                                let mut buf = Vec::new();
+                                err.build_report("input")
+                                    .write(("input", Source::from(ctxt.raw_input)), &mut buf)
+                                    .unwrap();
 
-                // eval_ctxt.add_var("ans", ans);
-                // database.commit_user_field::<Ctxt>(ctxt.trigger.author_id()).await;
+                                ctxt.trigger.reply(&state.http)
+                                    .content(&format!("```rs\n{}\n```", String::from_utf8_lossy(&strip(buf).unwrap())))?
+                                    .await?;
+                                return Ok(());
+                            },
+                        };
+                        ctxt.trigger.reply(&state.http)
+                            .content(&format!("**Calculation**\n{}", ans))?
+                            // .content(&format!("**Calculation** (mode: {})\n{}", eval_ctxt.trig_mode, ans))?
+                            .await?;
+
+                        // eval_ctxt.add_var("ans", ans);
+                        // database.commit_user_field::<Ctxt>(ctxt.trigger.author_id()).await;
+                    }
+                }
             },
             Err(errs) => {
                 let msg = errs.into_iter()
