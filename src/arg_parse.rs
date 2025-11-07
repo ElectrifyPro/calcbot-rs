@@ -196,6 +196,22 @@ impl<'a> Parse<'a> for Word<'a> {
     }
 }
 
+/// Parses a sequence of space-separated [`Parse`] types.
+impl<'a, T: Parse<'a>> Parse<'a> for Vec<T> {
+    fn parse(parser: &mut Parser<'a>) -> Result<Self, Error> {
+        let mut out = vec![];
+        loop {
+            if let Ok(item) = T::parse(parser) {
+                out.push(item);
+                parser.advance_past_whitespace();
+            } else {
+                break;
+            }
+        }
+        Ok(out)
+    }
+}
+
 /// Gets the rest of the string after the current byte index.
 pub struct Remainder<'a>(pub &'a str);
 
