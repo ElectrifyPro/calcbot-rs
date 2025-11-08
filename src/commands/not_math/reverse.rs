@@ -28,7 +28,7 @@ impl Command for Reverse {
         ctxt: Context<'c>,
     ) -> Result<(), Error> {
         ctxt.trigger.reply(&state.http)
-            .content(&ctxt.raw_input.chars().rev().collect::<String>())?
+            .content(&ctxt.raw_input.chars().rev().collect::<String>())
             .await?;
         Ok(())
     }

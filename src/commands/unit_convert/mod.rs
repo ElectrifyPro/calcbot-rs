@@ -50,7 +50,7 @@ impl Command for UnitConvert {
         let prefix = ctxt.prefix.unwrap_or_default();
         let Ok(unit) = parsed.1.0.parse::<CompoundUnit>() else {
             ctxt.trigger.reply(&state.http)
-                .content(&format!("**`{}` is not a valid unit.** Run the `{prefix}unitconvert units` for a list of supported units.", parsed.1.0))?
+                .content(&format!("**`{}` is not a valid unit.** Run the `{prefix}unitconvert units` for a list of supported units.", parsed.1.0))
                 .await?;
             return Ok(());
         };
@@ -73,7 +73,7 @@ impl Command for UnitConvert {
                     .oxford_join_custom("`, `", "` and `", "`, and `");
                 format!("**`{}` are not valid units.** Run the `{prefix}unitconvert units` for a list of supported units.", out)
             };
-            ctxt.trigger.reply(&state.http).content(&msg)?.await?;
+            ctxt.trigger.reply(&state.http).content(&msg).await?;
             return Ok(());
         }
 
@@ -99,7 +99,7 @@ impl Command for UnitConvert {
             },
         };
         ctxt.trigger.reply(&state.http)
-            .content(&out_msg)?
+            .content(&out_msg)
             .await?;
 
         Ok(())

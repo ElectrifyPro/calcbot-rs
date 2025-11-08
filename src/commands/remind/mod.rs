@@ -69,7 +69,7 @@ impl Command for Remind {
 
         let Ok(unit) = unit.try_into() else {
             ctxt.trigger.reply(&state.http)
-                .content(&format!("**`{unit}` is not a valid time unit.**"))?
+                .content(&format!("**`{unit}` is not a valid time unit.**"))
                 .await?;
             return Ok(());
         };
@@ -95,7 +95,7 @@ impl Command for Remind {
         database.commit_user_field::<Timers>(ctxt.trigger.author_id()).await;
 
         ctxt.trigger.reply(&state.http)
-            .content(&format!("**You will be mentioned in this channel in `{quantity} {unit}`.** This reminder's ID is `{id}`."))?
+            .content(&format!("**You will be mentioned in this channel in `{quantity} {unit}`.** This reminder's ID is `{id}`."))
             .await?;
 
         Ok(())

@@ -44,7 +44,7 @@ impl Command for Scramble {
         ctxt: Context<'c>,
     ) -> Result<(), Error> {
         ctxt.trigger.reply(&state.http)
-            .content(&scramble(ctxt.raw_input))?
+            .content(&scramble(ctxt.raw_input))
             .await?;
         Ok(())
     }

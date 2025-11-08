@@ -45,7 +45,7 @@ impl Command for Recur {
         let Some(timer) = db.get_user_field_mut::<Timers>(ctxt.trigger.author_id()).await
             .get_mut(timer_id) else {
             ctxt.trigger.reply(&state.http)
-                .content(&format!("**You do not have a reminder set with the ID `{timer_id}`.**"))?
+                .content(&format!("**You do not have a reminder set with the ID `{timer_id}`.**"))
                 .await?;
             return Ok(());
         };
@@ -58,7 +58,7 @@ impl Command for Recur {
             db.commit_user_field::<Timers>(ctxt.trigger.author_id()).await;
 
             ctxt.trigger.reply(&state.http)
-                .content(&format!("**Successfully disabled the recurring status of the reminder with ID `{timer_id}`. It will not recur when it triggers."))?
+                .content(&format!("**Successfully disabled the recurring status of the reminder with ID `{timer_id}`. It will not recur when it triggers."))
                 .await?;
             return Ok(());
         }
@@ -66,14 +66,14 @@ impl Command for Recur {
         // enable recurring status
         let (Some(quantity), Some(unit)) = (quantity, unit) else {
             ctxt.trigger.reply(&state.http)
-                .content("**You must specify a time interval for the reminder to recur with.**")?
+                .content("**You must specify a time interval for the reminder to recur with.**")
                 .await?;
             return Ok(());
         };
 
         let Ok(unit) = unit.try_into() else {
             ctxt.trigger.reply(&state.http)
-                .content(&format!("**`{unit}` is not a valid time unit.**"))?
+                .content(&format!("**`{unit}` is not a valid time unit.**"))
                 .await?;
             return Ok(());
         };
@@ -84,7 +84,7 @@ impl Command for Recur {
 
         if time_amount < Duration::from_secs(60) {
             ctxt.trigger.reply(&state.http)
-                .content("**The recurring reminder interval must be at least 1 minute long.**")?
+                .content("**The recurring reminder interval must be at least 1 minute long.**")
                 .await?;
             return Ok(());
         }
@@ -96,7 +96,7 @@ impl Command for Recur {
         db.commit_user_field::<Timers>(ctxt.trigger.author_id()).await;
 
         ctxt.trigger.reply(&state.http)
-            .content(&format!("**Successfully set the recurring status of the reminder with ID `{id}`. Once it triggers, it will repeatedly recur for `{quantity} {unit}`.**"))?
+            .content(&format!("**Successfully set the recurring status of the reminder with ID `{id}`. Once it triggers, it will repeatedly recur for `{quantity} {unit}`.**"))
             .await?;
 
         Ok(())

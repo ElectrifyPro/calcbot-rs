@@ -83,7 +83,7 @@ pub fn command(item: TokenStream) -> TokenStream {
                 // send the help embed by default
                 let embed = crate::commands::Info::info(self).build_embed(ctxt.prefix);
                 ctxt.trigger.reply(&state.http)
-                    .embeds(&[embed])?
+                    .embeds(&[embed])
                     .await?;
                 Ok(())
             }

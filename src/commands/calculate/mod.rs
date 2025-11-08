@@ -56,7 +56,7 @@ impl Command for Calculate {
                     _ = tokio::time::sleep(std::time::Duration::from_secs(4)) => {
                         cancel.store(true, std::sync::atomic::Ordering::Relaxed);
                         ctxt.trigger.reply(&state.http)
-                            .content("**Timeout: The calculation took too long (4+ seconds) and was cancelled.** Check your expression to see if there are any mistakes or infinite loops.")?
+                            .content("**Timeout: The calculation took too long (4+ seconds) and was cancelled.** Check your expression to see if there are any mistakes or infinite loops.")
                             .await?;
                     }
                     Ok(out) = tokio::task::spawn_blocking(move || vm.run()) => {
@@ -69,14 +69,14 @@ impl Command for Calculate {
                                     .unwrap();
 
                                 ctxt.trigger.reply(&state.http)
-                                    .content(&format!("```rs\n{}\n```", String::from_utf8_lossy(&strip(buf).unwrap())))?
+                                    .content(&format!("```rs\n{}\n```", String::from_utf8_lossy(&strip(buf).unwrap())))
                                     .await?;
                                 return Ok(());
                             },
                         };
                         ctxt.trigger.reply(&state.http)
-                            .content(&format!("**Calculation**\n{}", ans))?
-                            // .content(&format!("**Calculation** (mode: {})\n{}", eval_ctxt.trig_mode, ans))?
+                            .content(&format!("**Calculation**\n{}", ans))
+                            // .content(&format!("**Calculation** (mode: {})\n{}", eval_ctxt.trig_mode, ans))
                             .await?;
 
                         // eval_ctxt.add_var("ans", ans);
@@ -97,7 +97,7 @@ impl Command for Calculate {
                     .join("\n");
 
                 ctxt.trigger.reply(&state.http)
-                    .content(&format!("```rs\n{}\n```", msg))?
+                    .content(&format!("```rs\n{}\n```", msg))
                     .await?;
             },
         }

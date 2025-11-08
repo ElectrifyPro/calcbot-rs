@@ -46,7 +46,7 @@ impl Command for View {
         }
 
         ctxt.trigger.reply(&state.http)
-            .embeds(&[embed.build()])?
+            .embeds(&[embed.build()])
             .await?;
         Ok(())
     }

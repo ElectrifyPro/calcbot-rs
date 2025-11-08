@@ -65,7 +65,7 @@ impl Command for Sort {
         output.push_str(&values);
 
         ctxt.trigger.reply(&state.http)
-            .content(&output)?
+            .content(&output)
             .await?;
         Ok(())
     }

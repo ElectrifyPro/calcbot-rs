@@ -102,9 +102,9 @@ enum FetchError {
 impl CustomErrorFmt for FetchError {
     fn rich_fmt(&self, init: CreateMessage<'_>) -> Result<ResponseFuture<Message>, MessageValidationError> {
         match self {
-            FetchError::InvalidLanguageCode(language) => Ok(init.content(&format!("**The language code `{}` is invalid.** See [this link](<https://chillant.gitbook.io/calcbot/commands/dictionary>) for a list of valid language codes.", language))?.into_future()),
-            FetchError::NotFound(word, language) => Ok(init.content(&format!("**Could not find a dictionary entry for `{}` in the `{}` dictionary.**", word, language))?.into_future()),
-            FetchError::Reqwest => Ok(init.content("**An error occurred while fetching the definition. Please try again in a few seconds.**")?.into_future())
+            FetchError::InvalidLanguageCode(language) => Ok(init.content(&format!("**The language code `{}` is invalid.** See [this link](<https://chillant.gitbook.io/calcbot/commands/dictionary>) for a list of valid language codes.", language)).into_future()),
+            FetchError::NotFound(word, language) => Ok(init.content(&format!("**Could not find a dictionary entry for `{}` in the `{}` dictionary.**", word, language)).into_future()),
+            FetchError::Reqwest => Ok(init.content("**An error occurred while fetching the definition. Please try again in a few seconds.**").into_future()),
         }
     }
 }
@@ -232,7 +232,7 @@ impl Command for Dictionary {
         }
 
         ctxt.trigger.reply(&state.http)
-            .embeds(&[embed.build()])?
+            .embeds(&[embed.build()])
             .await?;
 
         Ok(())

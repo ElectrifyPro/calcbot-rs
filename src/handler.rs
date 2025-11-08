@@ -28,7 +28,7 @@ pub async fn message_create(
             let Ok(prefix) = db.get_server(id).await else {
                 // database connection lost
                 state.http.create_message(msg.channel_id)
-                    .content("**Oops!** CalcBot is having trouble reaching its database. Please try again in a moment.\nIf this issue persists after a few minutes, please report it to the developers!")?
+                    .content("**Oops!** CalcBot is having trouble reaching its database. Please try again in a moment.\nIf this issue persists after a few minutes, please report it to the developers!")
                     .await?;
                 return Ok(());
             };

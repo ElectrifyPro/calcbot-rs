@@ -33,7 +33,7 @@ impl Command for Mode {
         //     Some("d") => TrigMode::Degrees,
         //     _ => {
         //         ctxt.trigger.reply(&state.http)
-        //             .content(&format!("Current calculation mode: **{}**", eval_ctxt.trig_mode))?
+        //             .content(&format!("Current calculation mode: **{}**", eval_ctxt.trig_mode))
         //             .await?;
         //         return Ok(());
         //     },
@@ -43,12 +43,12 @@ impl Command for Mode {
         // database.commit_user_field::<Ctxt>(ctxt.trigger.author_id()).await;
         //
         // ctxt.trigger.reply(&state.http)
-        //     .content(&format!("Set calculation mode to **{}**", new_mode))?
+        //     .content(&format!("Set calculation mode to **{}**", new_mode))
         //     .await?;
         let embed = self.info().build_embed(ctxt.prefix);
 
         ctxt.trigger.reply(&state.http)
-            .embeds(&[embed])?
+            .embeds(&[embed])
             .await?;
         Ok(())
     }

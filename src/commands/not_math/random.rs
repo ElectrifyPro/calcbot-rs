@@ -57,7 +57,7 @@ impl Command for Random {
             .content(&format!(
                 "**Random number** from {} to {}\n{}",
                 min, max, num
-            ))?
+            ))
             .await?;
         Ok(())
     }

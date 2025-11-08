@@ -39,11 +39,11 @@ impl Command for Resume {
             timer.create_task(Arc::clone(state), Arc::clone(database));
             db.commit_user_field::<Timers>(ctxt.trigger.author_id()).await;
             ctxt.trigger.reply(&state.http)
-                .content(&format!("**Successfully resumed the reminder with ID `{timer_id}`.**"))?
+                .content(&format!("**Successfully resumed the reminder with ID `{timer_id}`.**"))
                 .await?;
         } else {
             ctxt.trigger.reply(&state.http)
-                .content(&format!("**You do not have a reminder set with the ID `{timer_id}`.**"))?
+                .content(&format!("**You do not have a reminder set with the ID `{timer_id}`.**"))
                 .await?;
         }
 

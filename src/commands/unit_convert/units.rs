@@ -12,11 +12,19 @@ use std::{future::IntoFuture, sync::Arc};
 use tokio::sync::Mutex;
 use twilight_model::{
     application::interaction::InteractionData,
-    channel::message::{component::{ActionRow, Button, ButtonStyle}, Component, Embed, ReactionType},
+    channel::message::{
+        component::{ActionRow, Button, ButtonStyle},
+        Component,
+        Embed,
+        EmojiReactionType,
+    },
     http::interaction::{InteractionResponse, InteractionResponseType},
     id::{marker::ChannelMarker, Id},
 };
-use twilight_util::builder::{embed::{EmbedBuilder, EmbedFieldBuilder, EmbedFooterBuilder}, InteractionResponseDataBuilder};
+use twilight_util::builder::{
+    embed::{EmbedBuilder, EmbedFieldBuilder, EmbedFooterBuilder},
+    InteractionResponseDataBuilder,
+};
 
 lazy_static::lazy_static! {
     /// List of all supported units.
@@ -61,39 +69,42 @@ fn send_paged_message(
             Component::Button(Button {
                 custom_id: Some("prev".to_owned()),
                 disabled: false,
-                emoji: Some(ReactionType::Unicode {
+                emoji: Some(EmojiReactionType::Unicode {
                     name: String::from("◀️"),
                 }),
                 label: Some(String::from("Previous")),
                 style: ButtonStyle::Primary,
                 url: None,
+                sku_id: None,
             }),
             Component::Button(Button {
                 custom_id: Some("next".to_owned()),
                 disabled: false,
-                emoji: Some(ReactionType::Unicode {
+                emoji: Some(EmojiReactionType::Unicode {
                     name: String::from("▶️"),
                 }),
                 label: Some(String::from("Next")),
                 style: ButtonStyle::Primary,
                 url: None,
+                sku_id: None,
             }),
             Component::Button(Button {
                 custom_id: Some("delete".to_owned()),
                 disabled: false,
-                emoji: Some(ReactionType::Unicode {
+                emoji: Some(EmojiReactionType::Unicode {
                     name: String::from("🗑️"),
                 }),
                 label: Some(String::from("Delete")),
                 style: ButtonStyle::Danger,
                 url: None,
+                sku_id: None,
             }),
         ],
     });
     let pages = pages.to_vec();
     let msg = state.http.create_message(channel_id)
-        .embeds(&[pages[index].clone()])?
-        .components(&[component.clone()])?
+        .embeds(&[pages[index].clone()])
+        .components(&[component.clone()])
         .into_future();
 
     let state = Arc::clone(state);

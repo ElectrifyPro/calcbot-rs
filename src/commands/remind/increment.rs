@@ -46,7 +46,7 @@ impl Command for Increment {
             Some(unit) => {
                 let Ok(unit) = unit.try_into() else {
                     ctxt.trigger.reply(&state.http)
-                        .content(&format!("**`{unit}` is not a valid time unit.**"))?
+                        .content(&format!("**`{unit}` is not a valid time unit.**"))
                     .await?;
                     return Ok(());
                 };
@@ -64,7 +64,7 @@ impl Command for Increment {
         let Some(timer) = db.get_user_field_mut::<Timers>(ctxt.trigger.author_id()).await
             .get_mut(timer_id) else {
             ctxt.trigger.reply(&state.http)
-                .content(&format!("**You do not have a reminder set with the ID `{timer_id}`.**"))?
+                .content(&format!("**You do not have a reminder set with the ID `{timer_id}`.**"))
                 .await?;
             return Ok(());
         };
@@ -73,7 +73,7 @@ impl Command for Increment {
         timer.create_task(Arc::clone(state), Arc::clone(database));
 
         ctxt.trigger.reply(&state.http)
-            .content(&format!("**Successfully added `{quantity} {unit}` to the reminder with ID `{timer_id}`.**"))?
+            .content(&format!("**Successfully added `{quantity} {unit}` to the reminder with ID `{timer_id}`.**"))
         .await?;
 
         Ok(())

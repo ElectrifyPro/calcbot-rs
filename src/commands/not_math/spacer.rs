@@ -28,7 +28,7 @@ impl Command for Spacer {
         ctxt: Context<'c>,
     ) -> Result<(), Error> {
         ctxt.trigger.reply(&state.http)
-            .content(&ctxt.raw_input.split("").collect::<Vec<&str>>().join(" "))?
+            .content(&ctxt.raw_input.split("").collect::<Vec<&str>>().join(" "))
             .await?;
         Ok(())
     }

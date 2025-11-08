@@ -28,7 +28,7 @@ impl Command for Trademark {
         ctxt: Context<'c>,
     ) -> Result<(), Error> {
         ctxt.trigger.reply(&state.http)
-            .content(&format!("{}:tm:", ctxt.raw_input))?
+            .content(&format!("{}:tm:", ctxt.raw_input))
             .await?;
         Ok(())
     }

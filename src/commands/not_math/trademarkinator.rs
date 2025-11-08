@@ -28,7 +28,7 @@ impl Command for Trademarkinator {
         ctxt: Context<'c>,
     ) -> Result<(), Error> {
         ctxt.trigger.reply(&state.http)
-            .content(&format!("{}:tm:", ctxt.raw_input.split_whitespace().collect::<Vec<_>>().join(":tm: ")))?
+            .content(&format!("{}:tm:", ctxt.raw_input.split_whitespace().collect::<Vec<_>>().join(":tm: ")))
             .await?;
         Ok(())
     }

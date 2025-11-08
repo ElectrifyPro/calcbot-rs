@@ -58,7 +58,7 @@ impl Command for Title {
             .join(" ");
 
         ctxt.trigger.reply(&state.http)
-            .content(&content)?
+            .content(&content)
             .await?;
         Ok(())
     }

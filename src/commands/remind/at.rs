@@ -90,7 +90,7 @@ impl Command for At {
                 parts.next(),
             ) else {
                 ctxt.trigger.reply(&state.http)
-                    .content("**You must specify a valid time in `hh:mm` format.**")?
+                    .content("**You must specify a valid time in `hh:mm` format.**")
                     .await?;
                 return Ok(());
             };
@@ -99,7 +99,7 @@ impl Command for At {
 
         if minute > 59 {
             ctxt.trigger.reply(&state.http)
-                .content("**The minute must be between 0 and 59.**")?
+                .content("**The minute must be between 0 and 59.**")
                 .await?;
             return Ok(());
         }
@@ -107,13 +107,13 @@ impl Command for At {
         match clock_mode {
             ClockMode::Twelve(_) if hour > 12 => {
                     ctxt.trigger.reply(&state.http)
-                        .content("**The hour of a 12-hr time must be between 1 and 12.**")?
+                        .content("**The hour of a 12-hr time must be between 1 and 12.**")
                         .await?;
                     return Ok(());
             },
             ClockMode::TwentyFour if hour > 23 => {
                     ctxt.trigger.reply(&state.http)
-                        .content("**The hour of a 24-hr time must be between 0 and 23.**")?
+                        .content("**The hour of a 24-hr time must be between 0 and 23.**")
                         .await?;
                     return Ok(());
             },
@@ -165,7 +165,7 @@ impl Command for At {
             ClockMode::TwentyFour => format!("{hour}:{minute:02}"),
         };
         ctxt.trigger.reply(&state.http)
-            .content(&format!("**You will be mentioned in this channel at `{time_input}`** (in `{}`). This reminder's ID is `{id}`.", duration.fmt()))?
+            .content(&format!("**You will be mentioned in this channel at `{time_input}`** (in `{}`). This reminder's ID is `{id}`.", duration.fmt()))
             .await?;
 
         Ok(())

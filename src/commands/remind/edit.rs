@@ -47,14 +47,14 @@ impl Command for Edit {
         let Some(timer) = db.get_user_field_mut::<Timers>(ctxt.trigger.author_id()).await
             .get_mut(timer_id) else {
             ctxt.trigger.reply(&state.http)
-                .content(&format!("**You do not have a reminder set with the ID `{timer_id}`.**"))?
+                .content(&format!("**You do not have a reminder set with the ID `{timer_id}`.**"))
                 .await?;
             return Ok(());
         };
 
         let Ok(unit) = unit.try_into() else {
             ctxt.trigger.reply(&state.http)
-                .content(&format!("**`{unit}` is not a valid time unit.**"))?
+                .content(&format!("**`{unit}` is not a valid time unit.**"))
                 .await?;
             return Ok(());
         };
@@ -72,11 +72,11 @@ impl Command for Edit {
 
         if is_running {
             ctxt.trigger.reply(&state.http)
-                .content(&format!("**Successfully edited the reminder with ID `{timer_id}`.** It will trigger in `{quantity} {unit}`."))?
+                .content(&format!("**Successfully edited the reminder with ID `{timer_id}`.** It will trigger in `{quantity} {unit}`."))
                 .await?;
         } else {
             ctxt.trigger.reply(&state.http)
-                .content(&format!("**Successfully edited the reminder with ID `{timer_id}`.** Once resumed, it will trigger in `{quantity} {unit}`."))?
+                .content(&format!("**Successfully edited the reminder with ID `{timer_id}`.** Once resumed, it will trigger in `{quantity} {unit}`."))
                 .await?;
         }
 

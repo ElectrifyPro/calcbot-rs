@@ -26,7 +26,7 @@ impl Command for Commands {
         ctxt: Context<'c>,
     ) -> Result<(), Error> {
         ctxt.trigger.reply(&state.http)
-            .embeds(&[state.build_commands_embed(ctxt.prefix)])?
+            .embeds(&[state.build_commands_embed(ctxt.prefix)])
             .await?;
         Ok(())
     }

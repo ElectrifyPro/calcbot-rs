@@ -68,11 +68,11 @@ impl Error {
     /// using the [`std::future::IntoFuture`] trait). When awaited, the message will be sent.
     pub fn rich_fmt(self, init: CreateMessage<'_>) -> Result<ResponseFuture<Message>, MessageValidationError> {
         match self {
-            Self::String(err) => Ok(init.content(&err)?.into_future()),
-            Self::MissingArgument(missing) => Ok(init.content(&format!("Missing argument at index {}.", missing.index))?.into_future()),
-            Self::NoArgument => Ok(init.content("No argument provided.")?.into_future()),
-            Self::TooManyArguments => Ok(init.content("Too many arguments.")?.into_future()),
-            Self::Embed(embed) => Ok(init.embeds(&[*embed])?.into_future()),
+            Self::String(err) => Ok(init.content(&err).into_future()),
+            Self::MissingArgument(missing) => Ok(init.content(&format!("Missing argument at index {}.", missing.index)).into_future()),
+            Self::NoArgument => Ok(init.content("No argument provided.").into_future()),
+            Self::TooManyArguments => Ok(init.content("Too many arguments.").into_future()),
+            Self::Embed(embed) => Ok(init.embeds(&[*embed]).into_future()),
             Self::Custom(custom) => custom.rich_fmt(init),
         }
     }
@@ -96,7 +96,7 @@ macro_rules! generic_error_impl {
         $(
             impl CustomErrorFmt for $name {
                 fn rich_fmt(&self, init: CreateMessage<'_>) -> Result<ResponseFuture<Message>, MessageValidationError> {
-                    Ok(init.content(&format!("**Oops!** CalcBot processed your command correctly, but Discord rejected the response message. This could be a bug!\nPlease report this to the developers, and include this error code:\n```\n{}\n```", stringify!($name)))?
+                    Ok(init.content(&format!("**Oops!** CalcBot processed your command correctly, but Discord rejected the response message. This could be a bug!\nPlease report this to the developers, and include this error code:\n```\n{}\n```", stringify!($name)))
                         .into_future())
                 }
             }

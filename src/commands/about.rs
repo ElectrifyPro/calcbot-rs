@@ -65,7 +65,7 @@ impl Command for About {
             .build();
 
         ctxt.trigger.reply(&state.http)
-            .embeds(&[embed])?
+            .embeds(&[embed])
             .await?;
 
         Ok(())

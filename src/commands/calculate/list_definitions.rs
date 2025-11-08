@@ -47,7 +47,7 @@ impl Command for ListDefinitions {
         };
 
         ctxt.trigger.reply(&state.http)
-            .content(&format!("**Variables**:\n{}\n\n**Functions**:\n{}", vars.join("\n"), funcs.join("\n")))?
+            .content(&format!("**Variables**:\n{}\n\n**Functions**:\n{}", vars.join("\n"), funcs.join("\n")))
             .await?;
 
         Ok(())

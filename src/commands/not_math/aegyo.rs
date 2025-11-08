@@ -36,7 +36,7 @@ impl Command for Aegyo {
         let replaced_upper = REGEX_UPPER.replace_all(ctxt.raw_input, "W");
         let replaced_lower = REGEX_LOWER.replace_all(&replaced_upper, "w");
         ctxt.trigger.reply(&state.http)
-            .content(&replaced_lower)?
+            .content(&replaced_lower)
             .await?;
         Ok(())
     }

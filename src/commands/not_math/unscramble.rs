@@ -97,7 +97,7 @@ impl Command for Unscramble {
             .content(&format!(
                 "**Unscrambling** `{}` with word length of {}\n{}",
                 word, length, output
-            ))?
+            ))
             .await?;
         Ok(())
     }

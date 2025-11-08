@@ -46,7 +46,7 @@ impl Command for Uglify {
             .collect::<String>();
 
         ctxt.trigger.reply(&state.http)
-            .content(&content)?
+            .content(&content)
             .await?;
         Ok(())
     }

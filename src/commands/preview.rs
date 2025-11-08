@@ -30,7 +30,7 @@ impl Command for Preview {
     ) -> Result<(), Error> {
         if ctxt.raw_input != "off" {
             ctxt.trigger.reply(&state.http)
-                .content(&format!("**You are currently using the preview version of CalcBot.** You can disable preview mode and return to the stable version by running `{}preview off`.", ctxt.prefix.unwrap_or_default()))?
+                .content(&format!("**You are currently using the preview version of CalcBot.** You can disable preview mode and return to the stable version by running `{}preview off`.", ctxt.prefix.unwrap_or_default()))
                 .await?;
             return Ok(());
         }
@@ -39,7 +39,7 @@ impl Command for Preview {
             .set_using_preview(ctxt.trigger.author_id(), false).await;
 
         ctxt.trigger.reply(&state.http)
-            .content("**Preview mode disabled.** You are now using the stable version of CalcBot.")?
+            .content("**Preview mode disabled.** You are now using the stable version of CalcBot.")
             .await?;
 
         Ok(())

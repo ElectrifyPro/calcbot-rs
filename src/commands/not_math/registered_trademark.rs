@@ -28,7 +28,7 @@ impl Command for RegisteredTrademark {
         ctxt: Context<'c>,
     ) -> Result<(), Error> {
         ctxt.trigger.reply(&state.http)
-            .content(&format!("{}:registered:", ctxt.raw_input))?
+            .content(&format!("{}:registered:", ctxt.raw_input))
             .await?;
         Ok(())
     }

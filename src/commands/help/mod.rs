@@ -58,7 +58,7 @@ impl Command for Help {
         }.build_embed(ctxt.prefix);
 
         ctxt.trigger.reply(&state.http)
-            .embeds(&[embed])?
+            .embeds(&[embed])
             .await?;
         Ok(())
     }

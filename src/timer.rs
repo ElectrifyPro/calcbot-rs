@@ -247,7 +247,7 @@ impl Timer {
                     0 => format!("{}'s reminder: _no message provided_", user_id.mention()),
                     _ => format!("{}'s reminder: **{}**", user_id.mention(), message),
                 };
-                bot_state.http.create_message(channel_id).content(&msg)?.await?;
+                bot_state.http.create_message(channel_id).content(&msg).await?;
 
                 if let Some(recur) = recur {
                     // to handle cases where the bot restarts after a recurring timer has

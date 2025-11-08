@@ -44,7 +44,7 @@ impl Command for Every {
 
         let Ok(unit) = unit.try_into() else {
             ctxt.trigger.reply(&state.http)
-                .content(&format!("**`{unit}` is not a valid time unit.**"))?
+                .content(&format!("**`{unit}` is not a valid time unit.**"))
                 .await?;
             return Ok(());
         };
@@ -55,7 +55,7 @@ impl Command for Every {
 
         if time_amount < Duration::from_secs(60) {
             ctxt.trigger.reply(&state.http)
-                .content("**The recurring reminder interval must be at least 1 minute long.**")?
+                .content("**The recurring reminder interval must be at least 1 minute long.**")
                 .await?;
             return Ok(());
         }
@@ -78,7 +78,7 @@ impl Command for Every {
         database.commit_user_field::<Timers>(ctxt.trigger.author_id()).await;
 
         ctxt.trigger.reply(&state.http)
-            .content(&format!("**You will be mentioned repeatedly in this channel every `{quantity} {unit}`.** This reminder's ID is `{id}`."))?
+            .content(&format!("**You will be mentioned repeatedly in this channel every `{quantity} {unit}`.** This reminder's ID is `{id}`."))
             .await?;
 
         Ok(())
