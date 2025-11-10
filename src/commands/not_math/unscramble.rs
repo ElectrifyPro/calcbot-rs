@@ -7,7 +7,7 @@ use crate::{
     error::Error,
     global::State,
 };
-use std::{collections::HashMap, sync::Arc};
+use std::sync::Arc;
 use tokio::sync::Mutex;
 
 lazy_static::lazy_static! {
@@ -18,37 +18,54 @@ lazy_static::lazy_static! {
     };
 }
 
-/// Count the number of times each letter appears in a string.
-fn count_letters(string: &str) -> HashMap<char, usize> {
-    let mut letters = HashMap::new();
+/// Stack-allocated structure to hold English letter counts, as opposed to allocation
+/// `HashMap<char, usize>` over and over for each word.
+#[derive(Clone, Copy, PartialEq)]
+struct LetterCounts {
+    counts: [usize; 26],
+}
 
-    for letter in string.to_lowercase().chars() {
-        if letter.is_alphabetic() {
-            *letters.entry(letter).or_insert(0) += 1;
+impl LetterCounts {
+    /// Counts the number of each English letter in the given string.
+    fn count(s: &str) -> Self {
+        let mut lc = Self { counts: [0; 26] };
+        for c in s.chars() {
+            lc.add(c);
+        }
+        lc
+    }
+
+    /// Adds a character to the counts.
+    fn add(&mut self, c: char) {
+        if c.is_ascii_alphabetic() {
+            let idx = c.to_ascii_lowercase() as usize - 'a' as usize;
+            self.counts[idx] += 1;
         }
     }
 
-    letters
+    /// Returns true if the word represented by `self` can be formed using letters from `other`.
+    fn can_form_from(self, other: Self) -> bool {
+        self.counts.iter()
+            .zip(other.counts.iter())
+            .all(|(a, b)| a <= b)
+    }
 }
 
 /// Finds the words that can be spelt using the provided letters.
 fn unscramble(letters: &str, length: usize) -> Vec<&'static str> {
     let mut words = Vec::new();
-    let letters = count_letters(letters);
+    let letters = LetterCounts::count(letters);
 
     for candidate in WORDS.iter() {
         if candidate.len() != length {
             continue;
         }
 
-        let candidate_letters = count_letters(candidate);
+        let candidate_letters = LetterCounts::count(candidate);
 
         // the target word must have at least as many of each letter as the input
-        if candidate_letters
-            .iter()
-            .all(|(letter, count)| letters.get(letter).map(|c| c >= count).unwrap_or(false))
-        {
-            words.push(&**candidate);
+        if candidate_letters.can_form_from(letters) {
+            words.push(candidate.as_str());
         }
 
         if words.len() >= 100 {
