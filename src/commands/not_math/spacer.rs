@@ -9,7 +9,9 @@ use crate::{
 use std::sync::Arc;
 use tokio::sync::Mutex;
 
-/// This command is incredibly useful for sounding like the sloth from Zootopia.
+/// _This command is incredibly useful for sounding like the sloth from Zootopia._
+///
+/// Inserts spaces between every character in your input.
 #[derive(Clone, Info)]
 #[info(
     aliases = ["spacer", "space", "sp"],

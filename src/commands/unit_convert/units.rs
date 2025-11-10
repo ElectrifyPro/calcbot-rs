@@ -187,7 +187,7 @@ fn generate_embeds() -> Vec<Embed> {
     vec
 }
 
-/// Show a list of units supported by the unit conversion command.
+/// Show a list of units supported by `{prefix}unitconvert`.
 #[derive(Clone, Info)]
 #[info(
     aliases = ["units", "unit", "u"],

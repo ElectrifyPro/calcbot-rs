@@ -9,7 +9,9 @@ use crate::{
 use std::sync::Arc;
 use tokio::sync::Mutex;
 
-/// It'll sound like you're going through puberty.
+/// _It'll sound like you're going through puberty._
+///
+/// Alternates the casing of letters in your input, starting with lowercase.
 #[derive(Clone, Info)]
 #[info(
     aliases = ["uglify", "ug"],

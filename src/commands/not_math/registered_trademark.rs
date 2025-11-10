@@ -9,7 +9,9 @@ use crate::{
 use std::sync::Arc;
 use tokio::sync::Mutex;
 
-/// Get your own custom brand name for free!
+/// _Get your own custom brand name for free!_
+///
+/// Appends the registered trademark symbol (®) to the end of your input.
 #[derive(Clone, Info)]
 #[info(
     aliases = ["registeredtrademark", "reg", "rt"],

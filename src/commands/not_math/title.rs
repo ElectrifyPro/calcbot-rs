@@ -25,6 +25,8 @@ fn capitalize(string: &str) -> String {
     }
 }
 
+/// _I'd love a voice in my head that narrates what I do in title case._
+///
 /// Converts text to title case. Prepositions and similar words will automatically be ignored.
 #[derive(Clone, Info)]
 #[info(

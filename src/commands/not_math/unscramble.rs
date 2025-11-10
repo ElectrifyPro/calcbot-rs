@@ -59,12 +59,17 @@ fn unscramble(letters: &str, length: usize) -> Vec<&'static str> {
     words
 }
 
-/// Finds words (up to 100) that can be spelt using the provided letters. The length of the input is used as the word length if not provided.
+/// _Don't use this to cheat at Anagrams._
+///
+/// Finds English words (up to 100) that can be spelt using the provided letters.
+///
+/// The command will only find words that use the same number of letters as your input. You can
+/// change this by providing an optional second argument with the desired word length.
 #[derive(Clone, Info)]
 #[info(
     aliases = ["unscramble", "unsc", "uns"],
-    syntax = ["<word> [word length]"],
-    examples = ["itonnnive"],
+    syntax = ["<letters> [word length]"],
+    examples = ["itonnnive", "aeht 3"],
     parent = super::NotMath,
 )]
 pub struct Unscramble;

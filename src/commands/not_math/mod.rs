@@ -13,7 +13,7 @@ pub mod unscramble;
 
 use calcbot_attrs::{Command, Info};
 
-/// A bunch of non-math related things. How dare you; go study for APUSH or something.
+/// A collection of strange commands and utilities.
 #[derive(Clone, Command, Info)]
 #[info(
     category = "Text",

@@ -50,7 +50,7 @@ impl<'a> Parse<'a> for ClockMode {
 /// as a 24-hr time.
 ///
 /// **Make sure that you have correctly set your time zone settings with the `{prefix}settings`
-/// command, or this command will not function properly.**
+/// command, or this command will not calculate the end time correctly!**
 #[derive(Clone, Info)]
 #[info(
     aliases = ["at", "@"],

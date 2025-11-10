@@ -31,11 +31,19 @@ fn report_errors(input: &str, errs: impl IntoIterator<Item = CasError>) -> Strin
         .join("\n")
 }
 
-/// Evaluates a given expression, like `1 + 1`. You can declare variables by typing `variablename =
-/// [value]`.
+/// Calculates an expression, like `1 + 1`.
 ///
-/// You can find extended documentation for this command
-/// [here](https://chillant.gitbook.io/calcbot/commands/calculate).
+/// You can create **variables** to save values for later use. For example, running
+/// `{prefix}calculate x = 5` will save the value `5` to the variable `x`, which you can reference
+/// in later calculations.
+///
+/// You can also create **functions** to save _entire calculations_. Running `{prefix}calculate
+/// f(x) = x^2 + 5x + 6` saves the calculation `x^2 + 5x + 6` to the function `f`. You can then
+/// repeat this calculation with different values for `x` by running `{prefix}calculate f(2)`,
+/// `{prefix}calculate f(10)`, etc.
+///
+/// There is much more you can do! Learn more about this command here:
+/// <https://chillant.gitbook.io/calcbot/calcbot-development-preview/cas>
 #[derive(Clone, Info)]
 #[info(
     category = "Calculate",

@@ -13,7 +13,7 @@ use tokio::sync::Mutex;
 use twilight_mention::Mention;
 use twilight_util::builder::embed::EmbedBuilder;
 
-/// View information about CalcBot.
+/// View information about CalcBot and its current status, including its uptime and resource usage.
 #[derive(Clone, Info)]
 #[info(category = "Miscellaneous")]
 pub struct About;
@@ -37,7 +37,7 @@ impl Command for About {
         let author_id = env::var("AUTHOR_ID")?.parse::<NonZeroU64>().unwrap();
         let author = {
             let user = state.http.user(author_id.into()).await?.model().await?;
-            format!("{}#{}", user.name, user.discriminator())
+            format!("{}", user.name)
         };
 
         let bot = state.cache.current_user()

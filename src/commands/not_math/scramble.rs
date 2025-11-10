@@ -22,10 +22,9 @@ fn scramble(string: &str) -> String {
     chars.into_iter().collect()
 }
 
-/// daw tbtlesr l armsreo/sec.
+/// _The perfect cipher for your secret messages (it's not)!_
 ///
-/// (If you can figure out what the unscrambled sentence is, hit me up. I put this in three years
-/// ago and I didn't write anything to help me remember what it was.)
+/// Randomizes the order of characters in a string.
 #[derive(Clone, Info)]
 #[info(
     aliases = ["scramble", "sc"],

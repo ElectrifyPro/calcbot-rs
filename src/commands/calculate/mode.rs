@@ -9,7 +9,7 @@ use crate::{
 use std::sync::Arc;
 use tokio::sync::Mutex;
 
-/// View or set the angle calculation mode of the calculator. (default **radians**)
+/// Check or set the angle calculation mode of the calculator. (default **radians**)
 #[derive(Clone, Info)]
 #[info(
     syntax = ["", "[radians | radian | rad | r]", "[degrees | degree | deg | d]"],

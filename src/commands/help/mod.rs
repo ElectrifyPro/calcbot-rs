@@ -20,15 +20,15 @@ impl Info for Help {
     fn info(&self) -> CommandInfo {
         CommandInfo {
             name: "Help",
-            description: "Get information on how to use a command in a neat embed.
+            description: "Get information on how to use a command in a neat embed, like this!
 
 A command's help embed contains the following information:
 
 - **Description**: A brief explanation of what the command does.
-- **Syntax**: Shows you how to use the command, including all pieces of data you must provide.
+- **Syntax**: Shows you how to use the command, including all pieces of data you must provide for it to work.
 - **Examples**: A list of example uses of the command that you can run right away to see it in action.
-- **Shorthand**: Shows the shortest possible way to run the command, by taking the shortest aliases from the command and its parent commands.
-- **Aliases**: A list of alternative (usually shorter) names for the command which you can use to trigger the command if you'd prefer.
+- **Shorthand**: Shows the shortest possible way to run the command, by taking the shortest **Aliases** from the command and its parent commands.
+- **Aliases**: A list of alternative (usually shorter) names for the command you can use to trigger the command.
 - **Children commands**: If the command has subcommands, they are listed here.
 
 For a list of all commands, run `{prefix}help commands`.",

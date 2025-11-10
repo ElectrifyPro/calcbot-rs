@@ -9,6 +9,8 @@ use crate::{
 use std::sync::Arc;
 use tokio::sync::Mutex;
 
+/// _Get your list in order!_
+///
 /// Sorts a list of numbers / words in ascending / alphabetical order, numbers first. If a minus
 /// symbol (`-`) is provided for the first argument, the list will be sorted in descending order
 /// instead.

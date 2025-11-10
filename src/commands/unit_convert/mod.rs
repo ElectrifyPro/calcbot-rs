@@ -18,9 +18,14 @@ use tokio::sync::Mutex;
 /// Convert a quantity from one unit to another. You can specify multiple target units to convert
 /// to (see examples).
 ///
+/// CalcBot can convert between compound units (e.g., `m/s`, `kg*m^2/s^2`, etc.). You can use
+/// multiplication (`*`), division (`/`), and exponents (`^`) to create compound units.
+///
+/// You can view a list of supported units with `{prefix}unitconvert units`.
+///
 /// **CalcBot uses the US customary measurement system.** You can read about its differences with
-/// the imperial system
-/// [here](https://en.wikipedia.org/wiki/Comparison_of_the_imperial_and_US_customary_measurement_systems).
+/// the imperial system here:
+/// <https://en.wikipedia.org/wiki/Comparison_of_the_imperial_and_US_customary_measurement_systems>
 #[derive(Clone, Info)]
 #[info(
     category = "Calculate",

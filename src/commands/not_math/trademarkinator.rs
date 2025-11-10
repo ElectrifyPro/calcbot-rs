@@ -9,7 +9,9 @@ use crate::{
 use std::sync::Arc;
 use tokio::sync::Mutex;
 
-/// I don't know why you would want to make the word "The" your custom brand name, but you do you.
+/// _Got your brand name? Now make it stand out!_
+///
+/// Appends the trademark symbol (™) after every word in your input.
 #[derive(Clone, Info)]
 #[info(
     aliases = ["trademarkinator", "tmor"],

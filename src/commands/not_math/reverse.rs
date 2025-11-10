@@ -9,7 +9,9 @@ use crate::{
 use std::sync::Arc;
 use tokio::sync::Mutex;
 
-/// No one will ever figure out your password now!
+/// _No one will ever figure out your password now!_
+///
+/// Reverses your input.
 #[derive(Clone, Info)]
 #[info(
     aliases = ["reverse", "rev"],

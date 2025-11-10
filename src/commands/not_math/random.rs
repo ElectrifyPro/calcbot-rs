@@ -22,7 +22,10 @@ fn random(min: u32, max: u32) -> u32 {
     num
 }
 
-/// Generate a random integer; boundaries are inclusive.
+/// Generate a random integer. The boundaries are inclusive.
+///
+/// If one number is provided, an integer between 0 and that number is generated. Otherwise, the
+/// two numbers are treated as the minimum and maximum (in any order).
 #[derive(Clone, Info)]
 #[info(
     aliases = ["random", "rand", "r"],

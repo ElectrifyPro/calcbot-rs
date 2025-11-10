@@ -13,7 +13,7 @@ use tokio::sync::Mutex;
 
 /// Toggles the recurring status of a specified reminder. If the reminder is already set to recur,
 /// this command will disable its recurring status. If the reminder is not set to recur, you must
-/// also specify the time interval the reminder will recur with once it triggers.
+/// also specify the amount of time the reminder will renew with once it triggers.
 #[derive(Clone, Info)]
 #[info(
     aliases = ["recur", "rec"],

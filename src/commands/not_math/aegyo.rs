@@ -15,7 +15,9 @@ lazy_static::lazy_static! {
     static ref REGEX_UPPER: Regex = Regex::new(r"[LR]").unwrap();
 }
 
-/// Bonus points on the test if you can type that second alias.
+/// _Bonus points on the test if you can type that second alias._
+///
+/// Converts all 'r's and 'l's to 'w's to make the input sound cuter.
 #[derive(Clone, Info)]
 #[info(
     aliases = ["aegyo", "애교"],
