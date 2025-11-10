@@ -5,6 +5,7 @@ pub mod to_latex;
 use ariadne::Source;
 use async_trait::async_trait;
 use calcbot_attrs::Info;
+use cas_error::{Error as CasError};
 use cas_parser::parser::Parser;
 use cas_vm::Vm;
 use crate::{
@@ -16,6 +17,19 @@ use crate::{
 use strip_ansi_escapes::strip;
 use std::sync::Arc;
 use tokio::sync::Mutex;
+
+fn report_errors(input: &str, errs: impl IntoIterator<Item = CasError>) -> String {
+    errs.into_iter()
+        .map(|err| {
+            let mut buf = Vec::new();
+            err.build_report("input")
+                .write(("input", Source::from(input)), &mut buf)
+                .unwrap();
+            String::from_utf8(strip(buf).unwrap()).unwrap()
+        })
+        .collect::<Vec<_>>()
+        .join("\n")
+}
 
 /// Evaluates a given expression, like `1 + 1`. You can declare variables by typing `variablename =
 /// [value]`.
@@ -50,7 +64,15 @@ impl Command for Calculate {
                 // let mut database = database.lock().await;
                 // let eval_ctxt = database.get_user_field_mut::<Ctxt>(ctxt.trigger.author_id()).await;
 
-                let mut vm = Vm::compile_program(stmts).unwrap();
+                let mut vm = match Vm::compile_program(stmts) {
+                    Ok(vm) => vm,
+                    Err(err) => {
+                        ctxt.trigger.reply(&state.http)
+                            .content(&format!("```rs\n{}\n```", report_errors(ctxt.raw_input, Some(err))))
+                            .await?;
+                        return Ok(());
+                    },
+                };
                 let cancel = vm.stop_execution.clone();
                 tokio::select! {
                     _ = tokio::time::sleep(std::time::Duration::from_secs(4)) => {
@@ -63,13 +85,8 @@ impl Command for Calculate {
                         let ans = match out {
                             Ok(ans) => ans,
                             Err(err) => {
-                                let mut buf = Vec::new();
-                                err.build_report("input")
-                                    .write(("input", Source::from(ctxt.raw_input)), &mut buf)
-                                    .unwrap();
-
                                 ctxt.trigger.reply(&state.http)
-                                    .content(&format!("```rs\n{}\n```", String::from_utf8_lossy(&strip(buf).unwrap())))
+                                    .content(&format!("```rs\n{}\n```", report_errors(ctxt.raw_input, Some(err))))
                                     .await?;
                                 return Ok(());
                             },
@@ -85,19 +102,8 @@ impl Command for Calculate {
                 }
             },
             Err(errs) => {
-                let msg = errs.into_iter()
-                    .map(|err| {
-                        let mut buf = Vec::new();
-                        err.build_report("input")
-                            .write(("input", Source::from(ctxt.raw_input)), &mut buf)
-                            .unwrap();
-                        String::from_utf8(strip(buf).unwrap()).unwrap()
-                    })
-                    .collect::<Vec<_>>()
-                    .join("\n");
-
                 ctxt.trigger.reply(&state.http)
-                    .content(&format!("```rs\n{}\n```", msg))
+                    .content(&format!("```rs\n{}\n```", report_errors(ctxt.raw_input, errs)))
                     .await?;
             },
         }

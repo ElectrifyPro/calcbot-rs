@@ -276,6 +276,7 @@ dependencies = [
  "async-trait",
  "calcbot-attrs",
  "cas-compute",
+ "cas-error",
  "cas-parser",
  "cas-unit-convert",
  "cas-vm",

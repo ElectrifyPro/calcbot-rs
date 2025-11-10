@@ -17,6 +17,10 @@ git = "https://github.com/ElectrifyPro/cas-rs.git"
 branch = "dev"
 features = ["mysql", "serde", "sync"]
 
+[dependencies.cas-error]
+git = "https://github.com/ElectrifyPro/cas-rs.git"
+branch = "dev"
+
 [dependencies.cas-parser]
 git = "https://github.com/ElectrifyPro/cas-rs.git"
 branch = "dev"
