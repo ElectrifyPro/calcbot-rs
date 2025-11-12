@@ -150,7 +150,7 @@ impl Database {
         {
             Some(prefix) => prefix,
             None => {
-                "INSERT INTO servers (id, prefix) VALUES (?, 'c-')"
+                "INSERT INTO servers (id, prefix, disabled, marked, custom_ratios, deleted, edited) VALUES (?, 'c-', '[]', '[]', '[]', '[]', '[]')"
                     .with((id.get(),))
                     .ignore(&self.pool)
                     .await?;
