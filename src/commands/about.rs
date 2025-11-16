@@ -48,15 +48,16 @@ impl Command for About {
             .title("About me")
             .color(0x988bc2)
             .description(format!("
-            {} is constantly being developed by **@{}**.
+            {bot} is constantly being developed by **@{author}**.
 
+            Shard ID: {} ({}),
             Uptime: {}
-            Shard CPU usage: {}%
-            Shard memory usage: {} MB
-            Commands: {}
+            Bot CPU usage: {}%
+            Bot memory usage: {} MB
+            # of commands: {}
             ",
-                bot,
-                author,
+                ctxt.shard_id.number(),
+                ctxt.shard_id.total(),
                 state.start_time.elapsed().fmt(),
                 process.cpu_usage(),
                 process.memory() / 1024 / 1024,

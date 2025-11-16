@@ -10,6 +10,7 @@ pub mod unit_convert;
 
 use super::{database::Database, error::Error, global::State};
 use async_trait::async_trait;
+use twilight_gateway::ShardId;
 use std::{iter::Peekable, sync::Arc};
 use tokio::sync::Mutex;
 use twilight_http::{request::channel::message::CreateMessage, Client};
@@ -271,6 +272,9 @@ impl Trigger<'_> {
 /// by most commands in one convenient struct.
 #[derive(Clone, Copy, Debug)]
 pub struct Context<'a> {
+    /// The ID of the shard that received the event.
+    pub shard_id: ShardId,
+
     /// The event that triggered the command.
     pub trigger: Trigger<'a>,
 

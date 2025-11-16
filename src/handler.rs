@@ -1,10 +1,12 @@
 use super::{commands::Context, database::Database, global::State};
 use std::{error::Error, sync::Arc, time::Instant};
 use tokio::sync::Mutex;
+use twilight_gateway::ShardId;
 use twilight_model::gateway::payload::incoming::MessageCreate;
 
 /// Handles a message being created in some text channel.
 pub async fn message_create(
+    shard_id: ShardId,
     msg: MessageCreate,
     state: Arc<State>,
     database: Arc<Mutex<Database>>,
@@ -52,7 +54,12 @@ pub async fn message_create(
                         &msg.content[byte..]
                     })
                     .unwrap_or_default();
-                let ctxt = Context { trigger: (&msg.0).into(), prefix: prefix.as_deref(), raw_input };
+                let ctxt = Context {
+                    shard_id,
+                    trigger: (&msg.0).into(),
+                    prefix: prefix.as_deref(),
+                    raw_input,
+                };
                 if let Err(discord_error) = cmd.execute(&state, &database, ctxt).await {
                     discord_error.rich_fmt(state.http.create_message(msg.channel_id))?
                         .await?;

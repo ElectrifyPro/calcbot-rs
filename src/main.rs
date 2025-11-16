@@ -72,6 +72,7 @@ async fn main() -> Result<(), Box<dyn Error + Send + Sync>> {
                 state.cache.update(&event);
 
                 tokio::spawn(handle_event(
+                    shard.id(),
                     event,
                     Arc::clone(&state),
                     Arc::clone(&database),
@@ -91,12 +92,18 @@ async fn main() -> Result<(), Box<dyn Error + Send + Sync>> {
 
 /// Handles events relevant to the bot, delegating each event to the appropriate handler.
 async fn handle_event(
+    shard_id: ShardId,
     event: Event,
     state: Arc<State>,
     database: Arc<Mutex<Database>>,
 ) -> Result<(), Box<dyn Error + Send + Sync>> {
     match event {
-        Event::MessageCreate(msg) => handler::message_create(*msg, state, database).await?,
+        Event::MessageCreate(msg) => handler::message_create(
+            shard_id,
+            *msg,
+            state,
+            database,
+        ).await?,
         Event::MessageDelete(msg) => {
             if database.lock().await.remove_paged_message(msg.channel_id, msg.id) {
                 log::info!("paged message task ended: message deleted");
