@@ -24,21 +24,21 @@ impl Display for DurationFormatter {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
         let seconds = self.value.as_secs_f64();
         if seconds < 60.0 {
-            return write!(f, "{seconds} seconds");
+            return write!(f, "{seconds:.3} seconds");
         }
 
         let minutes = seconds / 60.0;
         if minutes < 60.0 {
-            return write!(f, "{minutes} minutes");
+            return write!(f, "{minutes:.3} minutes");
         }
 
         let hours = minutes / 60.0;
         if hours < 24.0 {
-            return write!(f, "{hours} hours");
+            return write!(f, "{hours:.3} hours");
         }
 
         let days = hours / 24.0;
-        write!(f, "{days} days")
+        write!(f, "{days:.3} days")
     }
 }
 
