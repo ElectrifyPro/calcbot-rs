@@ -2,25 +2,23 @@ use async_trait::async_trait;
 use calcbot_attrs::Info;
 use chrono::{Days, FixedOffset, Local, NaiveTime};
 use crate::{
-    arg_parse::{parse_args_full, Parse, Parser, Remainder, Word},
-    commands::{Command, Context, Info},
-    database::{user::Timers, Database},
+    arg_parse::{Parse, Parser, Remainder, Word, parse_args_full},
+    commands::{Command, Context, Info, remind::{Label, create_timer_and_confirm}},
+    database::Database,
     error::Error,
-    fmt::DurationExt,
     global::State,
-    timer::Timer,
 };
 use std::{sync::Arc, time::SystemTime};
 use tokio::sync::Mutex;
 
 /// 12-hour or 24-hour.
-enum ClockMode {
+pub(crate) enum ClockMode {
     Twelve(AmPm),
     TwentyFour,
 }
 
 /// AM or PM.
-enum AmPm {
+pub(crate) enum AmPm {
     AM,
     PM,
 }
@@ -106,16 +104,16 @@ impl Command for At {
 
         match clock_mode {
             ClockMode::Twelve(_) if hour > 12 => {
-                    ctxt.trigger.reply(&state.http)
-                        .content("**The hour of a 12-hr time must be between 1 and 12.**")
-                        .await?;
-                    return Ok(());
+                ctxt.trigger.reply(&state.http)
+                    .content("**The hour of a 12-hr time must be between 1 and 12.**")
+                .await?;
+                return Ok(());
             },
             ClockMode::TwentyFour if hour > 23 => {
-                    ctxt.trigger.reply(&state.http)
-                        .content("**The hour of a 24-hr time must be between 0 and 23.**")
-                        .await?;
-                    return Ok(());
+                ctxt.trigger.reply(&state.http)
+                    .content("**The hour of a 24-hr time must be between 0 and 23.**")
+                .await?;
+                return Ok(());
             },
             _ => {}
         }
@@ -126,8 +124,9 @@ impl Command for At {
             _ => hour,
         };
 
-        let mut db = database.lock().await;
-        let time_zone = db.get_user_settings(ctxt.trigger.author_id()).await.time_zone;
+        let time_zone = database.lock().await
+            .get_user_settings(ctxt.trigger.author_id()).await
+            .time_zone;
 
         // calculate the amount of time until the next occurrence of the specified time
 
@@ -144,29 +143,14 @@ impl Command for At {
         }
 
         let duration = converted.signed_duration_since(now).to_std().unwrap();
-
-        let mut timer = Timer::running(
-            ctxt.trigger.author_id(),
-            ctxt.trigger.channel_id(),
+        create_timer_and_confirm(
+            state,
+            database,
+            ctxt,
             SystemTime::now() + duration,
             message.to_string(),
-        );
-        timer.create_task(Arc::clone(state), Arc::clone(database));
-        let id = timer.id.clone();
-
-        // add to local and remote database so timer can be loaded if bot restarts mid-timer
-        db.get_user_field_mut::<Timers>(ctxt.trigger.author_id()).await
-            .insert(id.clone(), timer);
-        db.commit_user_field::<Timers>(ctxt.trigger.author_id()).await;
-
-        let time_input = match clock_mode {
-            ClockMode::Twelve(AmPm::AM) => format!("{hour}:{minute:02} AM"),
-            ClockMode::Twelve(AmPm::PM) => format!("{hour}:{minute:02} PM"),
-            ClockMode::TwentyFour => format!("{hour}:{minute:02}"),
-        };
-        ctxt.trigger.reply(&state.http)
-            .content(&format!("**You will be mentioned in this channel at `{time_input}`** (in `{}`). This reminder's ID is `{id}`.", duration.fmt()))
-            .await?;
+            Label::At(clock_mode, hour, minute, duration),
+        ).await?;
 
         Ok(())
     }

@@ -285,7 +285,7 @@ impl Timer {
             // NOTE: **must** bind returned timer here to a variable to avoid dropping it before
             // `commit_user_field` is called. if we don't bind, timer's Drop impl will abort the
             // task (i.e. this function), which will abort execution of the `commit_user_field`
-            // function
+            // function that immediately follows
             // this results in timers only being removed from local cache, but not database;
             // whenever the restarts, the timer will still be in the database and will always get
             // restored again and again

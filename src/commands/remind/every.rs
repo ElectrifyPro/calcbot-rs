@@ -2,12 +2,11 @@ use async_trait::async_trait;
 use calcbot_attrs::Info;
 use cas_unit_convert::{unit::Time, Base, Measurement, Unit};
 use crate::{
-    arg_parse::{Word, Remainder, parse_args_full},
-    commands::{Command, Context, Info},
-    database::{user::Timers, Database},
+    arg_parse::{Remainder, Word, parse_args_full},
+    commands::{Command, Context, Info, remind::{Label, create_timer_and_confirm}},
+    database::Database,
     error::Error,
     global::State,
-    timer::Timer,
 };
 use std::{sync::Arc, time::{Duration, SystemTime}};
 use tokio::sync::Mutex;
@@ -61,25 +60,14 @@ impl Command for Every {
         }
 
         let end_time = SystemTime::now() + time_amount;
-        let mut timer = Timer::running(
-            ctxt.trigger.author_id(),
-            ctxt.trigger.channel_id(),
+        create_timer_and_confirm(
+            state,
+            database,
+            ctxt,
             end_time,
             message.to_string(),
-        );
-        timer.recur = Some(time_amount);
-        timer.create_task(Arc::clone(state), Arc::clone(database));
-        let id = timer.id.clone();
-
-        // add to local and remote database so timer can be loaded if bot restarts mid-timer
-        let mut database = database.lock().await;
-        database.get_user_field_mut::<Timers>(ctxt.trigger.author_id()).await
-            .insert(id.clone(), timer);
-        database.commit_user_field::<Timers>(ctxt.trigger.author_id()).await;
-
-        ctxt.trigger.reply(&state.http)
-            .content(&format!("**You will be mentioned repeatedly in this channel every `{quantity} {unit}`.** This reminder's ID is `{id}`."))
-            .await?;
+            Label::Every(quantity, unit, time_amount),
+        ).await?;
 
         Ok(())
     }

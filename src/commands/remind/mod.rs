@@ -10,17 +10,77 @@ pub mod view;
 
 use async_trait::async_trait;
 use calcbot_attrs::Info;
-use cas_unit_convert::{unit::Time, Base, Measurement, Unit};
+use cas_unit_convert::{unit::Time, Measurement};
 use crate::{
-    arg_parse::{Word, Remainder, parse_args_full},
-    commands::{Command, Context, Info},
-    database::{user::Timers, Database},
+    arg_parse::{Remainder, Word, parse_args_full},
+    commands::{Command, Context, Info, remind::at::{AmPm, ClockMode}},
+    database::{Database, user::Timers},
     error::Error,
+    fmt::DurationExt,
     global::State,
     timer::Timer,
 };
 use std::{sync::Arc, time::{Duration, SystemTime}};
 use tokio::sync::Mutex;
+
+/// Determines which type of timer is being created.
+enum Label {
+    /// One-time.
+    In(f64, Time),
+
+    /// One-time, at a specific 12-hour or 24-hour time.
+    At(ClockMode, u8, u8, Duration),
+
+    /// Recurring.
+    Every(f64, Time, Duration),
+}
+
+/// Create a timer, add it to the database, and send the confirmation message in one function.
+async fn create_timer_and_confirm(
+    state: &Arc<State>,
+    database: &Arc<Mutex<Database>>,
+    ctxt: Context<'_>,
+    end_time: SystemTime,
+    message: String,
+    label: Label,
+) -> Result<(), Error> {
+    let mut timer = Timer::running(
+        ctxt.trigger.author_id(),
+        ctxt.trigger.channel_id(),
+        end_time,
+        message,
+    );
+    if let Label::Every(_, _, recur_amount) = label {
+        timer.recur = Some(recur_amount);
+    }
+    timer.create_task(Arc::clone(state), Arc::clone(database));
+
+    let label = match label {
+        Label::In(quantity, unit) => format!("**You will be mentioned in this channel in `{quantity} {unit}`.**"),
+        Label::At(clock_mode, hour, minute, duration) => {
+            let time_input = match clock_mode {
+                ClockMode::Twelve(AmPm::AM) => format!("{hour}:{minute:02} AM"),
+                ClockMode::Twelve(AmPm::PM) => format!("{hour}:{minute:02} PM"),
+                ClockMode::TwentyFour => format!("{hour}:{minute:02}"),
+            };
+            format!("**You will be mentioned in this channel at `{time_input}`** (in `{}`).", duration.fmt())
+        },
+        Label::Every(quantity, unit, _) => format!("**You will be mentioned _repeatedly_ in this channel every `{quantity} {unit}`.**"),
+    };
+    let content = format!("{label} This reminder's ID is `{}`.", timer.id);
+
+    // add to local and remote database so timer can be loaded if bot restarts mid-timer
+    let mut database = database.lock().await;
+    database.get_user_field_mut::<Timers>(ctxt.trigger.author_id()).await
+        .insert(timer.id.clone(), timer);
+    database.commit_user_field::<Timers>(ctxt.trigger.author_id()).await;
+
+    ctxt.trigger.reply(&state.http)
+        .content(&content)
+        .await?;
+
+    Ok(())
+}
 
 /// Set a reminder with an optional message for a specified interval. You can find the available
 /// time units with `{prefix}unitconvert units`. You can view your active reminders and their IDs
@@ -67,36 +127,26 @@ impl Command for Remind {
         let unit = parsed.1.0;
         let message = parsed.2.0;
 
-        let Ok(unit) = unit.try_into() else {
+        let Ok(unit): Result<Time, _> = unit.try_into() else {
             ctxt.trigger.reply(&state.http)
                 .content(&format!("**`{unit}` is not a valid time unit.**"))
                 .await?;
             return Ok(());
         };
-        let time_amount = Duration::from_secs_f64(*Measurement::new(quantity, Unit::new(Base::Time(unit)))
+        let time_amount = Duration::from_secs_f64(*Measurement::new(quantity, unit)
             .convert(Time::Second)
             .unwrap()
             .value());
 
         let end_time = SystemTime::now() + time_amount;
-        let mut timer = Timer::running(
-            ctxt.trigger.author_id(),
-            ctxt.trigger.channel_id(),
+        create_timer_and_confirm(
+            state,
+            database,
+            ctxt,
             end_time,
             message.to_string(),
-        );
-        timer.create_task(Arc::clone(state), Arc::clone(database));
-        let id = timer.id.clone();
-
-        // add to local and remote database so timer can be loaded if bot restarts mid-timer
-        let mut database = database.lock().await;
-        database.get_user_field_mut::<Timers>(ctxt.trigger.author_id()).await
-            .insert(id.clone(), timer);
-        database.commit_user_field::<Timers>(ctxt.trigger.author_id()).await;
-
-        ctxt.trigger.reply(&state.http)
-            .content(&format!("**You will be mentioned in this channel in `{quantity} {unit}`.** This reminder's ID is `{id}`."))
-            .await?;
+            Label::In(quantity, unit),
+        ).await?;
 
         Ok(())
     }

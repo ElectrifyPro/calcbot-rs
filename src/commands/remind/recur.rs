@@ -58,7 +58,7 @@ impl Command for Recur {
             db.commit_user_field::<Timers>(ctxt.trigger.author_id()).await;
 
             ctxt.trigger.reply(&state.http)
-                .content(&format!("**Successfully disabled the recurring status of the reminder with ID `{timer_id}`. It will not recur when it triggers."))
+                .content(&format!("**Successfully disabled the recurring status of the reminder with ID `{timer_id}`.** It will not recur when it triggers."))
                 .await?;
             return Ok(());
         }
