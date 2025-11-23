@@ -3,7 +3,7 @@ use calcbot_attrs::Info;
 use cas_unit_convert::{unit::Time, Base, Measurement, Unit};
 use crate::{
     arg_parse::{Remainder, Word, parse_args_full},
-    commands::{Command, Context, Info, remind::{Label, create_timer_and_confirm}},
+    commands::{Command, Context, Info, remind::{Label, Metadata, create_timer_and_confirm}},
     database::Database,
     error::Error,
     global::State,
@@ -66,7 +66,10 @@ impl Command for Every {
             ctxt,
             end_time,
             message.to_string(),
-            Label::Every(quantity, unit, time_amount),
+            Metadata {
+                duration: time_amount,
+                label: Label::Every,
+            },
         ).await?;
 
         Ok(())
