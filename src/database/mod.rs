@@ -90,6 +90,46 @@ impl Database {
             .unwrap();
     }
 
+    /// Gets the shared reminder for the given message and user IDs, if it exists. Returns the ID
+    /// of the user who set the reminder and the timer ID.
+    pub async fn get_shared_reminder(
+        &self,
+        message: Id<MessageMarker>,
+    ) -> Option<(Id<UserMarker>, String)> {
+        "SELECT user_id, timer_id FROM shared_timers WHERE message_id = ? LIMIT 1"
+            .with((message.get(),))
+            .first::<(u64, String), _>(&self.pool)
+            .await
+            .unwrap()
+            .map(|(user_id, timer_id)| (Id::new(user_id), timer_id))
+    }
+
+    /// Registers a reminder (set with the `c-remind` commands) that supports multiple receivers
+    /// (i.e. multiple users can receive the reminder).
+    ///
+    /// This will listen for interactions on the reminder message.
+    pub async fn add_shared_reminder(
+        &self,
+        message: Id<MessageMarker>,
+        user: Id<UserMarker>,
+        timer_id: &str,
+    ) {
+        "INSERT INTO shared_timers (message_id, user_id, timer_id) VALUES (?, ?, ?)"
+            .with((message.get(), user.get(), timer_id))
+            .ignore(&self.pool)
+            .await
+            .unwrap();
+    }
+
+    /// Removes the shared reminder for the given message ID.
+    pub async fn remove_shared_reminder(&self, message: Id<MessageMarker>) {
+        "DELETE FROM shared_timers WHERE message_id = ?"
+            .with((message.get(),))
+            .ignore(&self.pool)
+            .await
+            .unwrap();
+    }
+
     /// Sets the paged message sender for the given channel and message IDs. This is used to listen
     /// for interactions on messages with multiple pages.
     pub fn set_paged_message(

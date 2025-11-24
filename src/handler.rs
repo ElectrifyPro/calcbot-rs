@@ -1,8 +1,11 @@
-use super::{commands::Context, database::Database, global::State};
+use super::{commands::{remind::toggle_shared, Context}, database::Database, global::State};
 use std::{error::Error, sync::Arc, time::Instant};
 use tokio::sync::Mutex;
 use twilight_gateway::ShardId;
-use twilight_model::gateway::payload::incoming::MessageCreate;
+use twilight_model::{
+    application::interaction::InteractionData,
+    gateway::payload::incoming::{InteractionCreate, MessageCreate},
+};
 
 /// Handles a message being created in some text channel.
 pub async fn message_create(
@@ -77,6 +80,47 @@ pub async fn message_create(
                 msg.content
             ),
         }
+    }
+
+    Ok(())
+}
+
+/// Handles a user interaction with a component on a message sent by the bot.
+pub async fn interaction_create(
+    interaction: InteractionCreate,
+    state: Arc<State>,
+    database: Arc<Mutex<Database>>,
+) -> Result<(), Box<dyn Error + Send + Sync>> {
+    let Some(data) = interaction.data.as_ref() else {
+        return Ok(());
+    };
+
+    match data {
+        InteractionData::ApplicationCommand(_) => todo!(),
+        InteractionData::MessageComponent(_) => {
+            let Some(message) = &interaction.message else {
+                return Ok(());
+            };
+
+            let mut db = database.lock().await;
+
+            if let Some((author, timer)) = db.get_shared_reminder(message.id).await {
+                toggle_shared::toggle_shared(
+                    &interaction,
+                    &state,
+                    &database,
+                    &mut db,
+                    author,
+                    &timer,
+                    message,
+                ).await?;
+            } else if let Some(channel) = &interaction.channel {
+                db
+                    .get_paged_message(channel.id, message.id)
+                    .map(|sender| sender.send(interaction));
+            }
+        },
+        _ => {},
     }
 
     Ok(())

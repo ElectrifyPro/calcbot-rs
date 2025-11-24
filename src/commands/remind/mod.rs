@@ -6,6 +6,7 @@ pub mod increment;
 pub mod pause;
 pub mod recur;
 pub mod resume;
+pub(crate) mod toggle_shared;
 pub mod view;
 
 use async_trait::async_trait;
@@ -82,18 +83,17 @@ async fn create_timer_and_confirm(
     } else {
         ""
     };
+
     let content = format!("{label} This reminder's ID is `{}`.{multiply_receivers_msg}", timer.id);
 
     // add to local and remote database so timer can be loaded if bot restarts mid-timer
     let mut database = database.lock().await;
-    database.get_user_field_mut::<Timers>(ctxt.trigger.author_id()).await
-        .insert(timer.id.clone(), timer);
-    database.commit_user_field::<Timers>(ctxt.trigger.author_id()).await;
 
     let msg = ctxt.trigger.reply(&state.http)
         .content(&content);
+
     if supports_multiple_receivers {
-        msg.components(&[
+        let msg = msg.components(&[
             Component::ActionRow(ActionRow {
                 components: vec![
                     Component::Button(Button {
@@ -109,10 +109,24 @@ async fn create_timer_and_confirm(
                     }),
                 ],
             }),
-        ]).await?;
+        ])
+            .await?
+            .model()
+            .await?;
+
+        database.add_shared_reminder(
+            msg.id,
+            ctxt.trigger.author_id(),
+            &timer.id,
+        ).await;
+        timer.confirmation_message_id = Some(msg.id);
     } else {
         msg.await?;
     }
+
+    database.get_user_field_mut::<Timers>(ctxt.trigger.author_id()).await
+        .insert(timer.id.clone(), timer);
+    database.commit_user_field::<Timers>(ctxt.trigger.author_id()).await;
 
     Ok(())
 }

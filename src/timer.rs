@@ -1,8 +1,15 @@
+use literator::Literator;
 use serde::{Deserialize, Serialize};
 use twilight_mention::{timestamp::{Timestamp, TimestampStyle}, Mention};
-use std::{error::Error, ops::{Add, AddAssign}, sync::Arc, time::{Duration, SystemTime}};
+use std::{
+    collections::HashSet,
+    error::Error,
+    ops::{Add, AddAssign},
+    sync::Arc,
+    time::{Duration, SystemTime},
+};
 use tokio::{sync::Mutex, task::JoinHandle, time::Sleep};
-use twilight_model::id::{marker::{ChannelMarker, UserMarker}, Id};
+use twilight_model::id::{Id, marker::{ChannelMarker, MessageMarker, UserMarker}};
 
 use crate::{database::{user::Timers, Database}, fmt::DurationExt, global::State};
 
@@ -46,6 +53,12 @@ pub struct Timer {
     /// The message to send when the timer ends.
     pub message: String,
 
+    /// The ID of the confirmation message sent when the timer was created.
+    pub confirmation_message_id: Option<Id<MessageMarker>>,
+
+    /// The users who are also subscribed to this timer's reminder.
+    pub subscribed_users: HashSet<Id<UserMarker>>,
+
     /// The task that will send the reminder message.
     #[serde(skip)]
     task: Option<JoinHandle<Result<(), Box<dyn Error + Send + Sync>>>>,
@@ -68,6 +81,8 @@ impl Clone for Timer {
             state: self.state.clone(),
             recur: self.recur,
             message: self.message.clone(),
+            confirmation_message_id: self.confirmation_message_id,
+            subscribed_users: self.subscribed_users.clone(),
             task: None,
         }
     }
@@ -91,6 +106,8 @@ impl Timer {
             state: TimerState::Running { end_time },
             recur: None,
             message,
+            confirmation_message_id: None,
+            subscribed_users: HashSet::new(),
             task: None,
         }
     }
@@ -162,6 +179,15 @@ impl Timer {
         }
     }
 
+    /// Add or remove a subscribed user to/from the timer.
+    pub fn toggle_subscribed_user(&mut self, user_id: Id<UserMarker>) {
+        if self.subscribed_users.contains(&user_id) {
+            self.subscribed_users.remove(&user_id);
+        } else {
+            self.subscribed_users.insert(user_id);
+        }
+    }
+
     /// Creates a [`Sleep`] future that will complete when the timer ends.
     pub fn sleep(&self) -> Sleep {
         match &self.state {
@@ -229,6 +255,8 @@ impl Timer {
         let channel_id = self.channel_id;
         let recur = self.recur;
         let message = self.message.clone();
+        let confirmation_message_id = self.confirmation_message_id;
+        let subscribed_users = self.subscribed_users.clone();
         let future = self.sleep();
 
         // kill the old task if it exists
@@ -243,9 +271,14 @@ impl Timer {
             loop {
                 future.await;
 
+                let mentions = Some(user_id)
+                    .into_iter()
+                    .chain(subscribed_users.iter().copied())
+                    .map(|id| id.mention().to_string())
+                    .oxford_join_and();
                 let msg = match message.len() {
-                    0 => format!("{}'s reminder: _no message provided_", user_id.mention()),
-                    _ => format!("{}'s reminder: **{}**", user_id.mention(), message),
+                    0 => format!("Reminder for {mentions}: _no message provided_"),
+                    _ => format!("Reminder for {mentions}: **{message}**"),
                 };
                 bot_state.http.create_message(channel_id).content(&msg).await?;
 
@@ -293,6 +326,9 @@ impl Timer {
             // call `remove` without binding
             let _timer = db.get_user_field_mut::<Timers>(user_id).await.remove(&timer_id);
             db.commit_user_field::<Timers>(user_id).await;
+            if let Some(confirmation_message_id) = confirmation_message_id {
+                db.remove_shared_reminder(confirmation_message_id).await;
+            }
 
             Ok::<_, Box<dyn std::error::Error + Send + Sync>>(())
         }));

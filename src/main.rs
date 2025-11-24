@@ -114,17 +114,11 @@ async fn handle_event(
             "Shard {} connected",
             ready.shard.unwrap_or(ShardId::new(0, 1))
         ),
-        Event::InteractionCreate(interaction) => {
-            if let (Some(channel), Some(message)) = (
-                &interaction.channel,
-                &interaction.message,
-            ) {
-                database.lock()
-                    .await
-                    .get_paged_message(channel.id, message.id)
-                    .map(|sender| sender.send(*interaction));
-            }
-        }
+        Event::InteractionCreate(interaction) => handler::interaction_create(
+            *interaction,
+            state,
+            database,
+        ).await?,
         _ => {}
     }
 
