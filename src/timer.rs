@@ -1,6 +1,6 @@
+use crate::{commands::remind::action::{self, Reason}, database::{Database, user::Timers}, fmt::DurationExt, global::State};
 use literator::Literator;
 use serde::{Deserialize, Serialize};
-use twilight_mention::{timestamp::{Timestamp, TimestampStyle}, Mention};
 use std::{
     collections::HashSet,
     error::Error,
@@ -9,9 +9,8 @@ use std::{
     time::{Duration, SystemTime},
 };
 use tokio::{sync::Mutex, task::JoinHandle, time::Sleep};
+use twilight_mention::{timestamp::{Timestamp, TimestampStyle}, Mention};
 use twilight_model::id::{Id, marker::{ChannelMarker, MessageMarker, UserMarker}};
-
-use crate::{database::{user::Timers, Database}, fmt::DurationExt, global::State};
 
 /// State of a timer.
 #[derive(Debug, Clone, Deserialize, Serialize)]
@@ -255,7 +254,6 @@ impl Timer {
         let channel_id = self.channel_id;
         let recur = self.recur;
         let message = self.message.clone();
-        let confirmation_message_id = self.confirmation_message_id;
         let subscribed_users = self.subscribed_users.clone();
         let future = self.sleep();
 
@@ -274,7 +272,7 @@ impl Timer {
                 let mentions = Some(user_id)
                     .into_iter()
                     .chain(subscribed_users.iter().copied())
-                    .map(|id| id.mention().to_string())
+                    .map(|id| id.mention())
                     .oxford_join_and();
                 let msg = match message.len() {
                     0 => format!("Reminder for {mentions}: _no message provided_"),
@@ -313,22 +311,13 @@ impl Timer {
                 }
             }
 
-            let mut db = db.lock().await;
-
-            // NOTE: **must** bind returned timer here to a variable to avoid dropping it before
-            // `commit_user_field` is called. if we don't bind, timer's Drop impl will abort the
-            // task (i.e. this function), which will abort execution of the `commit_user_field`
-            // function that immediately follows
-            // this results in timers only being removed from local cache, but not database;
-            // whenever the restarts, the timer will still be in the database and will always get
-            // restored again and again
-            // i think we only have to make this distinction inside the task; elsewhere, we can
-            // call `remove` without binding
-            let _timer = db.get_user_field_mut::<Timers>(user_id).await.remove(&timer_id);
-            db.commit_user_field::<Timers>(user_id).await;
-            if let Some(confirmation_message_id) = confirmation_message_id {
-                db.remove_shared_reminder(confirmation_message_id).await;
-            }
+            action::complete(
+                &timer_id,
+                user_id,
+                &bot_state,
+                &mut *db.lock().await,
+                Reason::Triggered,
+            ).await;
 
             Ok::<_, Box<dyn std::error::Error + Send + Sync>>(())
         }));

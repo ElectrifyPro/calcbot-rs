@@ -1,4 +1,4 @@
-use super::{commands::{remind::toggle_shared, Context}, database::Database, global::State};
+use super::{commands::{remind::action, Context}, database::Database, global::State};
 use std::{error::Error, sync::Arc, time::Instant};
 use tokio::sync::Mutex;
 use twilight_gateway::ShardId;
@@ -105,7 +105,7 @@ pub async fn interaction_create(
             let mut db = database.lock().await;
 
             if let Some((author, timer)) = db.get_shared_reminder(message.id).await {
-                toggle_shared::toggle_shared(
+                action::toggle_shared(
                     &interaction,
                     &state,
                     &database,

@@ -1,3 +1,4 @@
+pub(crate) mod action;
 pub mod at;
 pub mod delete;
 pub mod edit;
@@ -6,7 +7,6 @@ pub mod increment;
 pub mod pause;
 pub mod recur;
 pub mod resume;
-pub(crate) mod toggle_shared;
 pub mod view;
 
 use async_trait::async_trait;

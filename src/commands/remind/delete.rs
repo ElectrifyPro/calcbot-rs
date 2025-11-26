@@ -1,8 +1,8 @@
 use async_trait::async_trait;
 use calcbot_attrs::Info;
 use crate::{
-    commands::{Command, Context},
-    database::{user::Timers, Database},
+    commands::{Command, Context, remind::action::{self, Reason}},
+    database::Database,
     error::Error,
     global::State,
 };
@@ -31,11 +31,15 @@ impl Command for Delete {
         let timer_id = ctxt.raw_input;
 
         let mut database = database.lock().await;
-        let timer = database.get_user_field_mut::<Timers>(ctxt.trigger.author_id()).await
-            .remove(timer_id);
+        let timer = action::complete(
+            timer_id,
+            ctxt.trigger.author_id(),
+            state,
+            &mut database,
+            Reason::Deleted,
+        ).await;
 
         if timer.is_some() {
-            database.commit_user_field::<Timers>(ctxt.trigger.author_id()).await;
             ctxt.trigger.reply(&state.http)
                 .content(&format!("**Successfully deleted the reminder with ID `{timer_id}`.**"))
                 .await?;

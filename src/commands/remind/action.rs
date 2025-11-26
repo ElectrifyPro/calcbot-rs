@@ -1,4 +1,4 @@
-use crate::{database::{Database, user::Timers}, global::State};
+use crate::{database::{Database, user::Timers}, global::State, timer::Timer};
 use std::{error::Error, sync::Arc};
 use tokio::sync::Mutex;
 use twilight_model::{
@@ -14,6 +14,75 @@ use twilight_model::{
     id::{Id, marker::UserMarker},
 };
 use twilight_util::builder::InteractionResponseDataBuilder;
+
+/// Reason for completing a timer.
+pub enum Reason {
+    Triggered,
+    Deleted,
+}
+
+impl std::fmt::Display for Reason {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            Reason::Triggered => write!(f, "(completed)"),
+            Reason::Deleted => write!(f, "(deleted)"),
+        }
+    }
+}
+
+/// Handles the actions taken when a timer is finished (triggered, deleted, etc.). This includes:
+///
+/// - Removing it from the database.
+/// - Removing the confirmation message mapping if it was a shared reminder.
+/// - Editing the confirmation message button to be disabled.
+pub async fn complete(
+    timer_id: &str,
+    user_id: Id<UserMarker>,
+    state: &State,
+    db: &mut Database,
+    reason: Reason,
+) -> Option<Timer> {
+    let timer = db.get_user_field_mut::<Timers>(user_id).await.remove(timer_id)?;
+    db.commit_user_field::<Timers>(user_id).await;
+
+    let Some(confirmation_message_id) = timer.confirmation_message_id else {
+        return Some(timer);
+    };
+
+    db.remove_shared_reminder(confirmation_message_id).await;
+
+    let num_subscribers = timer.subscribed_users.len();
+    let button_label = if num_subscribers == 0 {
+        "Remind me".to_string()
+    } else {
+        format!(
+            "Remind me ({num_subscribers} user{})",
+            if num_subscribers == 1 { "" } else { "s" },
+        )
+    };
+
+    let _ = state.http.update_message(timer.channel_id, confirmation_message_id)
+        .components(Some(&[
+            Component::ActionRow(ActionRow {
+                components: vec![
+                    Component::Button(Button {
+                        custom_id: Some("remind-me-too".to_owned()),
+                        disabled: true,
+                        emoji: Some(EmojiReactionType::Unicode {
+                            name: String::from("⏰"),
+                        }),
+                        label: Some(format!("{button_label} {reason}")),
+                        style: ButtonStyle::Primary,
+                        url: None,
+                        sku_id: None,
+                    }),
+                ],
+            }),
+        ]))
+        .await;
+
+    Some(timer)
+}
 
 /// Register or unregister the interacting user to receive a copy of a reminder
 /// set by another user.
@@ -35,9 +104,9 @@ pub async fn toggle_shared(
             .create_response(
                 interaction.id,
                 &interaction.token,
-                &twilight_model::http::interaction::InteractionResponse {
-                    kind: twilight_model::http::interaction::InteractionResponseType::ChannelMessageWithSource,
-                    data: Some(twilight_util::builder::InteractionResponseDataBuilder::new()
+                &InteractionResponse {
+                    kind: InteractionResponseType::ChannelMessageWithSource,
+                    data: Some(InteractionResponseDataBuilder::new()
                         .content("**You are the author of this reminder and will always be pinged when it triggers.**")
                         .flags(MessageFlags::EPHEMERAL)
                         .build()),
@@ -47,7 +116,7 @@ pub async fn toggle_shared(
         return Ok(());
     }
 
-    let Some(timer) = dbg!(db_lock.get_user_field_mut::<Timers>(reminder_author).await)
+    let Some(timer) = db_lock.get_user_field_mut::<Timers>(reminder_author).await
         .get_mut(timer_id) else {
         return Ok(());
     };
