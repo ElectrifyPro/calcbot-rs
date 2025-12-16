@@ -4,6 +4,7 @@ use twilight_model::channel::{message::Embed, Message};
 use twilight_validate::message::MessageValidationError;
 
 /// An error that can format itself into a user-friendly Discord message.
+#[derive(Debug)]
 pub enum Error {
     /// A string that is formatted as-is.
     String(String),
@@ -78,7 +79,7 @@ impl Error {
     }
 }
 
-pub trait CustomErrorFmt {
+pub trait CustomErrorFmt: std::fmt::Debug {
     /// Creates a rich Discord message describing the error.
     ///
     /// Because [`CreateMessage`] borrows its content, this makes it impossible to return a
@@ -112,6 +113,7 @@ generic_error_impl! {
 }
 
 /// An argument was missing from a command invocation.
+#[derive(Debug)]
 pub struct MissingArgument {
     /// The index of the argument that was missing.
     pub index: usize,
