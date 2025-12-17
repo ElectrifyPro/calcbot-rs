@@ -5,7 +5,6 @@ pub mod to_latex;
 use ariadne::Source;
 use async_trait::async_trait;
 use calcbot_attrs::Info;
-use cas_error::{Error as CasError};
 use cas_parser::parser::Parser;
 use cas_vm::Vm;
 use crate::{
@@ -14,22 +13,8 @@ use crate::{
     error::Error,
     global::State,
 };
-use strip_ansi_escapes::strip;
 use std::sync::Arc;
 use tokio::sync::Mutex;
-
-fn report_errors(input: &str, errs: impl IntoIterator<Item = CasError>) -> String {
-    errs.into_iter()
-        .map(|err| {
-            let mut buf = Vec::new();
-            err.build_report("input")
-                .write(("input", Source::from(input)), &mut buf)
-                .unwrap();
-            String::from_utf8(strip(buf).unwrap()).unwrap()
-        })
-        .collect::<Vec<_>>()
-        .join("\n")
-}
 
 /// Calculates an expression, like `1 + 1`.
 ///
@@ -66,54 +51,39 @@ impl Command for Calculate {
         _database: &Arc<Mutex<Database>>,
         ctxt: Context<'c>,
     ) -> Result<(), Error> {
-        let mut parser = Parser::new(ctxt.raw_input);
-        match parser.try_parse_full_many() {
-            Ok(stmts) => {
-                // let mut database = database.lock().await;
-                // let eval_ctxt = database.get_user_field_mut::<Ctxt>(ctxt.trigger.author_id()).await;
+        let stmts = match Parser::new(ctxt.raw_input).try_parse_full_many() {
+            Ok(stmts) => stmts,
+            Err(errs) => Err(Error::CasMany(Source::from(ctxt.raw_input), errs))?,
+        };
 
-                let mut vm = match Vm::compile_program(stmts) {
-                    Ok(vm) => vm,
-                    Err(err) => {
-                        ctxt.trigger.reply(&state.http)
-                            .content(&format!("```rs\n{}\n```", report_errors(ctxt.raw_input, Some(err))))
-                            .await?;
-                        return Ok(());
-                    },
-                };
-                let cancel = vm.stop_execution.clone();
-                tokio::select! {
-                    _ = tokio::time::sleep(std::time::Duration::from_secs(4)) => {
-                        cancel.store(true, std::sync::atomic::Ordering::Relaxed);
-                        ctxt.trigger.reply(&state.http)
-                            .content("**Timeout: The calculation took too long (4+ seconds) and was cancelled.** Check your expression to see if there are any mistakes or infinite loops.")
-                            .await?;
-                    }
-                    Ok(out) = tokio::task::spawn_blocking(move || vm.run()) => {
-                        let ans = match out {
-                            Ok(ans) => ans,
-                            Err(err) => {
-                                ctxt.trigger.reply(&state.http)
-                                    .content(&format!("```rs\n{}\n```", report_errors(ctxt.raw_input, Some(err))))
-                                    .await?;
-                                return Ok(());
-                            },
-                        };
-                        ctxt.trigger.reply(&state.http)
-                            .content(&format!("**Calculation**\n{}", ans))
-                            // .content(&format!("**Calculation** (mode: {})\n{}", eval_ctxt.trig_mode, ans))
-                            .await?;
+        // let mut database = database.lock().await;
+        // let eval_ctxt = database.get_user_field_mut::<Ctxt>(ctxt.trigger.author_id()).await;
 
-                        // eval_ctxt.add_var("ans", ans);
-                        // database.commit_user_field::<Ctxt>(ctxt.trigger.author_id()).await;
-                    }
-                }
-            },
-            Err(errs) => {
+        let mut vm = match Vm::compile_program(stmts) {
+            Ok(vm) => vm,
+            Err(err) => Err(Error::Cas(Source::from(ctxt.raw_input), err))?,
+        };
+        let cancel = vm.stop_execution.clone();
+        tokio::select! {
+            _ = tokio::time::sleep(std::time::Duration::from_secs(4)) => {
+                cancel.store(true, std::sync::atomic::Ordering::Relaxed);
                 ctxt.trigger.reply(&state.http)
-                    .content(&format!("```rs\n{}\n```", report_errors(ctxt.raw_input, errs)))
+                    .content("**Timeout: The calculation took too long (4+ seconds) and was cancelled.** Check your expression to see if there are any mistakes or infinite loops.")
                     .await?;
-            },
+            }
+            Ok(out) = tokio::task::spawn_blocking(move || vm.run()) => {
+                let ans = match out {
+                    Ok(ans) => ans,
+                    Err(err) => Err(Error::Cas(Source::from(ctxt.raw_input), err))?,
+                };
+                ctxt.trigger.reply(&state.http)
+                    .content(&format!("**Calculation**\n{}", ans))
+                    // .content(&format!("**Calculation** (mode: {})\n{}", eval_ctxt.trig_mode, ans))
+                    .await?;
+
+                // eval_ctxt.add_var("ans", ans);
+                // database.commit_user_field::<Ctxt>(ctxt.trigger.author_id()).await;
+            }
         }
 
         Ok(())

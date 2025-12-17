@@ -1,4 +1,5 @@
 use std::future::IntoFuture;
+use ariadne::Source;
 use twilight_http::{request::channel::message::CreateMessage, response::ResponseFuture};
 use twilight_model::channel::{message::Embed, Message};
 use twilight_validate::message::MessageValidationError;
@@ -22,6 +23,12 @@ pub enum Error {
     ///
     /// The embed is boxed to reduce the size of the enum (600 bytes!).
     Embed(Box<Embed>),
+
+    /// An error from `cas-rs`.
+    Cas(Source, cas_error::Error),
+
+    /// Multiple errors from `cas-rs`.
+    CasMany(Source, Vec<cas_error::Error>),
 
     /// Custom error. It can only be formatted with `&self` and not `self`.
     Custom(Box<dyn CustomErrorFmt + Send + Sync>),
@@ -60,6 +67,25 @@ where
     }
 }
 
+/// Builds the error string for `cas-rs` errors.
+fn build_cas_errors(
+    source: Source,
+    errs: impl Iterator<Item = cas_error::Error> + ExactSizeIterator,
+) -> String {
+    let count = errs.len();
+    let mut buf = Vec::new();
+    for (err, source) in errs.zip(std::iter::repeat_n(source, count)) {
+        err.build_report("input")
+            .write(("input", source), &mut buf)
+            .unwrap();
+        buf.push(b'\n');
+    }
+
+    let stripped = strip_ansi_escapes::strip(buf);
+    let s = String::from_utf8_lossy(&stripped);
+    format!("```rs\n{s}\n```")
+}
+
 impl Error {
     /// Creates a rich Discord message describing the error.
     ///
@@ -74,6 +100,12 @@ impl Error {
             Self::NoArgument => Ok(init.content("No argument provided.").into_future()),
             Self::TooManyArguments => Ok(init.content("Too many arguments.").into_future()),
             Self::Embed(embed) => Ok(init.embeds(&[*embed]).into_future()),
+            Self::Cas(source, err) => {
+                Ok(init.content(&build_cas_errors(source, Some(err).into_iter())).into_future())
+            },
+            Self::CasMany(source, errs) => {
+                Ok(init.content(&build_cas_errors(source, errs.into_iter())).into_future())
+            },
             Self::Custom(custom) => custom.rich_fmt(init),
         }
     }

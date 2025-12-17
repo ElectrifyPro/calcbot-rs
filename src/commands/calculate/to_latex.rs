@@ -8,7 +8,6 @@ use crate::{
     error::Error,
     global::State,
 };
-use strip_ansi_escapes::strip;
 use std::sync::Arc;
 use tokio::sync::Mutex;
 
@@ -37,22 +36,7 @@ impl Command for ToLatex {
                     .content(&format!("**Converting** `{}` to LaTeX\n```{}```", ctxt.raw_input, expr.as_display()))
                     .await?;
             },
-            Err(errs) => {
-                let msg = errs.into_iter()
-                    .map(|err| {
-                        let mut buf = Vec::new();
-                        err.build_report("input")
-                            .write(("input", Source::from(ctxt.raw_input)), &mut buf)
-                            .unwrap();
-                        String::from_utf8(strip(buf).unwrap()).unwrap()
-                    })
-                    .collect::<Vec<_>>()
-                    .join("\n");
-
-                ctxt.trigger.reply(&state.http)
-                    .content(&format!("```{}```", msg))
-                    .await?;
-            },
+            Err(errs) => Err(Error::CasMany(Source::from(ctxt.raw_input), errs))?,
         }
 
         Ok(())
