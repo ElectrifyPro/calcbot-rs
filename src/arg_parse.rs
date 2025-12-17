@@ -199,7 +199,24 @@ impl<'a> Parse<'a> for Word<'a> {
 /// Parses a sequence of space-separated [`Parse`] types.
 impl<'a, T: Parse<'a>> Parse<'a> for Vec<T> {
     fn parse(parser: &mut Parser<'a>) -> Result<Self, Error> {
+        MinVec::<T, 0>::parse(parser)
+            .map(|minvec| minvec.0)
+    }
+}
+
+/// A [`Vec`] guaranteed to have at least `N` elements.
+#[derive(Debug)]
+pub struct MinVec<T, const N: usize>(pub Vec<T>);
+
+impl<'a, T: Parse<'a>, const N: usize> Parse<'a> for MinVec<T, N> {
+    fn parse(parser: &mut Parser<'a>) -> Result<Self, Error> {
         let mut out = vec![];
+
+        for _ in 0..N {
+            out.push(T::parse(parser)?);
+            parser.advance_past_whitespace();
+        }
+
         loop {
             if let Ok(item) = T::parse(parser) {
                 out.push(item);
@@ -208,7 +225,8 @@ impl<'a, T: Parse<'a>> Parse<'a> for Vec<T> {
                 break;
             }
         }
-        Ok(out)
+
+        Ok(MinVec(out))
     }
 }
 

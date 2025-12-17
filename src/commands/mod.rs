@@ -6,6 +6,7 @@ pub mod link;
 pub mod not_math;
 pub mod preview;
 pub mod remind;
+pub mod sequence;
 pub mod unit_convert;
 
 use super::{database::Database, error::Error, global::State};
@@ -336,6 +337,7 @@ pub fn root() -> CommandGroup {
             Box::new(not_math::NotMath),
             Box::new(preview::Preview),
             Box::new(remind::Remind),
+            Box::new(sequence::Sequence),
             Box::new(unit_convert::UnitConvert),
         ],
     }
