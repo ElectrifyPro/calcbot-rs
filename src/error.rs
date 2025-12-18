@@ -129,7 +129,7 @@ macro_rules! generic_error_impl {
         $(
             impl CustomErrorFmt for $name {
                 fn rich_fmt(&self, init: CreateMessage<'_>) -> Result<ResponseFuture<Message>, MessageValidationError> {
-                    Ok(init.content(&format!("**Oops!** CalcBot processed your command correctly, but Discord rejected the response message. This could be a bug!\nPlease report this to the developers, and include this error code:\n```\n{}\n```", stringify!($name)))
+                    Ok(init.content(&format!("**Oops!** CalcBot processed your command correctly, but Discord rejected the response message. This is likely a bug!\nPlease report this to the developers, and include this error code:\n```\n{}\n```", stringify!($name)))
                         .into_future())
                 }
             }

@@ -143,7 +143,7 @@ macro_rules! impl_parse_int {
     };
 }
 
-impl_parse_int!(u32, usize);
+impl_parse_int!(i64, u32, usize);
 
 impl<'a> Parse<'a> for f64 {
     fn parse(parser: &mut Parser<'a>) -> Result<Self, Error> {

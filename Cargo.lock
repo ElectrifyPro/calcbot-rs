@@ -269,6 +269,7 @@ dependencies = [
  "ariadne",
  "async-trait",
  "calcbot-attrs",
+ "cas-compiler",
  "cas-compute",
  "cas-error",
  "cas-parser",
@@ -282,6 +283,7 @@ dependencies = [
  "literator",
  "log",
  "mysql_async",
+ "ordinal",
  "paste",
  "random-string",
  "regex",
@@ -1863,6 +1865,12 @@ checksum = "68f19d67e5a2795c94e73e0bb1cc1a7edeb2e28efd39e2e1c9b7a40c1108b11c"
 dependencies = [
  "num-traits",
 ]
+
+[[package]]
+name = "ordinal"
+version = "0.4.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "04f7ff16c3a0599da7939ad0ae9300414ca1115a7f552574bb269638a1e0576d"
 
 [[package]]
 name = "parking_lot_core"

@@ -1,6 +1,6 @@
 // pub mod make_arithmetic;
-// pub mod sum;
-// pub mod terms;
+pub mod sum;
+pub mod terms;
 // pub mod toformula;
 
 use async_trait::async_trait;
@@ -107,8 +107,8 @@ impl TableKind for Factor {
     examples = ["1 3 6 10 15"],
     children = [
         // make_arithmetic::MakeArithmetic,
-        // sum::Sum,
-        // terms::Terms,
+        sum::Sum,
+        terms::Terms,
         // toformula::ToFormula,
     ],
 )]

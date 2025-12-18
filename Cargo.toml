@@ -12,6 +12,10 @@ lto = true
 [dependencies.calcbot-attrs]
 path = "calcbot-attrs"
 
+[dependencies.cas-compiler]
+git = "https://github.com/ElectrifyPro/cas-rs.git"
+branch = "dev"
+
 [dependencies.cas-compute]
 git = "https://github.com/ElectrifyPro/cas-rs.git"
 branch = "dev"
@@ -44,6 +48,7 @@ lazy_static = "1.4.0"
 literator = "0.2.0"
 log = "0.4.17"
 mysql_async = "0.32.1"
+ordinal = "0.4.0"
 paste = "1.0.15"
 random-string = "1.1.0"
 regex = "1.7.3"
