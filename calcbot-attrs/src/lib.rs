@@ -20,6 +20,7 @@ use syn::{parse_macro_input, ItemStruct};
 /// | Tag           | Description                                             | Accepts (types are converted automatically) | Obtained from                                                        |
 /// |---------------|---------------------------------------------------------|---------------------------------------------|----------------------------------------------------------------------|
 /// | `name`        | The name of the command.                                | `&str`                                      | The struct's name.                                                   |
+/// | `role`        | The permissions the user must have to run the command.  | `Role`                                      | The `role` tag in the `info` attribute.                              |
 /// | `description` | The description of the command.                         | `&str`                                      | The struct's doc comment.                                            |
 /// | `category`    | The category of the root command.                       | `&str`                                      | The `category` tag in the `info` attribute.                          |
 /// | `aliases`     | Allowed aliases for the command.                        | `[&str]`                                    | The struct's name, or via the `aliases` tag in the `info` attribute. |
@@ -37,6 +38,11 @@ pub fn info(item: TokenStream) -> TokenStream {
     } = info;
 
     let name_str = util::pascal_to_snake_case(&name.to_string());
+    let role = if let Some(role) = info_args.role {
+        quote! { #role }
+    } else {
+        quote! { Default::default() }
+    };
     let description = description.trim();
     let category = util::wrap(info_args.category);
     let aliases = util::wrap(info_args.aliases);
@@ -52,6 +58,7 @@ pub fn info(item: TokenStream) -> TokenStream {
             fn info(&self) -> crate::commands::CommandInfo {
                 crate::commands::CommandInfo {
                     name: #name_str,
+                    role: #role,
                     description: #description,
                     category: #category,
                     aliases: #aliases,

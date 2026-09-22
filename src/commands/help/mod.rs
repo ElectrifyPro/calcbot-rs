@@ -2,7 +2,7 @@ pub mod commands;
 
 use async_trait::async_trait;
 use crate::{
-    commands::{Command, CommandInfo, Context, Info},
+    commands::{Command, CommandInfo, Context, Info, Role},
     database::Database,
     error::Error,
     global::State,
@@ -20,6 +20,7 @@ impl Info for Help {
     fn info(&self) -> CommandInfo {
         CommandInfo {
             name: "Help",
+            role: Role::User,
             description: "Get information on how to use a command in a neat embed, like this!
 
 A command's help embed contains the following information:

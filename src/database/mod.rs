@@ -201,6 +201,17 @@ impl Database {
         Ok(self.servers.entry(id).or_insert(prefix))
     }
 
+    /// Sets the prefix of the server with the given ID.
+    pub async fn set_server_prefix(&mut self, id: Id<GuildMarker>, prefix: &str) {
+        "UPDATE servers SET prefix = ? WHERE id = ?"
+            .with((prefix, id.get()))
+            .ignore(&self.pool)
+            .await
+            .unwrap();
+
+        self.servers.insert(id, prefix.to_string());
+    }
+
     /// Gets immutable access to the user settings for the given user ID.
     ///
     /// If the data was cached previously, the cached value will be returned. Otherwise, the data

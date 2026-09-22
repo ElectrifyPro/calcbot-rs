@@ -1,4 +1,5 @@
 pub mod about;
+pub mod admin;
 pub mod calculate;
 pub mod dictionary;
 pub mod help;
@@ -15,7 +16,10 @@ use twilight_gateway::ShardId;
 use std::{iter::Peekable, sync::Arc};
 use tokio::sync::Mutex;
 use twilight_http::{request::channel::message::CreateMessage, Client};
-use twilight_model::{channel::message::{Embed, Message}, id::{marker::{ChannelMarker, UserMarker}, Id}};
+use twilight_model::{
+    channel::message::{Embed, Message},
+    id::{marker::{ChannelMarker, GuildMarker, UserMarker}, Id},
+};
 use twilight_util::builder::embed::{EmbedBuilder, EmbedFieldBuilder};
 
 /// Formats a list of commands into a code block. Each string is displayed on a separate line,
@@ -37,6 +41,17 @@ pub fn format_code_block(prefix: &str, strings: &[&str]) -> String {
             .collect::<Vec<_>>()
             .join("\n")
     )
+}
+
+/// User roles, representing permissions a user must have to run a command.
+#[derive(Clone, Copy, Default, PartialEq, Eq, PartialOrd, Ord)]
+pub enum Role {
+    /// Any user can run this command.
+    #[default]
+    User,
+
+    /// The user must be a server admin to run this command.
+    Admin,
 }
 
 /// A group of commands. It wraps a [`Vec`] of existing commands and provides extra functionality
@@ -102,6 +117,10 @@ pub struct CommandInfo {
     /// The name of the command.
     pub name: &'static str,
 
+    /// The permissions the user must have to run the command. Restrictive permissions apply to this
+    /// command and its children.
+    pub role: Role,
+
     /// The description of the command.
     pub description: &'static str,
 
@@ -126,6 +145,23 @@ pub struct CommandInfo {
 }
 
 impl CommandInfo {
+    /// Returns the minimum user role needed to execute this command, checking the roles of the
+    /// parent commands as necessary.
+    pub fn required_role(&self) -> Role {
+        let mut role = self.role;
+        let mut current = self.parent.as_ref().map(|p| p.clone_box());
+
+        while let Some(parent) = current {
+            let parent_info = parent.info();
+            if parent_info.role > role {
+                role = parent_info.role;
+            }
+            current = parent_info.parent;
+        }
+
+        role
+    }
+
     /// Retrieves the default alias for this command.
     pub fn default_alias(&self) -> &'static str {
         self.aliases
@@ -178,14 +214,18 @@ impl CommandInfo {
         let (path, short_path) = self.build_path();
         let full_path = format!("{}{}", prefix, path);
 
-        let mut embed =
-            EmbedBuilder::new()
-                .title(&full_path)
-                .color(0x66d2e8)
-                .field(EmbedFieldBuilder::new(
-                    "Description",
-                    self.description.replace("{prefix}", prefix),
-                ));
+        let mut embed = EmbedBuilder::new()
+            .title(&full_path)
+            .color(0x66d2e8);
+
+        if self.required_role() == Role::Admin {
+            embed = embed.field(EmbedFieldBuilder::new("Server admins only", ""));
+        }
+
+        embed = embed.field(EmbedFieldBuilder::new(
+            "Description",
+            self.description.replace("{prefix}", prefix),
+        ));
 
         if let Some(syntax) = self
             .syntax
@@ -245,6 +285,13 @@ impl<'a> From<&'a Message> for Trigger<'a> {
 }
 
 impl Trigger<'_> {
+    /// Returns the ID of the server this event was triggered in, if any.
+    pub fn guild_id(&self) -> Option<Id<GuildMarker>> {
+        match self {
+            Trigger::Message(msg) => msg.guild_id,
+        }
+    }
+
     /// Returns the ID of the author who triggered this event.
     pub fn author_id(&self) -> Id<UserMarker> {
         match self {
@@ -330,6 +377,7 @@ pub fn root() -> CommandGroup {
     CommandGroup {
         commands: vec![
             Box::new(about::About),
+            Box::new(admin::Admin),
             Box::new(calculate::Calculate),
             Box::new(dictionary::Dictionary),
             Box::new(help::Help),

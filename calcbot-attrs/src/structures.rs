@@ -85,6 +85,7 @@ impl ToTokens for CommandGroup {
 /// The arguments that can be passed to the `info` attribute.
 #[derive(Debug, Default)]
 pub struct InfoArgs {
+    pub role: Option<ExprPath>,
     pub category: Option<LitStr>,
     pub aliases: Option<SliceLitStr>,
     pub syntax: Option<SliceLitStr>,
@@ -101,6 +102,7 @@ impl InfoArgs {
 
         let ident_str = ident.to_string();
         match ident_str.as_str() {
+            "role" => self.role = Some(input.parse()?),
             "category" => self.category = Some(input.parse()?),
             "aliases" => self.aliases = Some(input.parse()?),
             "syntax" => self.syntax = Some(input.parse()?),

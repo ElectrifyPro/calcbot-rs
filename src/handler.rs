@@ -1,11 +1,56 @@
-use super::{commands::{remind::action, Context}, database::Database, global::State};
+use super::{commands::{remind::action, Context, Role}, database::Database, global::State};
 use std::{error::Error, sync::Arc, time::Instant};
 use tokio::sync::Mutex;
 use twilight_gateway::ShardId;
 use twilight_model::{
     application::interaction::InteractionData,
     gateway::payload::incoming::{InteractionCreate, MessageCreate},
+    guild::Permissions,
+    id::{marker::{GuildMarker, UserMarker}, Id},
 };
+
+/// Returns true if the given user is the owner or has the ADMINISTRATOR permission in the specified
+/// guild.
+async fn has_admin_permission(
+    state: &State,
+    guild: Id<GuildMarker>,
+    user: Id<UserMarker>,
+) -> Result<bool, Box<dyn Error + Send + Sync>> {
+    let is_owner = state.http.guild(guild)
+        .await?
+        .model()
+        .await?
+        .owner_id == user;
+    if is_owner {
+        return Ok(true);
+    }
+
+    let member = state.http.guild_member(guild, user)
+        .await?
+        .model()
+        .await?;
+    let is_admin = {
+        let guild_roles = state.http.roles(guild)
+            .await?
+            .model()
+            .await?;
+        let member_has_admin_permission = member.roles
+            .iter()
+            .filter_map(|role_id|
+                guild_roles
+                .iter()
+                .find(|role| role.id == *role_id)
+            )
+            .any(|role| role.permissions.contains(Permissions::ADMINISTRATOR));
+
+        member_has_admin_permission
+    };
+    if is_admin {
+        return Ok(true);
+    }
+
+    Ok(false)
+}
 
 /// Handles a message being created in some text channel.
 pub async fn message_create(
@@ -49,6 +94,23 @@ pub async fn message_create(
         let now = Instant::now();
         match state.commands.find_command(&mut trimmed) {
             Some(cmd) => {
+                match cmd.info().required_role() {
+                    Role::User => (), // anyone can run this command
+                    Role::Admin => if let Some(guild_id) = msg.guild_id {
+                        if !has_admin_permission(&state, guild_id, msg.author.id).await? {
+                            state.http.create_message(msg.channel_id)
+                                .content("**You don't have permission to access this command.**")
+                                .await?;
+                            return Ok(());
+                        }
+                    } else {
+                        state.http.create_message(msg.channel_id)
+                            .content("**This command is only accessible in servers.**")
+                            .await?;
+                        return Ok(());
+                    },
+                }
+
                 let raw_input = trimmed.peek()
                     .map(|s| {
                         // trimmed is a view into msg.content, so we can find the start of the
