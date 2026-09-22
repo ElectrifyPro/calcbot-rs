@@ -2,12 +2,16 @@ use super::{commands::{remind::action, Context, Role}, database::Database, globa
 use std::{error::Error, sync::Arc, time::Instant};
 use tokio::sync::Mutex;
 use twilight_gateway::ShardId;
+use twilight_mention::Mention;
 use twilight_model::{
     application::interaction::InteractionData,
+    channel::message::MessageFlags,
     gateway::payload::incoming::{InteractionCreate, MessageCreate},
     guild::Permissions,
+    http::interaction::{InteractionResponse, InteractionResponseType},
     id::{marker::{GuildMarker, UserMarker}, Id},
 };
+use twilight_util::builder::InteractionResponseDataBuilder;
 
 /// Returns true if the given user is the owner or has the ADMINISTRATOR permission in the specified
 /// guild.
@@ -159,6 +163,43 @@ pub async fn interaction_create(
 
     match data {
         InteractionData::ApplicationCommand(_) => todo!(),
+        InteractionData::MessageComponent(delete) if delete.custom_id.starts_with("delete:") => {
+            let Some(message) = &interaction.message else {
+                return Ok(());
+            };
+
+            let (Some(interacting_user_id), Some(expected_user_id)) = (
+                interaction.author_id(),
+                delete.custom_id
+                    .trim_start_matches("delete:")
+                    .parse::<Id<UserMarker>>()
+                    .ok(),
+            ) else {
+                return Ok(());
+            };
+
+            if interacting_user_id == expected_user_id {
+                state.http.delete_message(message.channel_id, message.id)
+                    .await?;
+            } else {
+                state.http.interaction(state.application_id)
+                    .create_response(
+                        interaction.id,
+                        &interaction.token,
+                        &InteractionResponse {
+                            kind: InteractionResponseType::ChannelMessageWithSource,
+                            data: Some(InteractionResponseDataBuilder::new()
+                                .content(format!(
+                                    "The user who triggered this message is {}; **only they can delete it.**",
+                                    expected_user_id.mention(),
+                                ))
+                                .flags(MessageFlags::EPHEMERAL)
+                                .build()),
+                        },
+                    )
+                .await?;
+            }
+        },
         InteractionData::MessageComponent(_) => {
             let Some(message) = &interaction.message else {
                 return Ok(());

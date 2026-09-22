@@ -3,6 +3,7 @@ use calcbot_attrs::Info;
 use twilight_util::builder::embed::{EmbedBuilder, EmbedFieldBuilder, EmbedFooterBuilder};
 use crate::{
     commands::{Command, Context},
+    component::delete_row,
     database::Database,
     error::Error,
     fmt::pluralize,
@@ -47,6 +48,7 @@ impl Command for View {
 
         ctxt.trigger.reply(&state.http)
             .embeds(&[embed.build()])
+            .components(&[delete_row(ctxt.trigger.author_id())])
             .await?;
         Ok(())
     }

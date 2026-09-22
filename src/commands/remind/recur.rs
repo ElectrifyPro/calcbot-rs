@@ -33,7 +33,7 @@ impl Command for Recur {
     ) -> Result<(), Error> {
         let parsed = parse_args_full::<(Word, Option<f64>, Option<Word>)>(ctxt.raw_input)
             .map_err(|err| if matches!(err, Error::NoArgument | Error::TooManyArguments) {
-                self.info().build_embed(ctxt.prefix).into()
+                (self.info().build_embed(ctxt.prefix), ctxt.trigger.author_id()).into()
             } else {
                 err
             })?;

@@ -91,6 +91,7 @@ pub fn command(item: TokenStream) -> TokenStream {
                 let embed = crate::commands::Info::info(self).build_embed(ctxt.prefix);
                 ctxt.trigger.reply(&state.http)
                     .embeds(&[embed])
+                    .components(&[crate::component::delete_row(ctxt.trigger.author_id())])
                     .await?;
                 Ok(())
             }

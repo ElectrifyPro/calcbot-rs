@@ -2,6 +2,7 @@ use async_trait::async_trait;
 use calcbot_attrs::Info;
 use crate::{
     commands::{Command, Context},
+    component::delete_row,
     database::Database,
     error::Error,
     global::State,
@@ -55,6 +56,7 @@ impl Command for Link {
 
         ctxt.trigger.reply(&state.http)
             .embeds(&[embed])
+            .components(&[delete_row(ctxt.trigger.author_id())])
             .await?;
 
         Ok(())

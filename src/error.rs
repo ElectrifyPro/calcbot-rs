@@ -1,7 +1,8 @@
-use std::future::IntoFuture;
 use ariadne::Source;
+use crate::component::delete_row;
+use std::future::IntoFuture;
 use twilight_http::{request::channel::message::CreateMessage, response::ResponseFuture};
-use twilight_model::channel::{message::Embed, Message};
+use twilight_model::{channel::{message::Embed, Message}, id::{marker::UserMarker, Id}};
 use twilight_validate::message::MessageValidationError;
 
 /// An error that can format itself into a user-friendly Discord message.
@@ -19,10 +20,10 @@ pub enum Error {
     /// A command has too many arguments.
     TooManyArguments,
 
-    /// Show an embed.
+    /// Show a help embed.
     ///
     /// The embed is boxed to reduce the size of the enum (600 bytes!).
-    Embed(Box<Embed>),
+    HelpEmbed(Box<Embed>, Id<UserMarker>),
 
     /// An error from `cas-rs`.
     Cas(Source, cas_error::Error),
@@ -52,9 +53,9 @@ impl From<MissingArgument> for Error {
     }
 }
 
-impl From<Embed> for Error {
-    fn from(embed: Embed) -> Self {
-        Self::Embed(Box::new(embed))
+impl From<(Embed, Id<UserMarker>)> for Error {
+    fn from((embed, user): (Embed, Id<UserMarker>)) -> Self {
+        Self::HelpEmbed(Box::new(embed), user)
     }
 }
 
@@ -99,7 +100,12 @@ impl Error {
             Self::MissingArgument(missing) => Ok(init.content(&format!("Missing argument at index {}.", missing.index)).into_future()),
             Self::NoArgument => Ok(init.content("No argument provided.").into_future()),
             Self::TooManyArguments => Ok(init.content("Too many arguments.").into_future()),
-            Self::Embed(embed) => Ok(init.embeds(&[*embed]).into_future()),
+            Self::HelpEmbed(embed, user) => {
+                Ok(init
+                    .embeds(&[*embed])
+                    .components(&[delete_row(user)])
+                    .into_future())
+            },
             Self::Cas(source, err) => {
                 Ok(init.content(&build_cas_errors(source, Some(err).into_iter())).into_future())
             },

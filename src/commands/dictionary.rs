@@ -3,6 +3,7 @@ use calcbot_attrs::Info;
 use crate::{
     arg_parse::{Word, parse_args_full},
     commands::{Command, Context, Info},
+    component::delete_row,
     database::Database,
     error::{CustomErrorFmt, Error},
     global::State,
@@ -164,7 +165,7 @@ impl Command for Dictionary {
     ) -> Result<(), Error> {
         let parsed = parse_args_full::<(Word, Option<Word>)>(ctxt.raw_input)
             .map_err(|err| if matches!(err, Error::NoArgument | Error::TooManyArguments) {
-                self.info().build_embed(ctxt.prefix).into()
+                (self.info().build_embed(ctxt.prefix), ctxt.trigger.author_id()).into()
             } else {
                 err
             })?;
@@ -233,6 +234,7 @@ impl Command for Dictionary {
 
         ctxt.trigger.reply(&state.http)
             .embeds(&[embed.build()])
+            .components(&[delete_row(ctxt.trigger.author_id())])
             .await?;
 
         Ok(())

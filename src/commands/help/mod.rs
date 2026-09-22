@@ -3,6 +3,7 @@ pub mod commands;
 use async_trait::async_trait;
 use crate::{
     commands::{Command, CommandInfo, Context, Info, Role},
+    component::delete_row,
     database::Database,
     error::Error,
     global::State,
@@ -60,6 +61,7 @@ impl Command for Help {
 
         ctxt.trigger.reply(&state.http)
             .embeds(&[embed])
+            .components(&[delete_row(ctxt.trigger.author_id())])
             .await?;
         Ok(())
     }
