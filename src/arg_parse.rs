@@ -130,8 +130,7 @@ macro_rules! impl_parse_int {
                     let out = str_to_parse
                         .parse()
                         .map_err(|_| Error::String(format!(
-                            "**Couldn't convert `{}` to an integer.** Please provide a valid integer in the range `{}` to `{}`.",
-                            str_to_parse,
+                            "**Couldn't convert `{str_to_parse}` to an integer.** Please provide a valid integer in the range `{}` to `{}`.",
                             $name::MIN,
                             $name::MAX,
                         )))?;
@@ -162,8 +161,7 @@ impl<'a> Parse<'a> for f64 {
         let out = str_to_parse
             .parse()
             .map_err(|_| Error::String(format!(
-                "**Couldn't convert `{}` to a number.** Please provide a valid number.",
-                str_to_parse,
+                "**Couldn't convert `{str_to_parse}` to a number.** Please provide a valid number.",
             )))?;
         *parser = clone;
         Ok(out)
@@ -217,13 +215,9 @@ impl<'a, T: Parse<'a>, const N: usize> Parse<'a> for MinVec<T, N> {
             parser.advance_past_whitespace();
         }
 
-        loop {
-            if let Ok(item) = T::parse(parser) {
-                out.push(item);
-                parser.advance_past_whitespace();
-            } else {
-                break;
-            }
+        while let Ok(item) = T::parse(parser) {
+            out.push(item);
+            parser.advance_past_whitespace();
         }
 
         Ok(MinVec(out))

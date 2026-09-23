@@ -146,7 +146,7 @@ pub async fn toggle_shared(
             &InteractionResponse {
                 kind: InteractionResponseType::UpdateMessage,
                 data: Some(InteractionResponseDataBuilder::new()
-                    .content(original_confirmation_message.content.clone())
+                    .content(&original_confirmation_message.content)
                     .components(vec![
                         Component::ActionRow(ActionRow {
                             components: vec![

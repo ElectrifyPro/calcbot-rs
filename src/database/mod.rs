@@ -69,15 +69,12 @@ impl Database {
     /// flag. If this is `true`, the user is using the new CalcBot (i.e. this instance). If
     /// `false`, the user is using the old Node.js-based CalcBot.
     pub async fn is_using_preview(&self, id: Id<UserMarker>) -> bool {
-        match "SELECT using_preview FROM using_preview WHERE id = ? LIMIT 1"
+        "SELECT using_preview FROM using_preview WHERE id = ? LIMIT 1"
             .with((id.get(),))
             .first::<bool, _>(&self.pool)
             .await
             .unwrap()
-        {
-            Some(using_preview) => using_preview,
-            None => false,
-        }
+            .unwrap_or_default()
     }
 
     /// Sets whether the user with the given ID is in preview mode.

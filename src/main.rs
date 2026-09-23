@@ -84,7 +84,7 @@ async fn main() -> Result<(), Box<dyn Error + Send + Sync>> {
 
     while let Some(res) = set.join_next().await {
         if let Err(e) = res {
-            log::error!("A shard task has failed: {}", e);
+            log::error!("A shard task has failed: {e}");
         }
     }
 

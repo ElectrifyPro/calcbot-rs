@@ -71,7 +71,7 @@ where
 /// Builds the error string for `cas-rs` errors.
 fn build_cas_errors(
     source: Source,
-    errs: impl Iterator<Item = cas_error::Error> + ExactSizeIterator,
+    errs: impl ExactSizeIterator<Item = cas_error::Error>,
 ) -> String {
     let count = errs.len();
     let mut buf = Vec::new();

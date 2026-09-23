@@ -4,9 +4,9 @@ use std::{fmt::{Display, Formatter}, time::Duration};
 /// the count.
 pub fn pluralize(count: usize, word: &str) -> String {
     if count == 1 {
-        format!("1 {}", word)
+        format!("1 {word}")
     } else {
-        format!("{} {}s", count, word)
+        format!("{count} {word}s")
     }
 }
 

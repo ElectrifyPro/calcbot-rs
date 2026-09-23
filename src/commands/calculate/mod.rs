@@ -77,7 +77,7 @@ impl Command for Calculate {
                     Err(err) => Err(Error::Cas(Source::from(ctxt.raw_input), err))?,
                 };
                 ctxt.trigger.reply(&state.http)
-                    .content(&format!("**Calculation**\n{}", ans))
+                    .content(&format!("**Calculation**\n{ans}"))
                     // .content(&format!("**Calculation** (mode: {})\n{}", eval_ctxt.trig_mode, ans))
                     .await?;
 

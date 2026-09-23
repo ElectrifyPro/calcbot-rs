@@ -217,10 +217,9 @@ pub async fn interaction_create(
                     &timer,
                     message,
                 ).await?;
-            } else if let Some(channel) = &interaction.channel {
-                db
-                    .get_paged_message(channel.id, message.id)
-                    .map(|sender| sender.send(interaction));
+            } else if let Some(channel) = &interaction.channel
+                && let Some(sender) = db.get_paged_message(channel.id, message.id) {
+                let _ = sender.send(interaction);
             }
         },
         _ => {},

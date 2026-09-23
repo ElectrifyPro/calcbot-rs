@@ -116,10 +116,7 @@ impl Command for Unscramble {
         };
 
         ctxt.trigger.reply(&state.http)
-            .content(&format!(
-                "**Unscrambling** `{}` with word length of {}\n{}",
-                word, length, output
-            ))
+            .content(&format!("**Unscrambling** `{word}` with word length of {length}\n{output}"))
             .await?;
         Ok(())
     }

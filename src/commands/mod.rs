@@ -37,7 +37,7 @@ pub fn format_code_block(prefix: &str, strings: &[&str]) -> String {
         "```\n{}\n```",
         strings
             .iter()
-            .map(|string| format!("{} {}", prefix, string))
+            .map(|string| format!("{prefix} {string}"))
             .collect::<Vec<_>>()
             .join("\n")
     )
@@ -212,7 +212,7 @@ impl CommandInfo {
     pub fn build_embed(&self, prefix: Option<&str>) -> Embed {
         let prefix = prefix.unwrap_or("");
         let (path, short_path) = self.build_path();
-        let full_path = format!("{}{}", prefix, path);
+        let full_path = format!("{prefix}{path}");
 
         let mut embed = EmbedBuilder::new()
             .title(&full_path)
@@ -243,7 +243,7 @@ impl CommandInfo {
 
         embed = embed.field(EmbedFieldBuilder::new(
             "Shorthand",
-            format!("`{}{}`", prefix, short_path),
+            format!("`{prefix}{short_path}`"),
         ));
 
         if let Some(aliases) = self.aliases {

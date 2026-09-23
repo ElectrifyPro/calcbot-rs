@@ -103,8 +103,8 @@ enum FetchError {
 impl CustomErrorFmt for FetchError {
     fn rich_fmt(&self, init: CreateMessage<'_>) -> Result<ResponseFuture<Message>, MessageValidationError> {
         match self {
-            FetchError::InvalidLanguageCode(language) => Ok(init.content(&format!("**The language code `{}` is invalid.** See [this link](<https://chillant.gitbook.io/calcbot/commands/dictionary>) for a list of valid language codes.", language)).into_future()),
-            FetchError::NotFound(word, language) => Ok(init.content(&format!("**Could not find a dictionary entry for `{}` in the `{}` dictionary.**", word, language)).into_future()),
+            FetchError::InvalidLanguageCode(language) => Ok(init.content(&format!("**The language code `{language}` is invalid.** See [this link](<https://chillant.gitbook.io/calcbot/commands/dictionary>) for a list of valid language codes.")).into_future()),
+            FetchError::NotFound(word, language) => Ok(init.content(&format!("**Could not find a dictionary entry for `{word}` in the `{language}` dictionary.**")).into_future()),
             FetchError::Reqwest => Ok(init.content("**An error occurred while fetching the definition. Please try again in a few seconds.**").into_future()),
         }
     }
@@ -127,10 +127,7 @@ async fn get_dictionary_entry<'a>(
         return Ok(vec![entry.clone()]);
     }
 
-    let url = format!(
-        "https://api.dictionaryapi.dev/api/v2/entries/{}/{}",
-        language, word
-    );
+    let url = format!("https://api.dictionaryapi.dev/api/v2/entries/{language}/{word}");
     let response = get(&url)
         .await
         .map_err(|_| FetchError::Reqwest)?
@@ -202,7 +199,7 @@ impl Command for Dictionary {
                     let mut definition_parts = Vec::new();
                     definition_parts.push(definition.definition);
                     if let Some(example) = definition.example {
-                        definition_parts.push(format!("_{}_", example));
+                        definition_parts.push(format!("_{example}_"));
                     }
                     if !definition.synonyms.is_empty() {
                         definition_parts

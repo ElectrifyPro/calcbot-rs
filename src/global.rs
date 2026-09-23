@@ -52,7 +52,7 @@ impl State {
                 CalcBot's command system can be confusing for those new to the bot. This short [guide](https://chillant.gitbook.io/calcbot/commands/command-system) will hopefully clear up that confusion.
             ",
                 if let Some(prefix) = prefix {
-                    format!("This server's prefix is `{0}`. Type `{0}<command>` to run one of the commands below, and type `{0}", prefix)
+                    format!("This server's prefix is `{prefix}`. Type `{prefix}<command>` to run one of the commands below, and type `{prefix}")
                 } else {
                     "Type `<command>` to run one of the commands below, and type `".to_string()
                 }

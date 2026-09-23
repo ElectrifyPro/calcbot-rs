@@ -148,7 +148,7 @@ impl Command for Sequence {
         } else {
             // any polynomial can fit any sequence, but it doesn't mean the sequence is stable
             ctxt.trigger.reply(&state.http)
-                .content(&format!("**Unable to determine the next term in the sequence.** I couldn't find a repeating finite difference or factor between the terms. Try extending the sequence."))
+                .content("**Unable to determine the next term in the sequence.** I couldn't find a repeating finite difference or factor between the terms. Try extending the sequence.")
                 .await?;
         };
 

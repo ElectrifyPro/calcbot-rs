@@ -59,7 +59,7 @@ impl Command for UnitConvert {
                 .await?;
             return Ok(());
         };
-        let unit_formatted = format!("{}", unit);
+        let unit_formatted = format!("{unit}");
 
         let (target_units, errors): (Vec<_>, Vec<_>) = parsed.2
             .into_iter()
@@ -76,7 +76,7 @@ impl Command for UnitConvert {
                 let out = errors
                     .into_iter()
                     .oxford_join_custom("`, `", "` and `", "`, and `");
-                format!("**`{}` are not valid units.** Run the `{prefix}unitconvert units` for a list of supported units.", out)
+                format!("**`{out}` are not valid units.** Run the `{prefix}unitconvert units` for a list of supported units.")
             };
             ctxt.trigger.reply(&state.http).content(&msg).await?;
             return Ok(());
@@ -97,10 +97,10 @@ impl Command for UnitConvert {
                     .iter()
                     .map(|m| format!("`{} {}`", m.value(), m.unit()))
                     .join("\n");
-                format!("**Converting** `{} {}` to `{}`\n{}", quantity, unit_formatted, targets, results)
+                format!("**Converting** `{quantity} {unit_formatted}` to `{targets}`\n{results}")
             },
             Err(error) => {
-                format!("**Can't convert from from `{}` to `{}`.**", unit_formatted, error.target())
+                format!("**Can't convert from from `{unit_formatted}` to `{}`.**", error.target())
             },
         };
         ctxt.trigger.reply(&state.http)

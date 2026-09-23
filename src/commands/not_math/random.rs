@@ -57,10 +57,7 @@ impl Command for Random {
 
         let num = random(min, max + 1);
         ctxt.trigger.reply(&state.http)
-            .content(&format!(
-                "**Random number** from {} to {}\n{}",
-                min, max, num
-            ))
+            .content(&format!("**Random number** from {min} to {max}\n{num}"))
             .await?;
         Ok(())
     }

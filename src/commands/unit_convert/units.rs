@@ -103,8 +103,8 @@ fn send_paged_message(
     });
     let pages = pages.to_vec();
     let msg = state.http.create_message(channel_id)
-        .embeds(&[pages[index].clone()])
-        .components(&[component.clone()])
+        .embeds(std::slice::from_ref(&pages[index]))
+        .components(std::slice::from_ref(&component))
         .into_future();
 
     let state = Arc::clone(state);
@@ -138,7 +138,7 @@ fn send_paged_message(
                             kind: InteractionResponseType::UpdateMessage,
                             data: Some(InteractionResponseDataBuilder::new()
                                 .components(Some(component.clone()))
-                                .embeds(vec![new_embed])
+                                .embeds(Some(new_embed))
                                 .build()),
                         },
                     )
@@ -159,7 +159,7 @@ fn create_embed(index: usize, total_pages: usize) -> EmbedBuilder {
     EmbedBuilder::new()
         .title("Supported units (case sensitive)")
         .color(0xed9632)
-        .footer(EmbedFooterBuilder::new(format!("Page {} of {}", index + 1, total_pages)))
+        .footer(EmbedFooterBuilder::new(format!("Page {} of {total_pages}", index + 1)))
 }
 
 /// Generates embeds for the supported units.

@@ -38,7 +38,7 @@ impl Command for About {
         let author_id = env::var("AUTHOR_ID")?.parse::<NonZeroU64>().unwrap();
         let author = {
             let user = state.http.user(author_id.into()).await?.model().await?;
-            format!("{}", user.name)
+            user.name
         };
 
         let bot = state.cache.current_user()
