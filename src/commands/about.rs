@@ -14,6 +14,8 @@ use tokio::sync::Mutex;
 use twilight_mention::Mention;
 use twilight_util::builder::embed::EmbedBuilder;
 
+static COMMIT_HASH: &'static str = env!("COMMIT_HASH");
+
 /// View information about CalcBot and its current status, including its uptime and resource usage.
 #[derive(Clone, Info)]
 #[info(category = "Miscellaneous")]
@@ -56,6 +58,7 @@ impl Command for About {
             Bot CPU usage: {}%
             Bot memory usage: {} MB
             # of commands: {}
+            Commit: `{COMMIT_HASH}`
             ",
                 ctxt.shard_id.number(),
                 ctxt.shard_id.total(),
