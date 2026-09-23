@@ -33,7 +33,7 @@ impl Command for ToLatex {
         match parser.try_parse_full::<Expr>() {
             Ok(expr) => {
                 ctxt.trigger.reply(&state.http)
-                    .content(&format!("**Converting** `{}` to LaTeX\n```{}```", ctxt.raw_input, expr.as_display()))
+                    .content(&format!("**Converting** `{}` to LaTeX\n```latex\n{}```", ctxt.raw_input, expr.as_display()))
                     .await?;
             },
             Err(errs) => Err(Error::CasMany(Source::from(ctxt.raw_input), errs))?,
